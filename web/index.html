@@ -378,15 +378,15 @@
 
     const map = L.map("map", { preferCanvas: true }).setView([19.085, 72.905], 11);
     const esriDark = L.layerGroup([
-      L.tileLayer("[https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/](https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/){z}/{y}/{x}", { maxZoom:16, attribution:"Esri" }),
-      L.tileLayer("[https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/](https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/){z}/{y}/{x}", { maxZoom:16, opacity:0.9 })
+      L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}", { maxZoom:16, attribution:"Esri" }),
+      L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}", { maxZoom:16, opacity:0.9 })
     ]);
-    const esriStreet = L.tileLayer("[https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/](https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/){z}/{y}/{x}", { maxZoom:19, attribution:"Esri" });
+    const esriStreet = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}", { maxZoom:19, attribution:"Esri" });
     const esriSat = L.layerGroup([
-      L.tileLayer("[https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/](https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/){z}/{y}/{x}", { maxZoom:18, attribution:"Esri" }),
-      L.tileLayer("[https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/](https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/){z}/{y}/{x}", { maxZoom:18 })
+      L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { maxZoom:18, attribution:"Esri" }),
+      L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}", { maxZoom:18 })
     ]);
-    const osmFallback = L.tileLayer("[https://tile.openstreetmap.org/](https://tile.openstreetmap.org/){z}/{x}/{y}.png", { maxZoom:19, attribution:"OSM" });
+    const osmFallback = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom:19, attribution:"OSM" });
     let activeBase = null;
     function setMapStyle(style) {
       st.mapStyle = style;
@@ -633,14 +633,14 @@
         </div>`).join("");
 
       const portalLabels = { magicbricks:"MagicBricks Listing ↗", nobroker:"NoBroker (0% Brok) ↗", "99acres":"99acres Listing ↗", housing:"Housing.com ↗" };
-      const linkBtns = [`<a target="_blank" href="${g.url || `[https://www.google.com/maps/search/?api=1&query=$](https://www.google.com/maps/search/?api=1&query=$){qMaps}`}">📍 Google Maps<span>Directions and Reviews</span></a>`];
+      const linkBtns = [`<a target="_blank" href="${g.url || `https://www.google.com/maps/search/?api=1&query=${qMaps}`}">📍 Google Maps<span>Directions and Reviews</span></a>`];
       Object.entries(src).forEach(([k, url]) => {
         if (url && portalLabels[k]) linkBtns.push(`<a target="_blank" href="${esc(url)}">${portalLabels[k]}<span>Verified Direct Listing</span></a>`);
       });
       if (s.rera_ids?.length) {
-        linkBtns.push(`<a target="_blank" href="[https://maharera.maharashtra.gov.in/projects-search-result?project_name=$](https://maharera.maharashtra.gov.in/projects-search-result?project_name=$){encodeURIComponent(s.rera_ids[0])}">🏛️ MahaRERA (${esc(s.rera_ids[0])})<span>Official RERA Record</span></a>`);
+        linkBtns.push(`<a target="_blank" href="https://maharera.maharashtra.gov.in/projects-search-result?project_name=${encodeURIComponent(s.rera_ids[0])}">🏛️ MahaRERA (${esc(s.rera_ids[0])})<span>Official RERA Record</span></a>`);
       }
-      linkBtns.push(`<a class="sub" target="_blank" href="[https://www.google.com/search?q=$](https://www.google.com/search?q=$){encodeURIComponent(`"${s.name}" "${s.locality}" Mumbai flat ${st.mode}`)}">🔎 Search "${esc(s.name)}" on other portals via Google ↗</a>`);
+      linkBtns.push(`<a class="sub" target="_blank" href="https://www.google.com/search?q=${encodeURIComponent(`"${s.name}" "${s.locality}" Mumbai flat ${st.mode}`)}">🔎 Search "${esc(s.name)}" on other portals via Google ↗</a>`);
 
       document.getElementById("dName").textContent = s.name;
       document.getElementById("dSub").textContent = `${s.locality} · ${s.zone}${g.rating?` · ★ ${g.rating} (${g.review_count||0})`:""}`;
@@ -648,7 +648,7 @@
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <button class="btn ${isS?"active":""}" id="dSv">${isS?"❤️ Saved":"🤍 Save"}</button>
           <button class="btn ${isC?"active":""}" id="dCm">${isC?"✓ Compare":"⚖️ Compare"}</button>
-          <a class="btn wa" target="_blank" href="[https://wa.me/?text=$](https://wa.me/?text=$){wa}">📲 WhatsApp</a>
+          <a class="btn wa" target="_blank" href="https://wa.me/?text=${wa}">📲 WhatsApp</a>
         </div>
         ${s.coords_approx?`<div style="font-size:12px;color:var(--amb);background:var(--amb-s);padding:8px 10px;border-radius:9px;">📍 Approx. locality pin — open <b>Google Maps</b> below for exact gate directions.</div>`:""}
         <div class="card-box"><h3>Price and Size</h3><div class="g2">

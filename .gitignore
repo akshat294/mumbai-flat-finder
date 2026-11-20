@@ -28,3 +28,5 @@ write_web_v5.py
 
 fix_boot.py
 _check_js.js
+
+repair_links.py
