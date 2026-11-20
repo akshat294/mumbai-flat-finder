@@ -18,3 +18,8 @@ run_crashproof.bat
 
 fix_*.py
 upgrade_*.py
+
+DIAGNOSTIC_REPORT.md
+generate_report.py
+write_web_v4.py
+fix_junk.py

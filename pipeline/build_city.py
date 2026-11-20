@@ -10,6 +10,7 @@ from pipeline.mumbai_enricher import enrich_mumbai, load_transit
 from pipeline.pricing_engine import summarize_portal_prices
 
 IST = timezone(timedelta(hours=5, minutes=30))
+JUNK_NAME = re.compile(r"(flats?,?\s*apartments?|houses?\s+for\s+(rent|sale)|properties\s+for\s+(rent|sale)|\bfor\s+(rent|sale)\s+in\b|\bnear\s+me\b|^\d+\s*(bhk|rk)\s*(flat|apartment|house)?$)", re.I)
 COMM_DROP = re.compile(
     r"\b(office|commercial|shop|showroom|warehouse|business\s*park|corporate|chambers|"
     r"trade\s*star|trade\s*center|town\s*center|it\s*park|coworking|the\s*summit|industrial\s*estate)\b",
@@ -47,7 +48,7 @@ def build_mumbai(db_path: str | Path = "pipeline/staging/mumbai_raw.db", max_goo
     now_ist = datetime.now(IST).strftime("%d %b %Y, %I:%M %p IST")
     compiled: List[Dict[str, Any]] = []
     for can in canonicals:
-        if COMM_DROP.search(can["name"]): continue
+        if COMM_DROP.search(can["name"]) or JUNK_NAME.search(can["name"]): continue
         gplace = gcache.get(can["id"])
         gloc = (gplace or {}).get("location") or {}
         lat, lng = can.get("lat") or gloc.get("latitude"), can.get("lng") or gloc.get("longitude")

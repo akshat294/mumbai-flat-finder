@@ -13,6 +13,7 @@ HDRS = {
     "Accept-Language": "en-IN,en;q=0.9",
 }
 RERA_RE = re.compile(r"P51[789]\d{8}")
+JUNK_NAME = re.compile(r"(flats?,?\s*apartments?|houses?\s+for\s+(rent|sale)|properties\s+for\s+(rent|sale)|\bfor\s+(rent|sale)\s+in\b|\bnear\s+me\b|^\d+\s*(bhk|rk)\s*(flat|apartment|house)?$)", re.I)
 COMM_RE = re.compile(
     r"\b(office|commercial|shop|showroom|warehouse|godown|business\s*park|corporate|chambers|"
     r"trade\s*star|trade\s*center|town\s*center|it\s*park|coworking|co-working|the\s*summit|industrial\s*estate)\b",
@@ -149,7 +150,7 @@ class MagicBricksConnector(BaseConnector):
                 if not price or COMM_RE.search(title): continue
                 s_el = card.select_one(".mb-srp__card__society--name")
                 name = s_el.get_text(" ", strip=True) if s_el else clean_name(title, locality)
-                if len(name) < 3 or name.lower() == locality.lower() or COMM_RE.search(name): continue
+                if len(name) < 3 or name.lower() == locality.lower() or COMM_RE.search(name) or JUNK_NAME.search(name): continue
                 if mode == "rent" and price > 850_000: continue
                 if mode == "sale" and price < 1_500_000: continue
 
@@ -242,7 +243,7 @@ class NoBrokerConnector(BaseConnector):
             title = h.get_text(" ", strip=True)
             if not re.search(r"for\s+rent", title, re.I): continue
             name = clean_name(title, locality)
-            if len(name) < 3 or name.lower() == locality.lower() or COMM_RE.search(name): continue
+            if len(name) < 3 or name.lower() == locality.lower() or COMM_RE.search(name) or JUNK_NAME.search(name): continue
             a = h.select_one("a[href]") or h.find_parent("a", href=True)
             href = (a.get("href") or "").strip() if a else ""
             exact_url = href if href.startswith("http") else (f"https://www.nobroker.in{href}" if href.startswith("/") else None)
