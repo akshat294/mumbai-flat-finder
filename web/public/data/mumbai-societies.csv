@@ -1,7 +1,5 @@
 id,name,zone,locality,bhks,carpet_sqft,rent_median_inr,buy_median_inr,has_zero_brokerage,google_rating,nearest_metro,metro_walk_min,flood_risk,exact_links
 mum-airoli-yash-paradise-chs,YASH PARADISE CHS,Navi Mumbai,Airoli,2,900,45000,17419354,False,4.1,Ghatkopar,178,low,magicbricks
-mum-airoli-mindspace-airoli-east,Mindspace Airoli East,Navi Mumbai,Airoli,,1800,400000,154838709,False,,Ghatkopar,208,low,
-mum-airoli-reliable-tech-park,Reliable Tech Park,Navi Mumbai,Airoli,,3483,2454999,950322193,False,4,Ghatkopar,215,low,
 mum-airoli-pyramid-elements,Pyramid Elements,Navi Mumbai,Airoli,1,750,44000,7800000,False,4.4,Aarey JVLR,218,low,magicbricks
 mum-airoli-akshar-green-world,Akshar Green World,Navi Mumbai,Airoli,2/3,800,68000,16500000,False,4.5,Aarey JVLR,216,low,magicbricks
 mum-airoli-liberty-tower,Liberty Tower,Navi Mumbai,Airoli,,3184,480000,185806451,False,4.2,Ghatkopar,214,low,
@@ -583,7 +581,6 @@ mum-malad-west-sheth-irene,Sheth Irene,Western Suburbs North,Malad West,1/2,657,
 mum-malad-west-shreeji-atlantis,Shreeji Atlantis,Western Suburbs North,Malad West,2,770,60000,23225806,False,,Malad West,8,moderate,magicbricks
 mum-malad-west-transcon-auris-serenity,Transcon Auris Serenity,Western Suburbs North,Malad West,2/3/4,806,84000,60750000,False,,Malad West,6,low,magicbricks
 mum-malad-west-lotus-sky-garden,Lotus Sky Garden,Western Suburbs North,Malad West,2/3,809,65000,25161290,False,,Malad West,4,low,magicbricks
-mum-malad-west-9-business-bay,9 Business Bay,Western Suburbs North,Malad West,,1179,91191,35300000,False,,Malad West,5,low,
 mum-malad-west-chandak-treesourus,Chandak Treesourus,Western Suburbs North,Malad West,2/3,1068,90933,35200000,False,,Malad West,7,low,magicbricks
 mum-malad-west-narang-vivenda,Narang Vivenda,Western Suburbs North,Malad West,2/3/4,2238,164429,63650000,False,,Malad West,7,low,magicbricks
 mum-malad-west-mahindra-marina64,Mahindra Marina64,Western Suburbs North,Malad West,2/3,1049,99458,38500000,False,,Malad West,8,moderate,magicbricks
@@ -879,7 +876,6 @@ mum-versova-rustomjee-prive-rustomjee-prive-band,"Rustomjee Prive, Rustomjee Pri
 mum-versova-naman-habitat-naman-habitat-andheri,"Naman Habitat, Naman Habitat, Andheri West",Andheri-Juhu,Versova,2,750,65358,25299999,False,,Versova,13,low,
 mum-versova-raheja-modern-vivarea-raheja-modern,"Raheja Modern Vivarea, Raheja Modern Vivarea, Mahalakshmi",Andheri-Juhu,Versova,5,2809,653066,252800000,False,,Versova,18,low,
 mum-versova-shapoorji-pallonji-one-hills-shapoor,"Shapoorji Pallonji One Hills, Shapoorji Pallonji One Hills, Kandivali East",Andheri-Juhu,Versova,4,2447,195816,75800000,False,,Versova,16,low,
-mum-versova-9-business-bay-malad-west-mumbai,"9 Business Bay, Malad West Mumbai",Andheri-Juhu,Versova,,1179,91191,35300000,False,,Versova,19,low,
 mum-versova-viceroy-savana-viceroy-savana-kandiv,"Viceroy SAVANA, Viceroy SAVANA, Kandivali East",Andheri-Juhu,Versova,3,1014,127616,49400000,False,,Versova,18,low,
 mum-versova-kalpataru-vivant-kalpataru-vivant-jo,"Kalpataru Vivant, Kalpataru Vivant, Jogeshwari Vikhroli Link Road",Andheri-Juhu,Versova,2,755,50891,19700000,False,,Versova,20,low,
 mum-versova-hiranandani-empress-hill-hiranandani,"Hiranandani Empress Hill, Hiranandani Empress Hill, Powai",Andheri-Juhu,Versova,3,1064,132525,51300000,False,,Versova,20,low,
@@ -3118,7 +3114,6 @@ mum-malad-west-k-raheja-interface-heights-kanchpada,"K Raheja Interface Heights,
 mum-malad-west-krishna-residency-atmaram-compound,Krishna Residency Atmaram Compound,Western Suburbs North,Malad West,2/5,1900,109791,42500000,False,,Malad West,6,low,magicbricks
 mum-malad-west-gaikwad-nagar-malvani-mumbai,Gaikwad Nagar Malvani Mumbai,Western Suburbs North,Malad West,1,404,15500,6000000,False,,Malad West,9,low,magicbricks
 mum-malad-west-liberty-heights,LIBERTY HEIGHTS,Western Suburbs North,Malad West,2,640,52958,20500000,False,,Malad West,3,low,magicbricks
-mum-malad-west-k-raheja-interface-heights-mindspace,"K Raheja Interface Heights, Mindspace Mumbai",Western Suburbs North,Malad West,2,800,64583,25000000,False,,Malad West,1,low,magicbricks
 mum-malad-west-nicco-sunder-milan,Nicco Sunder Milan,Western Suburbs North,Malad West,3,1125,81375,31500000,False,,Malad West,3,low,magicbricks
 mum-malad-west-shree-sai-imperial-hava-hira-nadiyaw,"Shree Sai Imperial Hava Hira, Nadiyawala Colony 2 Mumbai",Western Suburbs North,Malad West,2,510,39783,15400000,False,,Malad West,9,low,magicbricks
 mum-malad-west-abrol-signature,Abrol Signature,Western Suburbs North,Malad West,2,656,36166,14000000,False,,Malad West,4,low,magicbricks

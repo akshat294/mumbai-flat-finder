@@ -16,7 +16,7 @@ RERA_RE = re.compile(r"P51[789]\d{8}")
 JUNK_NAME = re.compile(r"(flats?,?\s*apartments?|houses?\s+for\s+(rent|sale)|properties\s+for\s+(rent|sale)|\bfor\s+(rent|sale)\s+in\b|\bnear\s+me\b|^\d+\s*(bhk|rk)\s*(flat|apartment|house)?$)", re.I)
 COMM_RE = re.compile(
     r"\b(office|commercial|shop|showroom|warehouse|godown|business\s*park|corporate|chambers|"
-    r"trade\s*star|trade\s*center|town\s*center|it\s*park|coworking|co-working|the\s*summit|industrial\s*estate)\b",
+    r"trade\s*star|trade\s*center|town\s*center|it\s*park|coworking|co-working|the\s*summit|industrial\s*estate|mindspace|tech\s*park|infotech|cyber\s*park|knowledge\s*park|business\s*bay|corporate\s*park|\bsez\b)\b",
     re.I,
 )
 
