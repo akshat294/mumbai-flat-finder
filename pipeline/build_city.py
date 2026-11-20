@@ -1,5 +1,5 @@
 from __future__ import annotations
-import csv, hashlib, json, math
+import csv, hashlib, json, math, re
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Any, Dict, List
@@ -10,12 +10,17 @@ from pipeline.mumbai_enricher import enrich_mumbai, load_transit
 from pipeline.pricing_engine import summarize_portal_prices
 
 IST = timezone(timedelta(hours=5, minutes=30))
+COMM_DROP = re.compile(
+    r"\b(office|commercial|shop|showroom|warehouse|business\s*park|corporate|chambers|"
+    r"trade\s*star|trade\s*center|town\s*center|it\s*park|coworking|the\s*summit|industrial\s*estate)\b",
+    re.I,
+)
 
 def _approx_coords(soc_id: str, locality: str, centroids: Dict[str, List[float]]):
     base = centroids.get(locality) or [19.0760, 72.8777]
     h = int(hashlib.md5(soc_id.encode("utf-8")).hexdigest()[:8], 16)
     ang = (h % 360) * (math.pi / 180.0)
-    rad = 0.0012 + ((h >> 8) % 100) * 0.00003
+    rad = 0.0012 + ((h >> 8) % 100) * 0.000035
     return round(base[0] + math.sin(ang) * rad, 6), round(base[1] + math.cos(ang) * rad, 6)
 
 def build_mumbai(db_path: str | Path = "pipeline/staging/mumbai_raw.db", max_google_calls: int = 25, max_record_age_days: float = 7.0) -> Dict[str, Any]:
@@ -42,6 +47,7 @@ def build_mumbai(db_path: str | Path = "pipeline/staging/mumbai_raw.db", max_goo
     now_ist = datetime.now(IST).strftime("%d %b %Y, %I:%M %p IST")
     compiled: List[Dict[str, Any]] = []
     for can in canonicals:
+        if COMM_DROP.search(can["name"]): continue
         gplace = gcache.get(can["id"])
         gloc = (gplace or {}).get("location") or {}
         lat, lng = can.get("lat") or gloc.get("latitude"), can.get("lng") or gloc.get("longitude")
@@ -56,9 +62,23 @@ def build_mumbai(db_path: str | Path = "pipeline/staging/mumbai_raw.db", max_goo
         bhks = sorted({int(r["bhk"]) for r in recs if r.get("bhk") and 1 <= int(r["bhk"]) <= 6})
         carpets = [float(r["carpet_sqft"]) for r in recs if r.get("carpet_sqft") and 200 <= float(r["carpet_sqft"]) <= 8000]
         med_carpet = round(sorted(carpets)[len(carpets) // 2], 0) if carpets else None
+        furns = sorted({r["furnishing"] for r in recs if r.get("furnishing")})
+        tenants = sorted({r["tenant"] for r in recs if r.get("tenant")})
+
         pricing = summarize_portal_prices(can["raw_by_source"], carpet_sqft=med_carpet)
         if not pricing["rent_monthly_inr"]["median"] and not pricing["buy_inr"]["median"]:
             continue
+
+        # Only keep exact direct listing/project URLs in sources (drop generic locality search pages)
+        clean_sources = {}
+        for k, u in (can.get("sources") or {}).items():
+            if not u: continue
+            if k == "magicbricks" and ("propertyDetails" in u or "-pdpid-" in u or "project-" in u):
+                clean_sources[k] = u
+            elif k == "nobroker" and "/property/" in u:
+                clean_sources[k] = u
+            elif k == "99acres" and ("-spid-" in u or "-npxid-" in u):
+                clean_sources[k] = u
 
         gblock = None
         if gplace:
@@ -70,16 +90,17 @@ def build_mumbai(db_path: str | Path = "pipeline/staging/mumbai_raw.db", max_goo
             "id": can["id"], "name": can["name"], "locality": can["locality"],
             "zone": can.get("zone") or loc_to_zone.get((can["locality"] or "").lower(), "Mumbai"),
             "lat": lat, "lng": lng, "coords_approx": coords_approx, "bhks": bhks,
+            "furnishing": furns, "tenant": tenants,
             "rera_ids": can["rera_ids"], "rera_carpet_sqft": int(med_carpet) if med_carpet else None,
             "pricing": pricing, "mumbai_context": enrich_mumbai(lat, lng, transit),
-            "google": gblock, "sources": can["sources"],
+            "google": gblock, "sources": clean_sources,
         })
 
     out_dir = Path("web/public/data"); out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "mumbai-index.json").write_text(json.dumps({"city":"Mumbai MMR","generated_at":now_ist,"count":len(compiled),"societies":compiled}, ensure_ascii=False, separators=(",",":")), encoding="utf-8")
     with (out_dir / "mumbai-societies.csv").open("w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
-        w.writerow(["id","name","zone","locality","bhks","carpet_sqft","rent_median_inr","buy_median_inr","has_zero_brokerage","google_rating","nearest_metro","metro_walk_min","flood_risk","portals"])
+        w.writerow(["id","name","zone","locality","bhks","carpet_sqft","rent_median_inr","buy_median_inr","has_zero_brokerage","google_rating","nearest_metro","metro_walk_min","flood_risk","exact_links"])
         for s in compiled:
             w.writerow([s["id"],s["name"],s["zone"],s["locality"],"/".join(map(str,s["bhks"])),s["rera_carpet_sqft"] or "",s["pricing"]["rent_monthly_inr"]["median"] or "",s["pricing"]["buy_inr"]["median"] or "",s["pricing"]["has_zero_brokerage"],(s["google"] or {}).get("rating",""),(s["mumbai_context"]["nearest_metro"] or {}).get("name",""),(s["mumbai_context"]["nearest_metro"] or {}).get("walk_min",""),s["mumbai_context"]["monsoon_flood_risk"],",".join(sorted(s["sources"].keys()))])
     return {"compiled": len(compiled), "pruned_stale": pruned, "google_new_calls": google_calls, "google_cached_total": len(gcache), "updated_at": now_ist}
