@@ -1,0 +1,17 @@
+.venv/
+__pycache__/
+*.pyc
+logs/
+pipeline/cache/
+pipeline/staging/
+probe_*.py
+test_*.py
+setup_*.py
+install_working.py
+upgrade_mmr_daily.py
+make_cloud_ready.py
+fix_and_build.py
+finish_setup.py
+daily_sync.ps1
+supervisor.ps1
+run_crashproof.bat

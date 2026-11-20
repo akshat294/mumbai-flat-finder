@@ -1,0 +1,421 @@
+{
+  "metro_lines": {
+    "Line 1 (Blue)": [
+      {
+        "name": "Versova",
+        "lat": 19.1307,
+        "lng": 72.8213
+      },
+      {
+        "name": "DN Nagar",
+        "lat": 19.1241,
+        "lng": 72.8313
+      },
+      {
+        "name": "Andheri",
+        "lat": 19.1207,
+        "lng": 72.8481
+      },
+      {
+        "name": "WEH",
+        "lat": 19.1157,
+        "lng": 72.8564
+      },
+      {
+        "name": "Marol Naka",
+        "lat": 19.1082,
+        "lng": 72.88
+      },
+      {
+        "name": "Saki Naka",
+        "lat": 19.1037,
+        "lng": 72.8878
+      },
+      {
+        "name": "Ghatkopar",
+        "lat": 19.0867,
+        "lng": 72.9082
+      }
+    ],
+    "Line 3 (Aqua - Full 2026)": [
+      {
+        "name": "Aarey JVLR",
+        "lat": 19.1365,
+        "lng": 72.8748
+      },
+      {
+        "name": "SEEPZ",
+        "lat": 19.1265,
+        "lng": 72.8732
+      },
+      {
+        "name": "Marol Naka",
+        "lat": 19.1082,
+        "lng": 72.88
+      },
+      {
+        "name": "CSMIA T2",
+        "lat": 19.0996,
+        "lng": 72.8744
+      },
+      {
+        "name": "Santacruz Metro",
+        "lat": 19.0817,
+        "lng": 72.8482
+      },
+      {
+        "name": "Bandra Colony",
+        "lat": 19.0706,
+        "lng": 72.8528
+      },
+      {
+        "name": "BKC",
+        "lat": 19.0653,
+        "lng": 72.8644
+      },
+      {
+        "name": "Dadar Metro",
+        "lat": 19.0218,
+        "lng": 72.8414
+      },
+      {
+        "name": "Siddhivinayak",
+        "lat": 19.0169,
+        "lng": 72.8304
+      },
+      {
+        "name": "Worli",
+        "lat": 19.0074,
+        "lng": 72.8195
+      },
+      {
+        "name": "Mahalaxmi",
+        "lat": 18.9826,
+        "lng": 72.824
+      },
+      {
+        "name": "Mumbai Central",
+        "lat": 18.9696,
+        "lng": 72.8193
+      },
+      {
+        "name": "CSMT Metro",
+        "lat": 18.9398,
+        "lng": 72.8355
+      },
+      {
+        "name": "Churchgate Metro",
+        "lat": 18.9352,
+        "lng": 72.8273
+      },
+      {
+        "name": "Cuffe Parade",
+        "lat": 18.9142,
+        "lng": 72.8213
+      }
+    ],
+    "Line 2A & 7 (Yellow/Red)": [
+      {
+        "name": "Borivali West",
+        "lat": 19.2288,
+        "lng": 72.8468
+      },
+      {
+        "name": "Kandivali West",
+        "lat": 19.2054,
+        "lng": 72.8364
+      },
+      {
+        "name": "Malad West",
+        "lat": 19.1862,
+        "lng": 72.8358
+      },
+      {
+        "name": "Goregaon West",
+        "lat": 19.1642,
+        "lng": 72.8384
+      },
+      {
+        "name": "Oshiwara",
+        "lat": 19.1469,
+        "lng": 72.8347
+      },
+      {
+        "name": "Andheri West",
+        "lat": 19.1301,
+        "lng": 72.8306
+      },
+      {
+        "name": "Gundavali",
+        "lat": 19.119,
+        "lng": 72.8559
+      },
+      {
+        "name": "Goregaon East (Dindoshi)",
+        "lat": 19.1665,
+        "lng": 72.8576
+      }
+    ],
+    "Navi Mumbai Line 1": [
+      {
+        "name": "CBD Belapur Metro",
+        "lat": 19.0185,
+        "lng": 73.0394
+      },
+      {
+        "name": "Kharghar Village",
+        "lat": 19.0359,
+        "lng": 73.0631
+      },
+      {
+        "name": "Central Park Kharghar",
+        "lat": 19.0548,
+        "lng": 73.0686
+      },
+      {
+        "name": "Pethpada",
+        "lat": 19.062,
+        "lng": 73.0715
+      },
+      {
+        "name": "Pendhar",
+        "lat": 19.0772,
+        "lng": 73.0977
+      }
+    ]
+  },
+  "local_stations": [
+    {
+      "name": "Churchgate (WR)",
+      "lat": 18.9355,
+      "lng": 72.8276
+    },
+    {
+      "name": "Lower Parel (WR)",
+      "lat": 18.9956,
+      "lng": 72.8302
+    },
+    {
+      "name": "Dadar (WR/CR)",
+      "lat": 19.0178,
+      "lng": 72.8428
+    },
+    {
+      "name": "Bandra (WR/HR)",
+      "lat": 19.0544,
+      "lng": 72.8402
+    },
+    {
+      "name": "Khar Road (WR)",
+      "lat": 19.0688,
+      "lng": 72.84
+    },
+    {
+      "name": "Santacruz (WR)",
+      "lat": 19.0816,
+      "lng": 72.8415
+    },
+    {
+      "name": "Andheri (WR/HR)",
+      "lat": 19.1197,
+      "lng": 72.8464
+    },
+    {
+      "name": "Goregaon (WR)",
+      "lat": 19.1647,
+      "lng": 72.8493
+    },
+    {
+      "name": "Malad (WR)",
+      "lat": 19.187,
+      "lng": 72.8489
+    },
+    {
+      "name": "Borivali (WR)",
+      "lat": 19.2291,
+      "lng": 72.8573
+    },
+    {
+      "name": "Sion (CR)",
+      "lat": 19.0468,
+      "lng": 72.8632
+    },
+    {
+      "name": "Kurla (CR/HR)",
+      "lat": 19.0658,
+      "lng": 72.8794
+    },
+    {
+      "name": "Ghatkopar (CR)",
+      "lat": 19.0858,
+      "lng": 72.9081
+    },
+    {
+      "name": "Vikhroli (CR)",
+      "lat": 19.1112,
+      "lng": 72.9278
+    },
+    {
+      "name": "Mulund (CR)",
+      "lat": 19.1718,
+      "lng": 72.9565
+    },
+    {
+      "name": "Thane (CR)",
+      "lat": 19.186,
+      "lng": 72.9759
+    },
+    {
+      "name": "Chembur (HR)",
+      "lat": 19.0626,
+      "lng": 72.9012
+    },
+    {
+      "name": "Wadala Road (HR)",
+      "lat": 19.016,
+      "lng": 72.859
+    },
+    {
+      "name": "Vashi (HR/TH)",
+      "lat": 19.0633,
+      "lng": 72.9987
+    },
+    {
+      "name": "Nerul (HR/TH)",
+      "lat": 19.0338,
+      "lng": 73.0182
+    },
+    {
+      "name": "Seawoods-Darave (HR)",
+      "lat": 19.0222,
+      "lng": 73.0186
+    },
+    {
+      "name": "CBD Belapur (HR)",
+      "lat": 19.0187,
+      "lng": 73.0394
+    },
+    {
+      "name": "Kharghar (HR)",
+      "lat": 19.0259,
+      "lng": 73.0598
+    },
+    {
+      "name": "Panvel (HR)",
+      "lat": 18.9901,
+      "lng": 73.1208
+    },
+    {
+      "name": "Airoli (TH)",
+      "lat": 19.1585,
+      "lng": 72.9994
+    },
+    {
+      "name": "Bhandup (CR)",
+      "lat": 19.1424,
+      "lng": 72.9377
+    },
+    {
+      "name": "Dahisar (WR)",
+      "lat": 19.2501,
+      "lng": 72.8594
+    }
+  ],
+  "commute_hubs": {
+    "bkc": {
+      "name": "BKC",
+      "lat": 19.0653,
+      "lng": 72.868
+    },
+    "lower_parel": {
+      "name": "Lower Parel",
+      "lat": 18.9977,
+      "lng": 72.8286
+    },
+    "nariman_point": {
+      "name": "Nariman Point",
+      "lat": 18.9256,
+      "lng": 72.8242
+    },
+    "andheri_seepz": {
+      "name": "Andheri / SEEPZ",
+      "lat": 19.1255,
+      "lng": 72.8732
+    },
+    "powai": {
+      "name": "Powai",
+      "lat": 19.1197,
+      "lng": 72.9051
+    },
+    "goregaon_nesco": {
+      "name": "Goregaon (NESCO / Nirlon)",
+      "lat": 19.152,
+      "lng": 72.8548
+    }
+  },
+  "monsoon_hotspots": [
+    {
+      "name": "Hindmata (Dadar-Parel)",
+      "lat": 19.0079,
+      "lng": 72.8423,
+      "radius_m": 650,
+      "severity": "high"
+    },
+    {
+      "name": "Gandhi Market (Sion)",
+      "lat": 19.0322,
+      "lng": 72.8576,
+      "radius_m": 700,
+      "severity": "high"
+    },
+    {
+      "name": "Milan Subway (Santacruz)",
+      "lat": 19.0853,
+      "lng": 72.8439,
+      "radius_m": 550,
+      "severity": "high"
+    },
+    {
+      "name": "Andheri Subway",
+      "lat": 19.1157,
+      "lng": 72.8442,
+      "radius_m": 550,
+      "severity": "high"
+    },
+    {
+      "name": "Kurla LBS / Bail Bazar",
+      "lat": 19.0764,
+      "lng": 72.8832,
+      "radius_m": 800,
+      "severity": "high"
+    },
+    {
+      "name": "Saki Naka Junction",
+      "lat": 19.1037,
+      "lng": 72.8878,
+      "radius_m": 500,
+      "severity": "moderate"
+    },
+    {
+      "name": "Malad Subway",
+      "lat": 19.1846,
+      "lng": 72.8468,
+      "radius_m": 500,
+      "severity": "high"
+    },
+    {
+      "name": "National College / Linking Rd",
+      "lat": 19.0604,
+      "lng": 72.835,
+      "radius_m": 300,
+      "severity": "moderate"
+    },
+    {
+      "name": "Chembur Shell Colony",
+      "lat": 19.0672,
+      "lng": 72.8935,
+      "radius_m": 600,
+      "severity": "moderate"
+    }
+  ]
+}

@@ -1,0 +1,991 @@
+id,name,zone,locality,bhks,carpet_sqft,rent_median_inr,buy_median_inr,has_zero_brokerage,google_rating,nearest_metro,metro_walk_min,flood_risk,portals
+mum-airoli-yash-paradise-chs,YASH PARADISE CHS,Navi Mumbai,Airoli,2,900,45000,17419354,False,4.1,Ghatkopar,178,low,magicbricks
+mum-airoli-mindspace-airoli-east,Mindspace Airoli East,Navi Mumbai,Airoli,,1800,400000,154838709,False,,Ghatkopar,208,low,magicbricks
+mum-airoli-reliable-tech-park,Reliable Tech Park,Navi Mumbai,Airoli,,3483,2454999,950322193,False,4,Ghatkopar,215,low,magicbricks
+mum-airoli-pyramid-elements,Pyramid Elements,Navi Mumbai,Airoli,1,450,44000,17032258,False,4.4,Aarey JVLR,218,low,magicbricks
+mum-airoli-akshar-green-world,Akshar Green World,Navi Mumbai,Airoli,2/3,800,72500,28064516,False,4.5,Aarey JVLR,216,low,magicbricks
+mum-airoli-liberty-tower,Liberty Tower,Navi Mumbai,Airoli,,3184,480000,185806451,False,4.2,Ghatkopar,214,low,magicbricks
+mum-airoli-empire-tower,Empire Tower,Navi Mumbai,Airoli,,8000,2400000,929032258,False,4.3,Ghatkopar,218,low,magicbricks
+mum-airoli-superior-exotica,Superior Exotica,Navi Mumbai,Airoli,2,767,59000,22838709,False,5,Ghatkopar,180,low,magicbricks
+mum-airoli-airoli-navi-mumbai,"Airoli, Navi Mumbai",Navi Mumbai,Airoli,1,309,23565,11500000,False,,Ghatkopar,199,low,"99acres,magicbricks"
+mum-airoli-mind-space,Mind Space,Navi Mumbai,Airoli,,8000,2360000,913548387,False,,Ghatkopar,208,low,magicbricks
+mum-airoli-newa-bhakti-park,Newa Bhakti Park,Navi Mumbai,Airoli,3,1285,240000,92903225,False,4.3,Aarey JVLR,201,low,"99acres,magicbricks"
+mum-airoli-sector-2-airoli-navi-mumbai,Sector 2 Airoli Navi Mumbai,Navi Mumbai,Airoli,1/2/6,600,18000,14000000,False,,Ghatkopar,202,low,"99acres,magicbricks"
+mum-airoli-sector-20b-airoli-navi-mumbai,Sector 20B Airoli Navi Mumbai,Navi Mumbai,Airoli,1,450,19333,8400000,False,,Ghatkopar,198,low,"99acres,magicbricks"
+mum-airoli-bhagwati-new-palm-beach,Bhagwati New Palm Beach,Navi Mumbai,Airoli,2/3,1066,71945,27850000,False,4.9,Aarey JVLR,205,low,magicbricks
+mum-airoli-delta-luxuria,Delta Luxuria,Navi Mumbai,Airoli,3,1169,72333,28000000,False,4,Ghatkopar,192,low,magicbricks
+mum-airoli-codename-eden-garden,Codename Eden Garden,Navi Mumbai,Airoli,2/3/4,1122,80600,31200000,False,4.4,Ghatkopar,192,low,"99acres,magicbricks"
+mum-airoli-pacific-one-pyramid,Pacific One Pyramid,Navi Mumbai,Airoli,3,1260,87316,33800000,False,3.7,Ghatkopar,176,low,"99acres,magicbricks"
+mum-airoli-delta-aveon-city,Delta Aveon City,Navi Mumbai,Airoli,2,633,35649,13799999,False,5,Pethpada,187,low,magicbricks
+mum-airoli-delta-icon,Delta Icon,Navi Mumbai,Airoli,3,1350,86025,33300000,False,3.4,Ghatkopar,181,low,magicbricks
+mum-airoli-venus-building-digha-navi-mumbai,"Venus Building, Digha Navi Mumbai",Navi Mumbai,Airoli,,549,27125,10500000,False,,Aarey JVLR,219,low,magicbricks
+mum-airoli-signia-oceans,Signia Oceans,Navi Mumbai,Airoli,2,878,64583,25000000,False,4.6,Ghatkopar,172,low,magicbricks
+mum-airoli-it-park-sez-for-sale-in-newa-busines,"IT Park/ SEZ for Sale in Newa Business Park, Digha Navi Mumbai",Navi Mumbai,Airoli,,459,20925,8100000,False,4,Aarey JVLR,218,low,magicbricks
+mum-airoli-newa-bhakti-park-sector-20b-airoli-n,"Newa Bhakti Park, Sector 20B Airoli Navi Mumbai",Navi Mumbai,Airoli,3,1441,83958,32500000,False,4.3,Aarey JVLR,201,low,magicbricks
+mum-airoli-maple-woods,Maple Woods,Navi Mumbai,Airoli,2,643,41333,16000000,False,4.3,Aarey JVLR,220,low,magicbricks
+mum-andheri-east-oberoi-three-sixty-west,Oberoi Three Sixty West,Andheri-Juhu,Andheri East,5,7000,2600000,1006451612,False,,Worli,9,low,magicbricks
+mum-andheri-east-andheri-east-mumbai,Andheri East Mumbai,Andheri-Juhu,Andheri East,,3500,1350000,522580645,False,,WEH,12,low,magicbricks
+mum-andheri-east-citi-point,Citi Point,Andheri-Juhu,Andheri East,,6300,1000000,387096774,False,4.2,WEH,20,low,magicbricks
+mum-andheri-east-kanakia-rainforest,Kanakia Rainforest,Andheri-Juhu,Andheri East,3,850,110000,42580645,False,4.3,SEEPZ,19,low,magicbricks
+mum-andheri-east-sheth-vasant-blossom,Sheth Vasant Blossom,Andheri-Juhu,Andheri East,3,1045,130000,50322580,False,4,Marol Naka,13,low,magicbricks
+mum-andheri-east-apraulic-sterling-court-d,Apraulic Sterling Court D,Andheri-Juhu,Andheri East,3,1130,130000,50322580,False,4.1,SEEPZ,18,low,magicbricks
+mum-andheri-east-chandak-chambers,Chandak Chambers,Andheri-Juhu,Andheri East,,821,265000,102580645,False,4.6,WEH,1,low,magicbricks
+mum-andheri-east-chakala-mumbai,Chakala Mumbai,Andheri-Juhu,Andheri East,,650,170000,65806451,False,,WEH,11,low,magicbricks
+mum-andheri-east-town-center-2,Town Center 2,Andheri-Juhu,Andheri East,,400,110000,42580645,False,4.2,Marol Naka,6,moderate,magicbricks
+mum-andheri-east-trade-star,Trade Star,Andheri-Juhu,Andheri East,,8000,2000000,774193548,False,4.1,Marol Naka,17,low,magicbricks
+mum-andheri-east-omkar-the-summit,Omkar The Summit,Andheri-Juhu,Andheri East,,710,220000,85161290,False,4,WEH,2,low,magicbricks
+mum-andheri-east-marol-mumbai,Marol Mumbai,Andheri-Juhu,Andheri East,,,3600000,1393548387,False,,Marol Naka,16,low,magicbricks
+mum-andheri-east-trans-residency,Trans Residency,Andheri-Juhu,Andheri East,2,650,71000,27483870,False,,SEEPZ,9,low,magicbricks
+mum-andheri-east-agm-at,AGM AT,Andheri-Juhu,Andheri East,,1400,180000,31500000,False,,Marol Naka,19,low,magicbricks
+mum-andheri-east-solitaire-corporate-park,Solitaire Corporate Park,Andheri-Juhu,Andheri East,,6400,2240000,867096774,False,,Marol Naka,19,low,magicbricks
+mum-andheri-east-dynamix-luma,Dynamix Luma,Andheri-Juhu,Andheri East,2,795,76983,29800000,False,,WEH,19,low,magicbricks
+mum-andheri-east-wadhwa-723-avenue-marol-mumbai,"Wadhwa 723 Avenue, Marol Mumbai",Andheri-Juhu,Andheri East,,1769,159908,61900000,False,,Marol Naka,18,low,magicbricks
+mum-andheri-east-salasar-pride,Salasar Pride,Andheri-Juhu,Andheri East,2,699,60191,23300000,False,,Marol Naka,16,low,magicbricks
+mum-andheri-east-atharv-brindavan,Atharv Brindavan,Andheri-Juhu,Andheri East,2/4,1829,212608,82300000,False,,Marol Naka,14,low,magicbricks
+mum-andheri-east-lodha-eternis,Lodha Eternis,Andheri-Juhu,Andheri East,3,645,57350,22200000,False,,SEEPZ,19,low,magicbricks
+mum-andheri-east-solstice-by-the-baya-company,Solstice by The Baya Company,Andheri-Juhu,Andheri East,2,1057,64841,25100000,False,,WEH,19,low,magicbricks
+mum-andheri-east-oberoi-three-sixty-west-hanuman-naga,"Oberoi Three Sixty West, Hanuman Nagar Andheri East Mumbai",Andheri-Juhu,Andheri East,4,7500,2040833,790000000,False,,Marol Naka,18,low,magicbricks
+mum-andheri-east-i-stay-tower-marol-mumbai,"I Stay Tower , Marol Mumbai",Andheri-Juhu,Andheri East,2,611,40816,15800000,False,,SEEPZ,20,low,magicbricks
+mum-andheri-east-lodha-acenza,Lodha Acenza,Andheri-Juhu,Andheri East,5,2700,271250,105000000,False,,Marol Naka,21,low,magicbricks
+mum-andheri-east-amey-apartments,Amey Apartments,Andheri-Juhu,Andheri East,2,810,51666,20000000,False,,Marol Naka,15,low,magicbricks
+mum-andheri-east-chandak-sarvam,Chandak Sarvam,Andheri-Juhu,Andheri East,3,1280,128908,49900000,False,,Marol Naka,17,low,magicbricks
+mum-andheri-east-tribeca-trilive,Tribeca Trilive,Andheri-Juhu,Andheri East,,218,20666,8000000,False,,Marol Naka,15,low,magicbricks
+mum-andheri-west-oberoi-sky-heights,Oberoi Sky Heights,Andheri-Juhu,Andheri West,4,2300,450000,174193548,False,,Versova,12,low,magicbricks
+mum-andheri-west-hubtown-premiere-residences,Hubtown Premiere Residences,Andheri-Juhu,Andheri West,3,1100,220000,85161290,False,,Andheri West,7,low,magicbricks
+mum-andheri-west-shree-mahavir-park-altezza,Shree Mahavir Park Altezza,Andheri-Juhu,Andheri West,3,1100,170000,65806451,False,,Andheri West,17,low,magicbricks
+mum-andheri-west-platinum-life,Platinum Life,Andheri-Juhu,Andheri West,2,825,140000,54193548,False,,Andheri West,10,low,magicbricks
+mum-andheri-west-sea-breeze-apartment,Sea Breeze Apartment,Andheri-Juhu,Andheri West,3,1240,200000,77419354,False,,Andheri West,15,low,magicbricks
+mum-andheri-west-hdil-metropolis,HDIL Metropolis,Andheri-Juhu,Andheri West,2,1175,95000,36774193,False,,Andheri West,11,low,magicbricks
+mum-andheri-west-surabhi-chs,Surabhi CHS,Andheri-Juhu,Andheri West,3,1300,190000,73548387,False,,Andheri West,11,low,magicbricks
+mum-andheri-west-saibaba-tower,Saibaba Tower,Andheri-Juhu,Andheri West,2,900,120000,46451612,False,,Versova,13,low,magicbricks
+mum-andheri-west-sanskar-chs,Sanskar CHS,Andheri-Juhu,Andheri West,3,1400,330000,127741935,False,,Oshiwara,16,low,magicbricks
+mum-andheri-west-sheth-72-west,Sheth 72 West,Andheri-Juhu,Andheri West,2/4,1945,180000,69677419,False,,Andheri West,11,low,magicbricks
+mum-andheri-west-montreal-tower,Montreal Tower,Andheri-Juhu,Andheri West,2,750,80000,30967741,False,,Andheri West,16,low,magicbricks
+mum-andheri-west-andheri-west-mumbai,"Andheri West, Mumbai",Andheri-Juhu,Andheri West,1,1260,370000,143225806,False,,Andheri West,10,low,magicbricks
+mum-andheri-west-rna-ng-eclat,RNA NG Eclat,Andheri-Juhu,Andheri West,3,1150,200000,77419354,False,,Andheri West,9,low,magicbricks
+mum-andheri-west-dlh-leo-tower,DLH Leo Tower,Andheri-Juhu,Andheri West,2,680,85000,32903225,False,,Andheri West,13,low,magicbricks
+mum-andheri-west-smgk-urbana-tower,SMGK Urbana Tower,Andheri-Juhu,Andheri West,2,600,57000,22064516,False,,Andheri West,7,low,magicbricks
+mum-andheri-west-raheja-classique,Raheja Classique,Andheri-Juhu,Andheri West,4,1800,350000,135483870,False,,Andheri West,14,low,magicbricks
+mum-andheri-west-adani-linkbay-residences,Adani Linkbay Residences,Andheri-Juhu,Andheri West,3/4,1522,156291,60500000,False,,Andheri West,10,low,magicbricks
+mum-andheri-west-naman-habitat,Naman Habitat,Andheri-Juhu,Andheri West,2,750,65358,25299999,False,,Andheri West,13,low,magicbricks
+mum-andheri-west-integrated-kavya,Integrated Kavya,Andheri-Juhu,Andheri West,,922,80858,31300000,False,,Andheri West,12,low,magicbricks
+mum-andheri-west-gurukrupa-dhyanam,Gurukrupa Dhyanam,Andheri-Juhu,Andheri West,3,952,120641,46700000,False,,Andheri West,11,low,magicbricks
+mum-andheri-west-puravankara-purva-estrella,Puravankara Purva Estrella,Andheri-Juhu,Andheri West,2/3/4,1100,127616,49400000,False,,Versova,14,low,magicbricks
+mum-andheri-west-dlf-the-westpark,DLF The Westpark,Andheri-Juhu,Andheri West,3,1550,163266,63200000,False,,Andheri West,13,low,magicbricks
+mum-andheri-west-gurukrupa-maurya,Gurukrupa Maurya,Andheri-Juhu,Andheri West,4,2600,335833,130000000,False,,Andheri West,8,low,magicbricks
+mum-andheri-west-godrej-sky-shore,Godrej Sky Shore,Andheri-Juhu,Andheri West,4,2145,297083,115000000,False,,Andheri West,16,low,magicbricks
+mum-andheri-west-disha-elysium,Disha Elysium,Andheri-Juhu,Andheri West,2,758,86541,33500000,False,,Andheri West,9,low,magicbricks
+mum-andheri-west-bharat-auravistas,Bharat Auravistas,Andheri-Juhu,Andheri West,,2294,237408,91900000,False,,Andheri West,11,low,magicbricks
+mum-andheri-west-gurukrupa-ekam,Gurukrupa Ekam,Andheri-Juhu,Andheri West,3,1122,109791,42500000,False,,Andheri West,8,low,magicbricks
+mum-bkc-block-b-bandra-kurla-complex,Block B Bandra Kurla Complex,Bandra-Santacruz,BKC,4,4500,1350000,522580645,False,,BKC,8,low,magicbricks
+mum-bkc-radius-10-bkc-block-b-bandra-kurla-c,"Radius 10 BKC, Block B Bandra Kurla Complex Mumbai",Bandra-Santacruz,BKC,3,1150,180833,70000000,False,,BKC,2,low,magicbricks
+mum-bandra-east-kalpataru-magnus,Kalpataru Magnus,Bandra-Santacruz,Bandra East,2/3/4,1150,210000,81290322,False,,Bandra Colony,16,low,magicbricks
+mum-bandra-east-sunteck-signia-isles,Sunteck Signia Isles,Bandra-Santacruz,Bandra East,4,3000,750000,290322580,False,,Bandra Colony,23,low,magicbricks
+mum-bandra-east-forum-serendipity,Forum Serendipity,Bandra-Santacruz,Bandra East,3,1465,430000,166451612,False,,Bandra Colony,16,low,magicbricks
+mum-bandra-east-nine-dimensions-ramaa-krishna,Nine Dimensions Ramaa Krishna,Bandra-Santacruz,Bandra East,3,750,150000,58064516,False,,Bandra Colony,17,low,magicbricks
+mum-bandra-east-rustomjee-seasons,Rustomjee Seasons,Bandra-Santacruz,Bandra East,3/4,1100,240000,65300000,False,,Bandra Colony,16,low,magicbricks
+mum-bandra-east-adani-ten-bkc,Adani Ten BKC,Bandra-Santacruz,Bandra East,3/4,1500,315000,121935483,False,,Bandra Colony,17,low,magicbricks
+mum-bandra-east-dheeraj-insignia-apartment,Dheeraj Insignia Apartment,Bandra-Santacruz,Bandra East,5,2200,229999,89031870,False,,Bandra Colony,24,low,magicbricks
+mum-bandra-east-insignia,Insignia,Bandra-Santacruz,Bandra East,6,2800,330000,127741935,False,,Bandra Colony,23,low,magicbricks
+mum-bandra-east-rustomjee-oriana,Rustomjee Oriana,Bandra-Santacruz,Bandra East,3,1516,190000,73548387,False,,Bandra Colony,12,low,magicbricks
+mum-bandra-east-rustomjee-cleon,Rustomjee Cleon,Bandra-Santacruz,Bandra East,2,560,82000,31741935,False,,Bandra Colony,22,low,magicbricks
+mum-bandra-east-rustomjee-prive,Rustomjee Prive,Bandra-Santacruz,Bandra East,3,1090,162491,62900000,False,,Bandra Colony,23,low,magicbricks
+mum-bandra-east-adani-ten-bkc-bandra-kurla-complex-m,"Adani Ten BKC , Bandra Kurla Complex Mumbai",Bandra-Santacruz,Bandra East,3/4,1735,224233,86800000,False,,Bandra Colony,12,low,magicbricks
+mum-bandra-east-asshna-12-pegasus,Asshna 12 Pegasus,Bandra-Santacruz,Bandra East,,2292,592100,229200000,False,,Bandra Colony,17,low,magicbricks
+mum-bandra-east-sahakar-excel-acropolis,Sahakar Excel Acropolis,Bandra-Santacruz,Bandra East,2,617,58383,22599999,False,,Bandra Colony,16,low,magicbricks
+mum-bandra-east-raymond-the-address-by-gs-bandra,Raymond The Address by GS Bandra,Bandra-Santacruz,Bandra East,2/4,700,77500,30000000,False,,BKC,19,low,magicbricks
+mum-bandra-east-raymond-invictus-by-gs,Raymond Invictus by GS,Bandra-Santacruz,Bandra East,3/4,1477,250583,97000000,False,,BKC,20,low,magicbricks
+mum-bandra-east-radius-10-bkc-bandra-kurla-complex-m,"Radius 10 BKC, Bandra Kurla Complex Mumbai",Bandra-Santacruz,Bandra East,3,1429,222941,86300000,False,,Bandra Colony,21,low,magicbricks
+mum-bhandup-west-neptune-ventures-eastern-business-di,Neptune Ventures Eastern Business District,Powai-Central,Bhandup West,,560,120000,46451612,False,,Aarey JVLR,97,low,magicbricks
+mum-bhandup-west-filix-tower,Filix Tower,Powai-Central,Bhandup West,,1450,180000,69677419,False,,Aarey JVLR,101,low,magicbricks
+mum-bhandup-west-bhandup-west-mumbai,Bhandup West Mumbai,Powai-Central,Bhandup West,,520,60000,23225806,False,,Aarey JVLR,99,low,magicbricks
+mum-bhandup-west-pannalal-compound,Pannalal Compound,Powai-Central,Bhandup West,,2900,730000,282580645,False,,Aarey JVLR,96,low,magicbricks
+mum-bhandup-west-rustomjee-bella,Rustomjee Bella,Powai-Central,Bhandup West,2,576,45500,17612903,False,,Aarey JVLR,101,low,magicbricks
+mum-bhandup-west-mahindra-splendour,Mahindra Splendour,Powai-Central,Bhandup West,3,1177,97000,37548387,False,,Aarey JVLR,100,low,magicbricks
+mum-bhandup-west-btm-jainam-elysium,BTM Jainam Elysium,Powai-Central,Bhandup West,2,851,65000,25161290,False,,Aarey JVLR,106,low,magicbricks
+mum-bhandup-west-srishti-square,Srishti Square,Powai-Central,Bhandup West,,448,55000,21290322,False,,Aarey JVLR,105,low,magicbricks
+mum-bhandup-west-kalpataru-crest,Kalpataru Crest,Powai-Central,Bhandup West,2/3,805,60000,23450000,False,,Aarey JVLR,104,low,magicbricks
+mum-bhandup-west-mayuresh-residency,MAYURESH RESIDENCY,Powai-Central,Bhandup West,2,707,48000,18580645,False,,Aarey JVLR,100,low,magicbricks
+mum-bhandup-west-mayuresh-park,Mayuresh Park,Powai-Central,Bhandup West,2,850,42000,16258064,False,,Aarey JVLR,103,low,magicbricks
+mum-bhandup-west-godrej-nurture,Godrej Nurture,Powai-Central,Bhandup West,2/3,983,62000,24000000,False,,Aarey JVLR,103,low,magicbricks
+mum-bhandup-west-lodha-corinthia,Lodha Corinthia,Powai-Central,Bhandup West,2/3,804,56316,21800000,False,,Aarey JVLR,105,low,magicbricks
+mum-bhandup-west-wmi-ashford-regal,WMI Ashford Regal,Powai-Central,Bhandup West,2,650,43141,16700000,False,,Aarey JVLR,100,low,magicbricks
+mum-bhandup-west-adani-airica,Adani Airica,Powai-Central,Bhandup West,4,1730,138983,53800000,False,,Aarey JVLR,99,low,magicbricks
+mum-bhandup-west-arkade-rare,Arkade Rare,Powai-Central,Bhandup West,2,680,49600,19200000,False,,Aarey JVLR,96,low,magicbricks
+mum-bhandup-west-ganesh-nagar-bhandup-west-mumbai,Ganesh Nagar Bhandup West Mumbai,Powai-Central,Bhandup West,,488,28416,11000000,False,,Aarey JVLR,96,low,magicbricks
+mum-bhandup-west-marathon-neohomes,Marathon NeoHomes,Powai-Central,Bhandup West,1,355,19710,7630000,False,,Aarey JVLR,102,low,magicbricks
+mum-bhandup-west-dss-mahavir-universe,DSS Mahavir Universe,Powai-Central,Bhandup West,3,850,60708,23500000,False,,Aarey JVLR,96,low,magicbricks
+mum-borivali-west-borivali-west-mumbai,"Borivali West, Mumbai",Western Suburbs North,Borivali West,1/2/3,725,57500,22258064,False,,Borivali West,4,low,magicbricks
+mum-borivali-west-neel-tower,Neel Tower,Western Suburbs North,Borivali West,3,1000,70000,27096774,False,,Borivali West,12,low,magicbricks
+mum-borivali-west-romell-empress,Romell Empress,Western Suburbs North,Borivali West,1/2,650,41000,15870967,False,,Borivali West,12,low,magicbricks
+mum-borivali-west-harshmaan-crescent-heights,Harshmaan Crescent Heights,Western Suburbs North,Borivali West,3,1034,60000,23225806,False,,Borivali West,9,low,magicbricks
+mum-borivali-west-kosmos-nandanvan,Kosmos Nandanvan,Western Suburbs North,Borivali West,,550,110000,42580645,False,,Borivali West,4,low,magicbricks
+mum-borivali-west-vini-gardens-2,Vini Gardens 2,Western Suburbs North,Borivali West,2,696,50000,19354838,False,,Borivali West,4,low,magicbricks
+mum-borivali-west-prathana-acharya-ashram,Prathana Acharya Ashram,Western Suburbs North,Borivali West,3,1000,70000,27096774,False,,Borivali West,7,low,magicbricks
+mum-borivali-west-prasham-vishal-2,Prasham Vishal 2,Western Suburbs North,Borivali West,1,430,42000,16258064,False,,Borivali West,12,low,magicbricks
+mum-borivali-west-kanakia-privaasa,Kanakia Privaasa,Western Suburbs North,Borivali West,2/3,709,67941,26300000,False,,Borivali West,9,low,magicbricks
+mum-borivali-west-kalpataru-advay,Kalpataru Advay,Western Suburbs North,Borivali West,4,1835,175150,67800000,False,,Borivali West,8,low,magicbricks
+mum-borivali-west-sumit-kmr-param,Sumit KMR Param,Western Suburbs North,Borivali West,2,792,64325,24900000,False,,Borivali West,12,low,magicbricks
+mum-borivali-west-inspira-aura,Inspira Aura,Western Suburbs North,Borivali West,2,1008,84475,32700000,False,,Borivali West,12,low,magicbricks
+mum-borivali-west-nicco-vanashri,Nicco Vanashri,Western Suburbs North,Borivali West,3,1270,95841,37100000,False,,Borivali West,10,low,magicbricks
+mum-borivali-west-amar-devendra-chsl-eksar-mumbai,"Amar Devendra Chsl, Eksar Mumbai",Western Suburbs North,Borivali West,3,815,71558,27700000,False,,Borivali West,7,low,magicbricks
+mum-borivali-west-kaustubh-park-91-eksar-mumbai,"Kaustubh Park 91, Eksar Mumbai",Western Suburbs North,Borivali West,3,834,76725,29700000,False,,Borivali West,12,low,magicbricks
+mum-borivali-west-bhoomi-airavat,Bhoomi Airavat,Western Suburbs North,Borivali West,4,2368,203050,78600000,False,,Borivali West,7,low,magicbricks
+mum-borivali-west-shraddha-paradise,Shraddha Paradise,Western Suburbs North,Borivali West,2,689,51666,20000000,False,,Borivali West,11,low,magicbricks
+mum-borivali-west-hum-gagansagar,Hum Gagansagar,Western Suburbs North,Borivali West,3,990,79825,30900000,False,,Borivali West,10,low,magicbricks
+mum-borivali-west-navkar-ipsit-anand-mangal,Navkar IPSIT Anand Mangal,Western Suburbs North,Borivali West,2,651,60450,23400000,False,,Borivali West,12,low,magicbricks
+mum-borivali-west-romell-ariana,Romell Ariana,Western Suburbs North,Borivali West,2,701,52183,20200000,False,,Borivali West,9,low,magicbricks
+mum-cbd-belapur-mahavir-icon-commercial,Mahavir Icon Commercial,Navi Mumbai,CBD Belapur,,600,95000,36774193,False,,CBD Belapur Metro,13,low,magicbricks
+mum-cbd-belapur-vansh-mayuresh-square,Vansh Mayuresh Square,Navi Mumbai,CBD Belapur,,1500,300000,116129032,False,,CBD Belapur Metro,11,low,magicbricks
+mum-cbd-belapur-sector-15-cbd-belapur-navi-mumbai,Sector 15 CBD Belapur Navi Mumbai,Navi Mumbai,CBD Belapur,1,1100,150000,82300000,False,,CBD Belapur Metro,3,low,magicbricks
+mum-cbd-belapur-cbd-belapur-navi-mumbai,CBD Belapur Navi Mumbai,Navi Mumbai,CBD Belapur,3,1100,225000,23250000,False,,CBD Belapur Metro,14,low,magicbricks
+mum-cbd-belapur-neelsidhi-splendour,Neelsidhi Splendour,Navi Mumbai,CBD Belapur,3,1000,74999,29031870,False,,CBD Belapur Metro,13,low,magicbricks
+mum-cbd-belapur-mayuresh-chambers,Mayuresh Chambers,Navi Mumbai,CBD Belapur,,2050,180000,69677419,False,,CBD Belapur Metro,8,low,magicbricks
+mum-cbd-belapur-akshar-sai-radiance,Akshar Sai Radiance,Navi Mumbai,CBD Belapur,4,2000,200000,77419354,False,,CBD Belapur Metro,7,low,magicbricks
+mum-cbd-belapur-v-times-square,V Times Square,Navi Mumbai,CBD Belapur,,570,130000,50322580,False,,CBD Belapur Metro,12,low,magicbricks
+mum-cbd-belapur-iia-belapur,Iia Belapur,Navi Mumbai,CBD Belapur,,650,58000,22451612,False,,CBD Belapur Metro,14,low,magicbricks
+mum-cbd-belapur-dharti-dhan-nms-midas,Dharti Dhan NMS Midas,Navi Mumbai,CBD Belapur,,885,74916,29000000,False,,CBD Belapur Metro,11,low,magicbricks
+mum-cbd-belapur-sara-antalya,Sara Antalya,Navi Mumbai,CBD Belapur,3/4,1270,109275,42300000,False,,CBD Belapur Metro,12,low,magicbricks
+mum-cbd-belapur-one-platinum,One Platinum,Navi Mumbai,CBD Belapur,,1556,199175,77100000,False,,CBD Belapur Metro,8,low,magicbricks
+mum-cbd-belapur-pioneer-the-view,Pioneer The View,Navi Mumbai,CBD Belapur,2,834,52958,20500000,False,,CBD Belapur Metro,7,low,magicbricks
+mum-cbd-belapur-gauri-commercial-complex,Gauri Commercial Complex,Navi Mumbai,CBD Belapur,,450,34875,13500000,False,,CBD Belapur Metro,9,low,magicbricks
+mum-cbd-belapur-gami-satyam-business-avenue-sector-1,"Gami Satyam Business Avenue, Sector 15 CBD Belapur Navi Mumbai",Navi Mumbai,CBD Belapur,,700,54508,21100000,False,,CBD Belapur Metro,3,low,magicbricks
+mum-cbd-belapur-shreenathji-delta-vistara-ekta-vihar,"Shreenathji Delta Vistara, Ekta Vihar Navi Mumbai",Navi Mumbai,CBD Belapur,3,1050,47791,18500000,False,,CBD Belapur Metro,14,low,magicbricks
+mum-cbd-belapur-the-bliss,The Bliss,Navi Mumbai,CBD Belapur,2,975,49083,19000000,False,,CBD Belapur Metro,11,low,magicbricks
+mum-cbd-belapur-dream-digit,Dream Digit,Navi Mumbai,CBD Belapur,,608,29708,11500000,False,,CBD Belapur Metro,14,low,magicbricks
+mum-cbd-belapur-shikara-parsik-hill,Shikara Parsik Hill,Navi Mumbai,CBD Belapur,5,4500,193750,75000000,False,,CBD Belapur Metro,15,low,magicbricks
+mum-chandivali-tulipia-and-tilia-apartment,Tulipia And Tilia Apartment,Powai-Central,Chandivali,3,1050,130000,50322580,False,,Saki Naka,17,low,magicbricks
+mum-chandivali-kalpataru-woods-ville,Kalpataru Woods Ville,Powai-Central,Chandivali,3,1237,130000,50322580,False,,Saki Naka,18,low,magicbricks
+mum-chandivali-nahar-amaryllis-towers-and-plaza,Nahar Amaryllis Towers and Plaza,Powai-Central,Chandivali,1,400,61000,23612903,False,,Saki Naka,18,low,magicbricks
+mum-chandivali-raheja-ascencio,Raheja Ascencio,Powai-Central,Chandivali,2/3,828,94000,36387096,False,,Saki Naka,21,low,magicbricks
+mum-chandivali-universal-business-park,universal business park,Powai-Central,Chandivali,,1000,180000,69677419,False,,Saki Naka,17,low,magicbricks
+mum-chandivali-crescent-silverwoods,Crescent Silverwoods,Powai-Central,Chandivali,1/2,435,59000,22838709,False,,Saki Naka,17,low,magicbricks
+mum-chandivali-synchronicity,Synchronicity,Powai-Central,Chandivali,2/3,1090,115000,33500000,False,,Saki Naka,27,low,magicbricks
+mum-chandivali-chandivali-mumbai,"Chandivali, Mumbai",Powai-Central,Chandivali,2,650,77500,30000000,False,,Saki Naka,18,low,magicbricks
+mum-chandivali-nahar-amrit-shakti,Nahar Amrit Shakti,Powai-Central,Chandivali,2/3,1050,95000,38850000,False,,Saki Naka,20,low,magicbricks
+mum-chandivali-nahar-amrit-shakti-powai,Nahar Amrit Shakti powai,Powai-Central,Chandivali,3/4,1864,125000,77850000,False,,Saki Naka,22,low,magicbricks
+mum-chandivali-nahar-water-lily-and-white-lily,Nahar Water Lily And White Lily,Powai-Central,Chandivali,2,750,73000,28258064,False,,Saki Naka,20,low,magicbricks
+mum-chandivali-nahars-chandi-valley,Nahars Chandi Valley,Powai-Central,Chandivali,3,1537,152675,59100000,False,,Saki Naka,19,low,magicbricks
+mum-chandivali-godrej-urban-park,Godrej Urban Park,Powai-Central,Chandivali,2,650,62516,24200000,False,,Saki Naka,17,low,magicbricks
+mum-chandivali-shapoorji-pallonji-vicinia-sangharsh,"Shapoorji Pallonji Vicinia, Sangharsh Nagar Mumbai",Powai-Central,Chandivali,3,1061,90416,35000000,False,,Saki Naka,28,low,magicbricks
+mum-chandivali-raheja-vista-raheja-vihar-mumbai,"Raheja Vista, Raheja Vihar Mumbai",Powai-Central,Chandivali,2,753,74658,28900000,False,,Saki Naka,17,low,magicbricks
+mum-chandivali-dedhia-palatial-height,Dedhia Palatial Height,Powai-Central,Chandivali,3,1050,73625,28500000,False,,Saki Naka,22,low,magicbricks
+mum-chembur-wadhwa-dukes-horizon,Wadhwa Dukes Horizon,Chembur-Wadala,Chembur,3,1050,120000,46451612,False,,Ghatkopar,60,low,magicbricks
+mum-chembur-safal-twins,Safal Twins,Chembur-Wadala,Chembur,3,1200,110000,42580645,False,,Ghatkopar,64,low,magicbricks
+mum-chembur-thapar-suburbia,Thapar Suburbia,Chembur-Wadala,Chembur,3,975,140000,54193548,False,,BKC,63,low,magicbricks
+mum-chembur-chembur-mumbai,"Chembur, Mumbai",Chembur-Wadala,Chembur,1/2/3/5,772,120000,46451612,False,,BKC,59,low,magicbricks
+mum-chembur-tridhaatu-morya,Tridhaatu Morya,Chembur-Wadala,Chembur,2,710,65000,25161290,False,,Ghatkopar,62,low,magicbricks
+mum-chembur-mighty-universal-majestic,Mighty Universal Majestic,Chembur-Wadala,Chembur,,2650,530000,205161290,False,,BKC,65,low,magicbricks
+mum-chembur-raunak-centrum,Raunak Centrum,Chembur-Wadala,Chembur,,2800,1100000,425806451,False,,BKC,63,low,magicbricks
+mum-chembur-skg-mumbadevi,SKG Mumbadevi,Chembur-Wadala,Chembur,2,655,85000,32903225,False,,Ghatkopar,67,low,magicbricks
+mum-chembur-godrej-rks,Godrej RKS,Chembur-Wadala,Chembur,3,1500,200000,77419354,False,,BKC,60,low,magicbricks
+mum-chembur-royale-adityaraj-supreme,Royale Adityaraj Supreme,Chembur-Wadala,Chembur,2,800,72000,27870967,False,,Ghatkopar,67,low,magicbricks
+mum-chembur-thapar-le-parc,Thapar Le Parc,Chembur-Wadala,Chembur,3,1136,140000,54193548,False,,BKC,65,low,magicbricks
+mum-chembur-heritage-pride,Heritage Pride,Chembur-Wadala,Chembur,4,1600,220000,85161290,False,,Ghatkopar,61,low,magicbricks
+mum-chembur-supreme-boulevard,Supreme Boulevard,Chembur-Wadala,Chembur,4,1962,187679,72650000,False,,Ghatkopar,61,low,magicbricks
+mum-chembur-hiranandani-maitri-park,Hiranandani Maitri Park,Chembur-Wadala,Chembur,3,1003,140016,54200000,False,,Ghatkopar,65,low,magicbricks
+mum-chembur-purva-clermont,Purva Clermont,Chembur-Wadala,Chembur,2,616,59416,23000000,False,,BKC,66,low,magicbricks
+mum-chembur-vaibhavlaxmi-corporate-park,Vaibhavlaxmi Corporate Park,Chembur-Wadala,Chembur,,1780,83570,32349999,False,,Ghatkopar,61,low,magicbricks
+mum-chembur-rustomjee-balmoral,Rustomjee Balmoral,Chembur-Wadala,Chembur,4,2086,304574,117899999,False,,BKC,66,low,magicbricks
+mum-chembur-crest-golfshire,Crest Golfshire,Chembur-Wadala,Chembur,4,1876,176183,68200000,False,,Ghatkopar,56,low,magicbricks
+mum-chembur-runwal-woods,Runwal Woods,Chembur-Wadala,Chembur,3,1325,106562,41249999,False,,Ghatkopar,63,low,magicbricks
+mum-chembur-chandak-highscape-city,Chandak Highscape City,Chembur-Wadala,Chembur,1/2,638,37329,14450000,False,,Ghatkopar,62,low,magicbricks
+mum-chembur-roswalt-raya,Roswalt Raya,Chembur-Wadala,Chembur,2,727,55283,21400000,False,,Ghatkopar,59,low,magicbricks
+mum-chembur-godrej-sky-terraces,Godrej Sky Terraces,Chembur-Wadala,Chembur,4,1900,224750,87000000,False,,Ghatkopar,58,low,magicbricks
+mum-chembur-satyam-solaris-deonar-chembur-mumbai,"Satyam Solaris , Deonar Chembur Mumbai",Chembur-Wadala,Chembur,2,885,93516,36200000,False,,Ghatkopar,62,low,magicbricks
+mum-chembur-skg-one-uttam,SKG One Uttam,Chembur-Wadala,Chembur,2,800,81891,31700000,False,,Ghatkopar,58,low,magicbricks
+mum-colaba-sangam-bhavan,Sangam Bhavan,South Mumbai,Colaba,1,700,100000,38709677,False,,Cuffe Parade,16,low,magicbricks
+mum-colaba-colaba-mumbai,"Colaba, Mumbai",South Mumbai,Colaba,1/2/3,1100,250000,42500000,False,,Cuffe Parade,16,low,magicbricks
+mum-colaba-sea-kunal-waterfront-tower,Sea Kunal Waterfront Tower,South Mumbai,Colaba,,525,160000,61935483,False,,Cuffe Parade,13,low,magicbricks
+mum-colaba-veena-tower,Veena Tower,South Mumbai,Colaba,1/4,4060,110000,200000000,False,,Cuffe Parade,16,low,magicbricks
+mum-colaba-pushpa-bhavan,Pushpa Bhavan,South Mumbai,Colaba,1,650,120000,46451612,False,,Cuffe Parade,16,low,magicbricks
+mum-colaba-jamuna-sagar,Jamuna Sagar,South Mumbai,Colaba,1,600,80000,30967741,False,,Cuffe Parade,14,low,magicbricks
+mum-colaba-apollo-bandar-mumbai,Apollo Bandar Mumbai,South Mumbai,Colaba,4,2400,260000,151900000,False,,Cuffe Parade,24,low,magicbricks
+mum-colaba-world-trade-center,World Trade Center,South Mumbai,Colaba,,2953,800000,309677419,False,,Cuffe Parade,14,low,magicbricks
+mum-colaba-owner-court,Owner Court,South Mumbai,Colaba,1,500,110000,42580645,False,,Cuffe Parade,22,low,magicbricks
+mum-colaba-usha-sadan-apartment,Usha Sadan Apartment,South Mumbai,Colaba,,,78000,30193548,False,,Cuffe Parade,13,low,magicbricks
+mum-colaba-ajanta-apartment,Ajanta Apartment,South Mumbai,Colaba,2,1500,180833,70000000,False,,Cuffe Parade,19,low,magicbricks
+mum-colaba-surat-bahar,SURAT BAHAR,South Mumbai,Colaba,2,700,77500,30000000,False,,Cuffe Parade,24,low,magicbricks
+mum-colaba-gitanjali-building,Gitanjali Building,South Mumbai,Colaba,3,1100,167916,65000000,False,,Cuffe Parade,21,low,magicbricks
+mum-colaba-sagar-sangeet,Sagar Sangeet,South Mumbai,Colaba,2/3,1116,177604,68750000,False,,Cuffe Parade,15,low,magicbricks
+mum-colaba-cusrow-baug-colony-mumbai,Cusrow Baug Colony Mumbai,South Mumbai,Colaba,2,1200,122708,47500000,False,,Cuffe Parade,16,low,magicbricks
+mum-colaba-ganesh-murti-nagar-mumbai,Ganesh Murti Nagar Mumbai,South Mumbai,Colaba,2,850,135625,52500000,False,,Cuffe Parade,21,low,magicbricks
+mum-cuffe-parade-jolly-maker-apartment,Jolly Maker Apartment,South Mumbai,Cuffe Parade,2/3,1290,1975000,185000000,False,,Cuffe Parade,2,low,magicbricks
+mum-cuffe-parade-maker-tower,Maker Tower,South Mumbai,Cuffe Parade,1/2/3/4,1150,240000,97500000,False,,Cuffe Parade,5,low,magicbricks
+mum-cuffe-parade-world-trade-center,World Trade Center,South Mumbai,Cuffe Parade,,1042,420000,30500000,False,,Cuffe Parade,5,low,magicbricks
+mum-cuffe-parade-cuffe-parade-mumbai,Cuffe Parade Mumbai,South Mumbai,Cuffe Parade,2/3,1061,150000,90000000,False,,Cuffe Parade,8,low,magicbricks
+mum-cuffe-parade-dsk-durgamata-towers,DSK Durgamata Towers,South Mumbai,Cuffe Parade,3/5,3350,815000,140000000,False,,Cuffe Parade,7,low,magicbricks
+mum-cuffe-parade-parsipolis-apartment,Parsipolis Apartment,South Mumbai,Cuffe Parade,2,1035,229999,89031870,False,,Cuffe Parade,5,low,magicbricks
+mum-cuffe-parade-sea-lord,Sea Lord,South Mumbai,Cuffe Parade,2/3,1600,300000,75000000,False,,Cuffe Parade,6,low,magicbricks
+mum-cuffe-parade-satnam-apartment,Satnam Apartment,South Mumbai,Cuffe Parade,2,850,250000,96774193,False,,Cuffe Parade,7,low,magicbricks
+mum-cuffe-parade-jupiter-apartment,Jupiter Apartment,South Mumbai,Cuffe Parade,3,1342,284166,110000000,False,,Cuffe Parade,6,low,magicbricks
+mum-cuffe-parade-ameeta-apartments,Ameeta Apartments,South Mumbai,Cuffe Parade,3,1015,193750,75000000,False,,Cuffe Parade,2,low,magicbricks
+mum-cuffe-parade-ganesh-murti-nagar-mumbai,Ganesh Murti Nagar Mumbai,South Mumbai,Cuffe Parade,2,850,135625,52500000,False,,Cuffe Parade,7,low,magicbricks
+mum-dadar-west-peace-heaven,Peace Heaven,South Mumbai,Dadar West,2,750,200000,77419354,False,,Dadar Metro,7,low,magicbricks
+mum-dadar-west-dadar-west-mumbai,"Dadar West, Mumbai",South Mumbai,Dadar West,2/3,780,162499,34000000,False,,Dadar Metro,8,low,magicbricks
+mum-dadar-west-babasaheb-ambedkar-nagar-dadar-west,Babasaheb Ambedkar Nagar Dadar West Mumbai,South Mumbai,Dadar West,,2000,400000,154838709,False,,Dadar Metro,10,moderate,magicbricks
+mum-dadar-west-sugee-sanskruti,Sugee Sanskruti,South Mumbai,Dadar West,1,430,75000,29032258,False,,Dadar Metro,5,low,magicbricks
+mum-dadar-west-kohinoor-altissimo,Kohinoor Altissimo,South Mumbai,Dadar West,3/4,1750,350000,135483870,False,,Dadar Metro,4,low,magicbricks
+mum-dadar-west-ratan-address,Ratan Address,South Mumbai,Dadar West,3,999,200000,55000000,False,,Dadar Metro,9,low,magicbricks
+mum-dadar-west-the-baya-midtown,The Baya Midtown,South Mumbai,Dadar West,2,772,130000,38600000,False,,Dadar Metro,13,moderate,magicbricks
+mum-dadar-west-kohinoor-square,Kohinoor Square,South Mumbai,Dadar West,,5000,1525000,590322580,False,,Dadar Metro,10,low,magicbricks
+mum-dadar-west-mindset-the-ruby,Mindset The Ruby,South Mumbai,Dadar West,,,4000000,1548387096,False,,Dadar Metro,4,low,magicbricks
+mum-dadar-west-bhawani-sankar-mumbai,Bhawani Sankar Mumbai,South Mumbai,Dadar West,,455,150000,58064516,False,,Dadar Metro,9,low,magicbricks
+mum-dadar-west-sugee-sadan,Sugee Sadan,South Mumbai,Dadar West,3,1450,170000,65806451,False,,Dadar Metro,9,low,magicbricks
+mum-dadar-west-sanghvi-morya,Sanghvi Morya,South Mumbai,Dadar West,4,1277,183158,70900000,False,,Dadar Metro,11,moderate,magicbricks
+mum-dadar-west-colo-color-sigma-garnet,Colo Color Sigma Garnet,South Mumbai,Dadar West,2,769,92225,35700000,False,,Siddhivinayak,9,low,magicbricks
+mum-dadar-west-avhad-oasis,Avhad Oasis,South Mumbai,Dadar West,2,753,113408,43900000,False,,Dadar Metro,10,low,magicbricks
+mum-dadar-west-suraj-park-view,Suraj Park View,South Mumbai,Dadar West,2,620,88091,34100000,False,,Dadar Metro,8,low,magicbricks
+mum-dadar-west-suraj-palette-dadar-west,Suraj Palette Dadar West,South Mumbai,Dadar West,2,906,154741,59900000,False,,Dadar Metro,6,low,magicbricks
+mum-dadar-west-shivaji-park-mumbai,Shivaji Park Mumbai,South Mumbai,Dadar West,4,1630,325241,125900000,False,,Dadar Metro,10,low,magicbricks
+mum-dadar-west-adityaraj-midtown,Adityaraj Midtown,South Mumbai,Dadar West,2,597,83958,32500000,False,,Dadar Metro,9,low,magicbricks
+mum-dadar-west-suraj-park-view-shivaji-park-mumbai,"Suraj Park View, Shivaji Park Mumbai",South Mumbai,Dadar West,2,670,90158,34900000,False,,Dadar Metro,10,moderate,magicbricks
+mum-dahisar-east-sadguru-avenue,Sadguru Avenue,Western Suburbs North,Dahisar East,2,600,50000,19354838,False,,Borivali West,50,low,magicbricks
+mum-dahisar-east-rang-rekha,Rang Rekha,Western Suburbs North,Dahisar East,1,400,36000,13935483,False,,Borivali West,46,low,magicbricks
+mum-dahisar-east-dahisar-east-mumbai,Dahisar East Mumbai,Western Suburbs North,Dahisar East,1/2,500,40000,7500000,False,,Borivali West,53,low,magicbricks
+mum-dahisar-east-lodha-casa-essenza,Lodha Casa Essenza,Western Suburbs North,Dahisar East,2,792,35000,13548387,False,,Borivali West,55,low,magicbricks
+mum-dahisar-east-nl-aryavarta,NL Aryavarta,Western Suburbs North,Dahisar East,3,945,65000,25161290,False,,Borivali West,51,low,magicbricks
+mum-dahisar-east-harsh-niketan,Harsh Niketan,Western Suburbs North,Dahisar East,1,430,25000,9677419,False,,Borivali West,51,low,magicbricks
+mum-dahisar-east-db-ozone,DB Ozone,Western Suburbs North,Dahisar East,2,665,33000,12774193,False,,Borivali West,52,low,magicbricks
+mum-dahisar-east-n-rose-northern-hills,N Rose Northern Hills,Western Suburbs North,Dahisar East,2/3,701,46000,20600000,False,,Borivali West,52,low,magicbricks
+mum-dahisar-east-sanskruti-splendour,Sanskruti Splendour,Western Suburbs North,Dahisar East,2,500,45000,17419354,False,,Borivali West,54,low,magicbricks
+mum-dahisar-east-shiv-parvati-chs,Shiv Parvati CHS,Western Suburbs North,Dahisar East,2,650,65000,25161290,False,,Borivali West,47,low,magicbricks
+mum-dahisar-east-gomant-kutir-apartments,Gomant Kutir Apartments,Western Suburbs North,Dahisar East,2,690,47000,18193548,False,,Borivali West,49,low,magicbricks
+mum-dahisar-east-ornate-solitaire,Ornate Solitaire,Western Suburbs North,Dahisar East,2,734,49470,19149999,False,,Borivali West,46,low,magicbricks
+mum-dahisar-east-modirealty-acacia,Modirealty Acacia,Western Suburbs North,Dahisar East,3,756,53733,20800000,False,,Borivali West,43,low,magicbricks
+mum-dahisar-east-shailendra-nagar-mumbai,Shailendra Nagar Mumbai,Western Suburbs North,Dahisar East,2,654,42366,16399999,False,,Borivali West,49,low,magicbricks
+mum-dahisar-east-dynamix-avanya,Dynamix Avanya,Western Suburbs North,Dahisar East,2,537,28933,11200000,False,,Borivali West,48,low,magicbricks
+mum-dahisar-east-sheth-midori,Sheth Midori,Western Suburbs North,Dahisar East,2,600,41333,16000000,False,,Borivali West,53,low,magicbricks
+mum-ghatkopar-east-ghatkopar-east-mumbai,"Ghatkopar East, Mumbai",Powai-Central,Ghatkopar East,2/4,681,150000,17250000,False,,Ghatkopar,15,low,magicbricks
+mum-ghatkopar-east-shri-ganesh-royal-altezza,Shri Ganesh Royal Altezza,Powai-Central,Ghatkopar East,2,737,57000,24000000,False,,Ghatkopar,13,low,magicbricks
+mum-ghatkopar-east-rare-rising-city,Rare Rising City,Powai-Central,Ghatkopar East,2/3,900,70000,30750000,False,,Ghatkopar,17,low,magicbricks
+mum-ghatkopar-east-neelam-solstice,Neelam Solstice,Powai-Central,Ghatkopar East,1/3,1352,57500,22258064,False,,Ghatkopar,13,low,magicbricks
+mum-ghatkopar-east-shreeji-laxmi,Shreeji Laxmi,Powai-Central,Ghatkopar East,2/3,1000,80000,30967741,False,,Ghatkopar,21,low,magicbricks
+mum-ghatkopar-east-jairaj-happy-jade-gardens,Jairaj Happy Jade Gardens,Powai-Central,Ghatkopar East,3,1310,130000,50322580,False,,Ghatkopar,11,low,magicbricks
+mum-ghatkopar-east-vikrant-apartment,Vikrant Apartment,Powai-Central,Ghatkopar East,2,750,70000,27096774,False,,Ghatkopar,14,low,magicbricks
+mum-ghatkopar-east-kukreja-palace,Kukreja Palace,Powai-Central,Ghatkopar East,5,3400,250000,96774193,False,,Ghatkopar,22,low,magicbricks
+mum-ghatkopar-east-gurukrupa-divyam,Gurukrupa Divyam,Powai-Central,Ghatkopar East,3,1000,110000,42580645,False,,Ghatkopar,20,low,magicbricks
+mum-ghatkopar-east-om-neeldhara,OM Neeldhara,Powai-Central,Ghatkopar East,3,1088,94291,36500000,False,,Ghatkopar,20,low,magicbricks
+mum-ghatkopar-east-kabra-embraze,Kabra Embraze,Powai-Central,Ghatkopar East,2/3,1048,86670,33550000,False,,Ghatkopar,19,low,magicbricks
+mum-ghatkopar-east-silver-stellar,Silver Stellar,Powai-Central,Ghatkopar East,3/4,1567,129425,50100000,False,,Ghatkopar,11,low,magicbricks
+mum-ghatkopar-east-adeshwar-72-parksyde,Adeshwar 72 ParkSyde,Powai-Central,Ghatkopar East,1,407,32808,12700000,False,,Ghatkopar,13,low,magicbricks
+mum-ghatkopar-east-shree-sai-shankar,Shree Sai Shankar,Powai-Central,Ghatkopar East,2,676,64583,25000000,False,,Ghatkopar,16,low,magicbricks
+mum-ghatkopar-east-micl-aaradhya-onepark,MICL Aaradhya OnePark,Powai-Central,Ghatkopar East,3,1338,155516,60199999,False,,Ghatkopar,14,low,magicbricks
+mum-ghatkopar-east-adani-the-views,Adani The Views,Powai-Central,Ghatkopar East,3,1110,95583,37000000,False,,Ghatkopar,18,low,magicbricks
+mum-ghatkopar-east-zen-77-crossroads-by-l-t-realty,Zen 77 Crossroads by L & T Realty,Powai-Central,Ghatkopar East,2,573,37458,14500000,False,,Ghatkopar,22,low,magicbricks
+mum-ghatkopar-east-adityaraj-gateway,Adityaraj Gateway,Powai-Central,Ghatkopar East,2,676,32033,12400000,False,,Ghatkopar,16,low,magicbricks
+mum-ghatkopar-east-adityaraj-gateway-pant-nagar-mumbai,"Adityaraj Gateway, Pant Nagar Mumbai",Powai-Central,Ghatkopar East,2,676,32033,12400000,False,,Ghatkopar,19,low,magicbricks
+mum-ghodbunder-road-wagle-industrial-estate-thane,Wagle Industrial Estate Thane,Thane,Ghodbunder Road,,7731,915000,354193548,False,,Borivali West,216,low,magicbricks
+mum-ghodbunder-road-centrum-it-park,centrum it park,Thane,Ghodbunder Road,,3900,700000,270967741,False,,Borivali West,213,low,magicbricks
+mum-ghodbunder-road-ghodbunder-road-thane,"Ghodbunder Road, Thane",Thane,Ghodbunder Road,2,700,47000,18193548,False,,Borivali West,207,low,magicbricks
+mum-ghodbunder-road-opal-square,Opal Square,Thane,Ghodbunder Road,,1100,210000,81290322,False,,Borivali West,214,low,magicbricks
+mum-ghodbunder-road-thane-west-thane,Thane West Thane,Thane,Ghodbunder Road,,680,127500,49354838,False,,Borivali West,214,low,magicbricks
+mum-ghodbunder-road-wagle-estate-thane,Wagle Estate Thane,Thane,Ghodbunder Road,,384,53760,20810322,False,,Borivali West,209,low,magicbricks
+mum-ghodbunder-road-lodha-supremus-2,Lodha Supremus 2,Thane,Ghodbunder Road,,1014,150000,58064516,False,,Borivali West,213,low,magicbricks
+mum-ghodbunder-road-bhairaav-milestone-wagle-industrial,"Bhairaav Milestone, Wagle Industrial Estate Thane",Thane,Ghodbunder Road,,5000,975000,377419354,False,,Borivali West,214,low,magicbricks
+mum-ghodbunder-road-nitco-biz-park,Nitco Biz Park,Thane,Ghodbunder Road,,1000,120000,46451612,False,,Borivali West,215,low,magicbricks
+mum-ghodbunder-road-lokpuram-complex,Lokpuram Complex,Thane,Ghodbunder Road,2,600,28000,10838709,False,,Borivali West,210,low,magicbricks
+mum-ghodbunder-road-hiranandani-the-walk-ventana,Hiranandani The Walk Ventana,Thane,Ghodbunder Road,1,450,35000,13548387,False,,Borivali West,212,low,magicbricks
+mum-ghodbunder-road-piramal-vaikunth,Piramal Vaikunth,Thane,Ghodbunder Road,2,530,32000,12387096,False,,Borivali West,208,low,magicbricks
+mum-ghodbunder-road-ashwin-sheth-avalon,Ashwin Sheth Avalon,Thane,Ghodbunder Road,3,1469,116250,45000000,False,,Borivali West,217,low,magicbricks
+mum-ghodbunder-road-trividh-naupada-thane,"Trividh, Naupada Thane",Thane,Ghodbunder Road,3,1112,70266,27200000,False,,Borivali West,208,low,magicbricks
+mum-ghodbunder-road-midas-o22-business-park-wagle-estate,"Midas O22 Business Park, Wagle Estate Thane",Thane,Ghodbunder Road,,1495,107208,41500000,False,,Borivali West,212,low,magicbricks
+mum-ghodbunder-road-squarefeet-green-square-kavesar-than,"Squarefeet Green Square, Kavesar Thane",Thane,Ghodbunder Road,2,632,24490,9480000,False,,Borivali West,206,low,magicbricks
+mum-ghodbunder-road-piramal-vaikunth-balkum-pada-thane,"Piramal Vaikunth, Balkum Pada Thane",Thane,Ghodbunder Road,1/2,518,27977,10830000,False,,Borivali West,214,low,magicbricks
+mum-ghodbunder-road-l-t-evara-heights,L & T Evara Heights,Thane,Ghodbunder Road,3,1057,75175,29100000,False,,Borivali West,208,low,magicbricks
+mum-ghodbunder-road-puravankara-purva-panorama,Puravankara Purva Panorama,Thane,Ghodbunder Road,3,1060,65616,25400000,False,,Borivali West,205,low,magicbricks
+mum-ghodbunder-road-l-t-realty-vayam-wagle-estate-thane,"L&T Realty Vayam, Wagle Estate Thane",Thane,Ghodbunder Road,3,1263,85250,33000000,False,,Borivali West,213,low,magicbricks
+mum-ghodbunder-road-dosti-604-wagle-estate-thane,"Dosti 604, Wagle Estate Thane",Thane,Ghodbunder Road,2,760,41591,16100000,False,,Borivali West,209,low,magicbricks
+mum-ghodbunder-road-ace-parkside-kasarvadavali-thane,"Ace Parkside, Kasarvadavali Thane",Thane,Ghodbunder Road,2,662,23172,8970000,False,,Borivali West,210,low,magicbricks
+mum-ghodbunder-road-mextech-miraya-divine-majiwada-thane,"Mextech Miraya Divine, Majiwada Thane",Thane,Ghodbunder Road,3,1000,51150,19800000,False,,Borivali West,209,low,magicbricks
+mum-ghodbunder-road-puraniks-rumah-bali,Puraniks Rumah Bali,Thane,Ghodbunder Road,1,362,14931,5780000,False,,Borivali West,213,low,magicbricks
+mum-ghodbunder-road-rustomjee-urbania-majiwada-thane,"Rustomjee Urbania, Majiwada Thane",Thane,Ghodbunder Road,2,698,31775,12300000,False,,Borivali West,210,low,magicbricks
+mum-ghodbunder-road-iris-at-kashish-park,IRIS at Kashish Park,Thane,Ghodbunder Road,3,1124,64325,24900000,False,,Borivali West,216,low,magicbricks
+mum-ghodbunder-road-dosti-west-county-balkum-pada-thane,"Dosti West County, Balkum Pada Thane",Thane,Ghodbunder Road,3,1033,46241,17900000,False,,Borivali West,213,low,magicbricks
+mum-ghodbunder-road-hiranandani-westgate-kavesar-thane,"Hiranandani Westgate, Kavesar Thane",Thane,Ghodbunder Road,4,1761,152158,58900000,False,,Borivali West,213,low,magicbricks
+mum-goregaon-east-oberoi-esquire,Oberoi Esquire,Western Suburbs North,Goregaon East,3/4,1515,290000,152500000,False,,Goregaon East (Dindoshi),7,low,magicbricks
+mum-goregaon-east-oberoi-woods,Oberoi Woods,Western Suburbs North,Goregaon East,5/6,1966,280000,108387096,False,,Goregaon East (Dindoshi),3,low,magicbricks
+mum-goregaon-east-lodha-fiorenza,Lodha Fiorenza,Western Suburbs North,Goregaon East,2/3/4,1380,150000,116500000,False,,Goregaon East (Dindoshi),6,low,magicbricks
+mum-goregaon-east-lakshchandi-height,Lakshchandi Height,Western Suburbs North,Goregaon East,3,1350,110000,42580645,False,,Goregaon East (Dindoshi),2,low,magicbricks
+mum-goregaon-east-kshitij-chs,Kshitij CHS,Western Suburbs North,Goregaon East,1,450,48000,18580645,False,,Goregaon East (Dindoshi),5,low,magicbricks
+mum-goregaon-east-buildtech-prayag-heights,Buildtech Prayag Heights,Western Suburbs North,Goregaon East,1,450,45000,17419354,False,,Goregaon East (Dindoshi),6,low,magicbricks
+mum-goregaon-east-avant-hillway,Avant Hillway,Western Suburbs North,Goregaon East,2,680,50000,19354838,False,,Goregaon East (Dindoshi),7,low,magicbricks
+mum-goregaon-east-goregaon-east-mumbai,"Goregaon East, Mumbai",Western Suburbs North,Goregaon East,3,1140,1150000,445161290,False,,Goregaon East (Dindoshi),5,low,magicbricks
+mum-goregaon-east-db-orchid-woods,DB Orchid Woods,Western Suburbs North,Goregaon East,2,985,110000,42580645,False,,Goregaon East (Dindoshi),1,low,magicbricks
+mum-goregaon-east-lotus-corporate-park,Lotus Corporate Park,Western Suburbs North,Goregaon East,,5500,1620000,627096774,False,,Goregaon East (Dindoshi),4,low,magicbricks
+mum-goregaon-east-arkade-vistas,Arkade vistas,Western Suburbs North,Goregaon East,3,1037,89125,34500000,False,,Goregaon East (Dindoshi),2,low,magicbricks
+mum-goregaon-east-oberoi-elysian,Oberoi Elysian,Western Suburbs North,Goregaon East,4/6,2538,288816,111800000,False,,Goregaon East (Dindoshi),7,low,magicbricks
+mum-goregaon-east-shreeram-mehta-marquina-1978,Shreeram Mehta Marquina 1978,Western Suburbs North,Goregaon East,2/3,1130,87833,34000000,False,,Goregaon East (Dindoshi),7,low,magicbricks
+mum-goregaon-east-one-vara,One Vara,Western Suburbs North,Goregaon East,3,1079,80600,31200000,False,,Goregaon East (Dindoshi),3,low,magicbricks
+mum-goregaon-east-agarwal-floresta-oak,Agarwal Floresta Oak,Western Suburbs North,Goregaon East,4,1245,98941,38300000,False,,Goregaon East (Dindoshi),9,low,magicbricks
+mum-goregaon-east-satellite-elegance,Satellite Elegance,Western Suburbs North,Goregaon East,3,1050,121416,47000000,False,,Goregaon East (Dindoshi),8,low,magicbricks
+mum-goregaon-east-raheja-ridgewood,Raheja Ridgewood,Western Suburbs North,Goregaon East,3,1100,120125,46500000,False,,Goregaon East (Dindoshi),2,low,magicbricks
+mum-goregaon-west-ekta-tripolis,Ekta Tripolis,Western Suburbs North,Goregaon West,3,1084,130000,50322580,False,,Goregaon West,9,low,magicbricks
+mum-goregaon-west-silver-serene,Silver Serene,Western Suburbs North,Goregaon West,2,720,70000,16100000,False,,Goregaon West,3,low,magicbricks
+mum-goregaon-west-goregaon-west-mumbai,"Goregaon West, Mumbai",Western Suburbs North,Goregaon West,2,612,65000,25161290,False,,Goregaon West,7,low,magicbricks
+mum-goregaon-west-sunteck-city-avenue-ii,Sunteck City Avenue II,Western Suburbs North,Goregaon West,2/3,980,90000,34838709,False,,Goregaon West,5,low,magicbricks
+mum-goregaon-west-sunteck-city-4th-avenue,Sunteck City 4th Avenue,Western Suburbs North,Goregaon West,2/3,1036,97500,37741935,False,,Goregaon West,6,low,magicbricks
+mum-goregaon-west-sheth-polaris,Sheth Polaris,Western Suburbs North,Goregaon West,3,1740,140000,54193548,False,,Goregaon West,3,low,magicbricks
+mum-goregaon-west-kolte-patil-vivere,Kolte Patil Vivere,Western Suburbs North,Goregaon West,2/3,1050,87499,38500000,False,,Goregaon West,6,low,magicbricks
+mum-goregaon-west-kalpataru-radiance,Kalpataru Radiance,Western Suburbs North,Goregaon West,2/3,838,148500,31500000,False,,Goregaon West,2,low,magicbricks
+mum-goregaon-west-nd-palai-towers,ND Palai Towers,Western Suburbs North,Goregaon West,3,960,88000,34064516,False,,Goregaon West,1,low,magicbricks
+mum-goregaon-west-34-park-estate,34 Park Estate,Western Suburbs North,Goregaon West,2,617,62000,24000000,False,,Goregaon West,4,low,magicbricks
+mum-goregaon-west-siddhartha-nagar-patra-chawl,Siddhartha Nagar Patra Chawl,Western Suburbs North,Goregaon West,2,750,60000,23225806,False,,Goregaon West,7,low,magicbricks
+mum-goregaon-west-arkade-evoke,Arkade Evoke,Western Suburbs North,Goregaon West,3,1234,98683,38200000,False,,Goregaon West,2,low,magicbricks
+mum-goregaon-west-sunteck-altavia,Sunteck Altavia,Western Suburbs North,Goregaon West,3,1500,116895,45249999,False,,Goregaon West,9,low,magicbricks
+mum-goregaon-west-kumar-vibe-mangrove,Kumar Vibe Mangrove,Western Suburbs North,Goregaon West,3,1090,95325,36900000,False,,Goregaon West,5,low,magicbricks
+mum-goregaon-west-narang-valora,Narang Valora,Western Suburbs North,Goregaon West,3/5,1411,157066,60800000,False,,Goregaon West,4,low,magicbricks
+mum-goregaon-west-white-berry-konark-vaayu,White Berry Konark Vaayu,Western Suburbs North,Goregaon West,1,428,30483,11800000,False,,Goregaon West,3,low,magicbricks
+mum-goregaon-west-chandak-34-park-estate,Chandak 34 Park Estate,Western Suburbs North,Goregaon West,2,605,52183,20200000,False,,Goregaon West,9,low,magicbricks
+mum-goregaon-west-goregaon-vivan,Goregaon Vivan,Western Suburbs North,Goregaon West,1,417,28933,11200000,False,,Goregaon West,4,low,magicbricks
+mum-goregaon-west-sahakar-vogue77,Sahakar VOGUE77,Western Suburbs North,Goregaon West,4,1891,219066,84800000,False,,Goregaon West,2,low,magicbricks
+mum-goregaon-west-kalpataru-elaara-bangur-nagar-mumbai,"Kalpataru Elaara, Bangur Nagar Mumbai",Western Suburbs North,Goregaon West,3,1503,168691,65300000,False,,Goregaon West,5,low,magicbricks
+mum-hiranandani-estate-rosa-oasis,Rosa Oasis,Thane,Hiranandani Estate,2,700,45000,17419354,False,,Borivali West,228,low,magicbricks
+mum-hiranandani-estate-bell-blue-hiranandani-estate,bell blue hiranandani estate,Thane,Hiranandani Estate,2,650,48000,18580645,False,,Borivali West,232,low,magicbricks
+mum-hiranandani-estate-hiranandani-estate-hillgrange,Hiranandani Estate Hillgrange,Thane,Hiranandani Estate,3,1070,69000,26709677,False,,Borivali West,232,low,magicbricks
+mum-hiranandani-estate-hiranandani-estate-thane,"Hiranandani Estate, Thane",Thane,Hiranandani Estate,2/3,920,71000,17400000,False,,Borivali West,234,low,magicbricks
+mum-hiranandani-estate-madhav-palacia,Madhav Palacia,Thane,Hiranandani Estate,1,453,27000,10451612,False,,Borivali West,230,low,magicbricks
+mum-hiranandani-estate-hiranandani-tribeca,Hiranandani Tribeca,Thane,Hiranandani Estate,3,1323,78000,30193548,False,,Borivali West,226,low,magicbricks
+mum-hiranandani-estate-hiranandani-estate-canary,Hiranandani Estate Canary,Thane,Hiranandani Estate,2/3,850,75500,11500000,False,,Borivali West,236,low,magicbricks
+mum-hiranandani-estate-hiranandani-estate-park-plaza-c,Hiranandani Estate Park Plaza C,Thane,Hiranandani Estate,,,4000000,1548387096,False,,Borivali West,229,low,magicbricks
+mum-hiranandani-estate-arcadia-shopping-center,Arcadia Shopping Center,Thane,Hiranandani Estate,,240,40000,15483870,False,,Borivali West,226,low,magicbricks
+mum-hiranandani-estate-senina,Senina,Thane,Hiranandani Estate,2,730,45000,17419354,False,,Borivali West,229,low,magicbricks
+mum-hiranandani-estate-hiranandani-lake-enclave,Hiranandani Lake Enclave,Thane,Hiranandani Estate,3/4,1912,90000,40000000,False,,Borivali West,235,low,magicbricks
+mum-hiranandani-estate-hiranandani-the-walk,Hiranandani The Walk,Thane,Hiranandani Estate,1,450,32000,12387096,False,,Borivali West,235,low,magicbricks
+mum-hiranandani-estate-platinum-heritage,Platinum Heritage,Thane,Hiranandani Estate,2,750,38000,14709677,False,,Borivali West,233,low,magicbricks
+mum-hiranandani-estate-hiranandani-villa-grand,Hiranandani Villa Grand,Thane,Hiranandani Estate,2,690,40000,15483870,False,,Borivali West,233,low,magicbricks
+mum-hiranandani-estate-rosa-manhattan,Rosa Manhattan,Thane,Hiranandani Estate,2/3,1023,65000,17750000,False,,Borivali West,235,low,magicbricks
+mum-hiranandani-estate-hiranandani-aralia,Hiranandani Aralia,Thane,Hiranandani Estate,3,1200,102041,39500000,False,,Borivali West,236,low,magicbricks
+mum-hiranandani-estate-one-hiranandani-park,One Hiranandani Park,Thane,Hiranandani Estate,2/3,1300,73625,28500000,False,,Borivali West,231,low,magicbricks
+mum-hiranandani-estate-t-bhimjyani-the-verraton,T Bhimjyani The Verraton,Thane,Hiranandani Estate,3,994,47016,18200000,False,,Borivali West,237,low,magicbricks
+mum-hiranandani-estate-annora,Annora,Thane,Hiranandani Estate,3,1300,129166,50000000,False,,Borivali West,233,low,magicbricks
+mum-hiranandani-estate-puravankara-purva-panorama,Puravankara Purva Panorama,Thane,Hiranandani Estate,3,2050,77758,30099999,False,,Borivali West,233,low,magicbricks
+mum-hiranandani-estate-woodstock-hiranansani-estate,Woodstock Hiranansani estate,Thane,Hiranandani Estate,2,727,54250,21000000,False,,Borivali West,228,low,magicbricks
+mum-hiranandani-estate-hiranandani-estate-tiara,Hiranandani Estate Tiara,Thane,Hiranandani Estate,3,1105,76208,29500000,False,,Borivali West,228,low,magicbricks
+mum-juhu-praneta-apartment,Praneta Apartment,Andheri-Juhu,Juhu,3,1450,650000,251612903,False,,DN Nagar,35,low,magicbricks
+mum-juhu-mittal-palm-beach,Mittal Palm Beach,Andheri-Juhu,Juhu,4,4000,1500000,580645161,False,,DN Nagar,37,low,magicbricks
+mum-juhu-harshjyot-apartment,Harshjyot Apartment,Andheri-Juhu,Juhu,4,3000,900000,348387096,False,,DN Nagar,25,low,magicbricks
+mum-juhu-juhu-mumbai,"Juhu, Mumbai",Andheri-Juhu,Juhu,2/3/4/6,2200,350000,100000000,False,,DN Nagar,27,low,magicbricks
+mum-juhu-bharat-juhu-acropolis,Bharat Juhu Acropolis,Andheri-Juhu,Juhu,3,1200,229999,89031870,False,,DN Nagar,26,low,magicbricks
+mum-juhu-49-ideal,49 Ideal,Andheri-Juhu,Juhu,3,1060,160000,61935483,False,,DN Nagar,37,low,magicbricks
+mum-juhu-imperial-windsor-apartment,Imperial Windsor Apartment,Andheri-Juhu,Juhu,3,1800,550000,212903225,False,,DN Nagar,34,low,magicbricks
+mum-juhu-k-raheja-maestro,K Raheja Maestro,Andheri-Juhu,Juhu,4,3549,779133,301600000,False,,DN Nagar,33,low,magicbricks
+mum-juhu-rustomjee-ashiana-jvpd-scheme-mumbai,"Rustomjee Ashiana, JVPD Scheme Mumbai",Andheri-Juhu,Juhu,3/4,1954,267116,103400000,False,,DN Nagar,37,low,magicbricks
+mum-juhu-gurukrupa-alaknanda,Gurukrupa Alaknanda,Andheri-Juhu,Juhu,5,3782,585900,226800000,False,,DN Nagar,26,low,magicbricks
+mum-juhu-kalpataru-amare,Kalpataru Amare,Andheri-Juhu,Juhu,4/5,3700,588612,227850000,False,,DN Nagar,37,low,magicbricks
+mum-juhu-lotus-arcadian,Lotus Arcadian,Andheri-Juhu,Juhu,3/4,1717,310000,120000000,False,,DN Nagar,32,low,magicbricks
+mum-juhu-beach-heaven,Beach Heaven,Andheri-Juhu,Juhu,2,800,205375,79500000,False,,DN Nagar,28,low,magicbricks
+mum-juhu-shelton-elite,Shelton Elite,Andheri-Juhu,Juhu,3,1356,172437,66750000,False,,DN Nagar,30,low,magicbricks
+mum-kandivali-east-shapoorji-pallonji-astron,Shapoorji Pallonji Astron,Western Suburbs North,Kandivali East,2,763,70000,27096774,False,,Borivali West,53,low,magicbricks
+mum-kandivali-east-acme-oasis,Acme Oasis,Western Suburbs North,Kandivali East,3,920,60000,23225806,False,,Kandivali West,50,low,magicbricks
+mum-kandivali-east-godrej-tranquil,Godrej Tranquil,Western Suburbs North,Kandivali East,2,717,47000,18193548,False,,Kandivali West,56,low,magicbricks
+mum-kandivali-east-uk-luxecity,UK Luxecity,Western Suburbs North,Kandivali East,1,395,30500,11806451,False,,Borivali West,55,low,magicbricks
+mum-kandivali-east-kalpataru-vienta,Kalpataru Vienta,Western Suburbs North,Kandivali East,3,1006,90000,43550000,False,,Borivali West,52,low,magicbricks
+mum-kandivali-east-challenger-tower,Challenger Tower,Western Suburbs North,Kandivali East,3,1325,95000,36774193,False,,Kandivali West,56,low,magicbricks
+mum-kandivali-east-sd-alpine,SD Alpine,Western Suburbs North,Kandivali East,3,1050,91000,35225806,False,,Kandivali West,51,low,magicbricks
+mum-kandivali-east-anita,Anita,Western Suburbs North,Kandivali East,2,534,37000,14322580,False,,Borivali West,51,low,magicbricks
+mum-kandivali-east-sea-gundecha-trillium,Sea Gundecha Trillium,Western Suburbs North,Kandivali East,2,844,78000,30193548,False,,Kandivali West,57,low,magicbricks
+mum-kandivali-east-viceroy-savana,Viceroy SAVANA,Western Suburbs North,Kandivali East,2/3,1014,110000,53200000,False,,Kandivali West,57,low,magicbricks
+mum-kandivali-east-evershine-millenium-paradise,Evershine Millenium Paradise,Western Suburbs North,Kandivali East,2,650,60000,23225806,False,,Borivali West,56,low,magicbricks
+mum-kandivali-east-alpine-shapoorji-pallonji,Alpine Shapoorji Pallonji,Western Suburbs North,Kandivali East,3,1050,100000,38709677,False,,Kandivali West,54,low,magicbricks
+mum-kandivali-east-neighbourhood-society,Neighbourhood Society,Western Suburbs North,Kandivali East,2,660,42000,16258064,False,,Kandivali West,50,low,magicbricks
+mum-kandivali-east-lodha-woods,Lodha Woods,Western Suburbs North,Kandivali East,2/4,750,70000,53000000,False,,Borivali West,51,low,magicbricks
+mum-kandivali-east-uk-iridium,UK Iridium,Western Suburbs North,Kandivali East,2,540,42000,16258064,False,,Borivali West,53,low,magicbricks
+mum-kandivali-east-shapoorji-pallonji-one-hills,Shapoorji Pallonji One Hills,Western Suburbs North,Kandivali East,4,2432,195816,75800000,False,,Kandivali West,47,low,magicbricks
+mum-kandivali-east-godrej-bliss,Godrej Bliss,Western Suburbs North,Kandivali East,1/3,986,45466,17600000,False,,Borivali West,56,low,magicbricks
+mum-kandivali-east-sethia-pride,Sethia Pride,Western Suburbs North,Kandivali East,2,620,48566,18800000,False,,Kandivali West,58,low,magicbricks
+mum-kandivali-east-godrej-reserve,Godrej Reserve,Western Suburbs North,Kandivali East,3/4,2033,169854,65750000,False,,Kandivali West,54,low,magicbricks
+mum-kandivali-east-viceroy-prive-thakur-village,"Viceroy PRIVE, Thakur Village",Western Suburbs North,Kandivali East,5,2995,353141,136700000,False,,Kandivali West,57,low,magicbricks
+mum-kandivali-west-wisteria,Wisteria,Western Suburbs North,Kandivali West,3,900,78000,30193548,False,,Kandivali West,2,low,magicbricks
+mum-kandivali-west-kandivali-west-mumbai,"Kandivali West, Mumbai",Western Suburbs North,Kandivali West,2,650,91500,21850000,False,,Kandivali West,6,low,magicbricks
+mum-kandivali-west-hiranandani-heritage-rivona,Hiranandani Heritage Rivona,Western Suburbs North,Kandivali West,3,1100,110000,42580645,False,,Kandivali West,8,low,magicbricks
+mum-kandivali-west-dimple-73-east,Dimple 73 East,Western Suburbs North,Kandivali West,2,836,72000,27870967,False,,Kandivali West,2,low,magicbricks
+mum-kandivali-west-charkop-industrial-estate-mumbai,Charkop Industrial Estate Mumbai,Western Suburbs North,Kandivali West,,3900,380000,147096774,False,,Kandivali West,4,low,magicbricks
+mum-kandivali-west-raj-heights-apartments,Raj Heights Apartments,Western Suburbs North,Kandivali West,3,1050,85000,32903225,False,,Kandivali West,6,low,magicbricks
+mum-kandivali-west-siddha-seabrook,Siddha Seabrook,Western Suburbs North,Kandivali West,2/3,1008,67500,26129032,False,,Kandivali West,3,low,magicbricks
+mum-kandivali-west-parinee-essence,Parinee Essence,Western Suburbs North,Kandivali West,2,610,45000,17419354,False,,Kandivali West,9,low,magicbricks
+mum-kandivali-west-supreme-willows,Supreme Willows,Western Suburbs North,Kandivali West,1,450,40000,15483870,False,,Kandivali West,6,low,magicbricks
+mum-kandivali-west-sethia-kalpavruksh-heights,Sethia Kalpavruksh Heights,Western Suburbs North,Kandivali West,1/2,655,43000,16645161,False,,Kandivali West,11,low,magicbricks
+mum-kandivali-west-dem-cygnus,DEM Cygnus,Western Suburbs North,Kandivali West,3,1000,65000,25161290,False,,Kandivali West,10,low,magicbricks
+mum-kandivali-west-shree-harini-niwas,Shree Harini Niwas,Western Suburbs North,Kandivali West,1,430,38000,14709677,False,,Kandivali West,8,low,magicbricks
+mum-kandivali-west-dem-icon,Dem Icon,Western Suburbs North,Kandivali West,2,617,51000,19741935,False,,Kandivali West,9,low,magicbricks
+mum-kandivali-west-kush-elegante,Kush Elegante,Western Suburbs North,Kandivali West,3,980,75000,29032258,False,,Kandivali West,8,low,magicbricks
+mum-kandivali-west-db-realty-orchid-suburbia,DB Realty Orchid Suburbia,Western Suburbs North,Kandivali West,2,999,60000,23225806,False,,Kandivali West,4,low,magicbricks
+mum-kandivali-west-shivani-rudram,Shivani Rudram,Western Suburbs North,Kandivali West,2,717,49858,19300000,False,,Kandivali West,8,low,magicbricks
+mum-kandivali-west-shreeji-sky-rise-tower,Shreeji Sky Rise Tower,Western Suburbs North,Kandivali West,4,1864,148800,57600000,False,,Kandivali West,12,low,magicbricks
+mum-kandivali-west-srk-shree-vrindavan,SRK Shree Vrindavan,Western Suburbs North,Kandivali West,4,1722,170500,66000000,False,,Kandivali West,3,low,magicbricks
+mum-kandivali-west-kandivali-hanuman-chsl,Kandivali Hanuman CHSL,Western Suburbs North,Kandivali West,1,428,28675,11100000,False,,Kandivali West,3,low,magicbricks
+mum-kandivali-west-navkarmik-shiv-vardaan,Navkarmik Shiv Vardaan,Western Suburbs North,Kandivali West,3,1041,77241,29900000,False,,Kandivali West,7,low,magicbricks
+mum-kandivali-west-ashray-jaswanti-jewel,Ashray Jaswanti Jewel,Western Suburbs North,Kandivali West,2,728,60708,23500000,False,,Kandivali West,10,low,magicbricks
+mum-kandivali-west-orion-heights,Orion Heights,Western Suburbs North,Kandivali West,3,1098,82925,32100000,False,,Kandivali West,6,low,magicbricks
+mum-kandivali-west-shreeji-gateway,Shreeji Gateway,Western Suburbs North,Kandivali West,3,963,62775,24300000,False,,Kandivali West,4,low,magicbricks
+mum-kandivali-west-shreeji-aikyam,Shreeji Aikyam,Western Suburbs North,Kandivali West,2/3,1571,77500,30000000,False,,Kandivali West,10,low,magicbricks
+mum-kandivali-west-shanti-raman-capital,Shanti Raman Capital,Western Suburbs North,Kandivali West,,946,84475,32700000,False,,Kandivali West,5,low,magicbricks
+mum-kandivali-west-sahakar-the-vibe,Sahakar The Vibe,Western Suburbs North,Kandivali West,4,1582,184966,71600000,False,,Kandivali West,4,low,magicbricks
+mum-kandivali-west-punita-by-lakshachandi,Punita by Lakshachandi,Western Suburbs North,Kandivali West,2,701,60708,23500000,False,,Kandivali West,10,low,magicbricks
+mum-kandivali-west-laxmi-heights,Laxmi Heights,Western Suburbs North,Kandivali West,2,650,47016,18200000,False,,Kandivali West,8,low,magicbricks
+mum-kandivali-west-hariko-skylon-suburbia,Hariko Skylon Suburbia,Western Suburbs North,Kandivali West,1,416,24593,9520000,False,,Kandivali West,10,low,magicbricks
+mum-kanjurmarg-damji-shamji-business-galleria,Damji Shamji Business Galleria,Powai-Central,Kanjurmarg,,481,85000,32903225,False,,Saki Naka,87,low,magicbricks
+mum-kanjurmarg-damji-shamji-business-78,Damji Shamji Business 78,Powai-Central,Kanjurmarg,,665,110000,42580645,False,,Saki Naka,80,low,magicbricks
+mum-kanjurmarg-runwal-bliss,Runwal Bliss,Powai-Central,Kanjurmarg,2/3/4,1193,110000,23300000,False,,Saki Naka,89,low,magicbricks
+mum-kanjurmarg-runwal-forests,Runwal Forests,Powai-Central,Kanjurmarg,1/2/3,661,64000,14700000,False,,Ghatkopar,89,low,magicbricks
+mum-kanjurmarg-lily-runwal-forests,Lily Runwal Forests,Powai-Central,Kanjurmarg,3,983,85000,32903225,False,,Ghatkopar,80,low,magicbricks
+mum-kanjurmarg-runwal-avenue,Runwal Avenue,Powai-Central,Kanjurmarg,2,917,340000,15800000,False,,Saki Naka,84,low,magicbricks
+mum-kanjurmarg-sheth-avante,Sheth Avante,Powai-Central,Kanjurmarg,1,451,48000,18580645,False,,Saki Naka,87,low,magicbricks
+mum-kanjurmarg-kanjurmarg-west-mumbai,Kanjurmarg West Mumbai,Powai-Central,Kanjurmarg,,1278,400000,154838709,False,,Ghatkopar,82,low,magicbricks
+mum-kanjurmarg-raheja-antares,Raheja Antares,Powai-Central,Kanjurmarg,3/4,1345,122450,47400000,False,,Ghatkopar,80,low,magicbricks
+mum-kanjurmarg-runwal-meadows,Runwal Meadows,Powai-Central,Kanjurmarg,3,1244,83183,32200000,False,,Ghatkopar,82,low,magicbricks
+mum-kanjurmarg-lodha-aurum-grande,Lodha Aurum Grande,Powai-Central,Kanjurmarg,3,1129,95583,37000000,False,,Saki Naka,86,low,magicbricks
+mum-khar-west-trinity-luxury-residency,Trinity Luxury Residency,Bandra-Santacruz,Khar West,5,3000,1200000,464516129,False,,Santacruz Metro,35,low,magicbricks
+mum-khar-west-saidhan-infinity,Saidhan Infinity,Bandra-Santacruz,Khar West,3,900,200000,77419354,False,,Santacruz Metro,34,low,magicbricks
+mum-khar-west-khar-west-mumbai,"Khar West, Mumbai",Bandra-Santacruz,Khar West,2/3/4/5,2400,550000,195000000,False,,Santacruz Metro,28,low,magicbricks
+mum-khar-west-rustomjee-paramount,Rustomjee Paramount,Bandra-Santacruz,Khar West,2/3/4,1350,340000,105000000,False,,Santacruz Metro,32,low,magicbricks
+mum-khar-west-mayfair-apartments,Mayfair Apartments,Bandra-Santacruz,Khar West,3,1050,280000,108387096,False,,Bandra Colony,35,low,magicbricks
+mum-khar-west-izarra,Izarra,Bandra-Santacruz,Khar West,3,1228,300000,116129032,False,,Bandra Colony,29,low,magicbricks
+mum-khar-west-joy-legend,Joy Legend,Bandra-Santacruz,Khar West,3/4,1962,440000,117500000,False,,Santacruz Metro,34,low,magicbricks
+mum-khar-west-s-raheja-new-light,S Raheja New Light,Bandra-Santacruz,Khar West,3,1250,245416,95000000,False,,Santacruz Metro,30,low,magicbricks
+mum-khar-west-wadhwa-venue-52,Wadhwa Venue 52,Bandra-Santacruz,Khar West,,5080,808583,313000000,False,,Bandra Colony,36,low,magicbricks
+mum-khar-west-hariom-mio-solace,Hariom MIO Solace,Bandra-Santacruz,Khar West,3,1159,163783,63400000,False,,Bandra Colony,31,low,magicbricks
+mum-khar-west-platinum-oceanic,Platinum Oceanic,Bandra-Santacruz,Khar West,3,1100,148025,57300000,False,,Bandra Colony,27,low,magicbricks
+mum-khar-west-platinum-avenue,Platinum Avenue,Bandra-Santacruz,Khar West,3,1080,180833,70000000,False,,Santacruz Metro,39,low,magicbricks
+mum-khar-west-prakash-zindagi-chs,Prakash Zindagi Chs,Bandra-Santacruz,Khar West,3,1120,164816,63800000,False,,Bandra Colony,40,low,magicbricks
+mum-khar-west-ap-florence,AP Florence,Bandra-Santacruz,Khar West,3,1242,219583,85000000,False,,Santacruz Metro,33,low,magicbricks
+mum-kharghar-nms-one-27,NMS One 27,Navi Mumbai,Kharghar,2,768,47000,18193548,False,,Central Park Kharghar,17,low,magicbricks
+mum-kharghar-regency-gardens,Regency Gardens,Navi Mumbai,Kharghar,3,1050,70000,27096774,False,,Kharghar Village,17,low,magicbricks
+mum-kharghar-rs-exotica,RS Exotica,Navi Mumbai,Kharghar,2,730,40000,15483870,False,,Central Park Kharghar,13,low,magicbricks
+mum-kharghar-hiranandani-crystal-court-chs,Hiranandani Crystal Court CHS,Navi Mumbai,Kharghar,2,900,52000,20129032,False,,Central Park Kharghar,13,low,magicbricks
+mum-kharghar-juhi-niharika-residency,Juhi Niharika Residency,Navi Mumbai,Kharghar,2,710,40000,15483870,False,,Central Park Kharghar,15,low,magicbricks
+mum-kharghar-nisarg-hyde-park,Nisarg Hyde Park,Navi Mumbai,Kharghar,3,900,62000,24000000,False,,Central Park Kharghar,14,low,magicbricks
+mum-kharghar-bhagwati-luxuria,Bhagwati Luxuria,Navi Mumbai,Kharghar,3,900,73000,28258064,False,,Kharghar Village,17,low,magicbricks
+mum-kharghar-varsha-balaji-residency,Varsha Balaji Residency,Navi Mumbai,Kharghar,3,1200,57000,22064516,False,,Central Park Kharghar,16,low,magicbricks
+mum-kharghar-sai-mannat,Sai Mannat,Navi Mumbai,Kharghar,2,775,46000,17806451,False,,Central Park Kharghar,19,low,magicbricks
+mum-kharghar-paradise-sai-world-empire,Paradise Sai World Empire,Navi Mumbai,Kharghar,2/4,2173,70000,49800000,False,,Central Park Kharghar,8,low,magicbricks
+mum-kharghar-paradise-mall,Paradise Mall,Navi Mumbai,Kharghar,,600,90000,34838709,False,,Central Park Kharghar,15,low,magicbricks
+mum-kharghar-jewel-heights,Jewel Heights,Navi Mumbai,Kharghar,2,1200,34000,13161290,False,,Central Park Kharghar,15,low,magicbricks
+mum-kharghar-jewel-ekvira,Jewel Ekvira,Navi Mumbai,Kharghar,2,800,40000,15483870,False,,Central Park Kharghar,11,low,magicbricks
+mum-kharghar-kharghar-navi-mumbai,"Kharghar, Navi Mumbai",Navi Mumbai,Kharghar,2,800,45000,17419354,False,,Central Park Kharghar,11,low,magicbricks
+mum-kharghar-shankar-residency,Shankar Residency,Navi Mumbai,Kharghar,2,1100,42000,16258064,False,,Kharghar Village,19,low,magicbricks
+mum-kharghar-dhruv-heights,Dhruv Heights,Navi Mumbai,Kharghar,3,1300,55000,21290322,False,,Central Park Kharghar,12,low,magicbricks
+mum-kharghar-platinum-the-reserve,Platinum The Reserve,Navi Mumbai,Kharghar,3,1346,97779,37850000,False,,Central Park Kharghar,16,low,magicbricks
+mum-kharghar-siya-vishwaraja,Siya Vishwaraja,Navi Mumbai,Kharghar,2,671,29966,11600000,False,,Central Park Kharghar,8,low,magicbricks
+mum-kharghar-metro-regents-park,Metro Regents Park,Navi Mumbai,Kharghar,1,424,16430,6360000,False,,Central Park Kharghar,10,low,magicbricks
+mum-kharghar-godrej-varanya-phase-2,Godrej Varanya Phase 2,Navi Mumbai,Kharghar,3,1271,107983,41800000,False,,Central Park Kharghar,15,low,magicbricks
+mum-kharghar-metro-queens-necklace,Metro Queens Necklace,Navi Mumbai,Kharghar,1,443,15035,5820000,False,,Central Park Kharghar,15,low,magicbricks
+mum-kharghar-avenue-hills,Avenue Hills,Navi Mumbai,Kharghar,2,795,49341,19100000,False,,Central Park Kharghar,8,low,magicbricks
+mum-kharghar-sai-platinum,Sai Platinum,Navi Mumbai,Kharghar,2/3,956,40300,15600000,False,,Central Park Kharghar,11,low,magicbricks
+mum-kharghar-tricity-aspire,Tricity Aspire,Navi Mumbai,Kharghar,2,622,27383,10600000,False,,Central Park Kharghar,10,low,magicbricks
+mum-kharghar-elite-vivanta,Elite Vivanta,Navi Mumbai,Kharghar,3,1780,83441,32300000,False,,Central Park Kharghar,17,low,magicbricks
+mum-kharghar-nova-10-elegance-phase-i,Nova 10 Elegance Phase I,Navi Mumbai,Kharghar,4,3413,183158,70900000,False,,Central Park Kharghar,9,low,magicbricks
+mum-kharghar-today-codename-upvan,Today Codename Upvan,Navi Mumbai,Kharghar,2,596,23921,9260000,False,,Central Park Kharghar,15,low,magicbricks
+mum-kharghar-metrosatyam-grand-atlantis,Metrosatyam Grand Atlantis,Navi Mumbai,Kharghar,3,956,43916,17000000,False,,Central Park Kharghar,18,low,magicbricks
+mum-kolshet-road-lodha-amara,Lodha Amara,Thane,Kolshet Road,2/3,700,38000,15900000,False,,Borivali West,246,low,magicbricks
+mum-kolshet-road-kalpataru-parkcity,Kalpataru Parkcity,Thane,Kolshet Road,1/2/3,753,35750,21100000,False,,Borivali West,238,low,magicbricks
+mum-kolshet-road-saptashree-heights,Saptashree Heights,Thane,Kolshet Road,2,700,36000,13935483,False,,Borivali West,245,low,magicbricks
+mum-kolshet-road-kolshet-road-thane,"Kolshet Road, Thane",Thane,Kolshet Road,2/3,1850,264999,102580258,False,,Borivali West,245,low,magicbricks
+mum-kolshet-road-lodha-signet,Lodha Signet,Thane,Kolshet Road,,7000,2500000,967741935,False,,Borivali West,234,low,magicbricks
+mum-kolshet-road-highland-garden,Highland garden,Thane,Kolshet Road,,200,44900,17380645,False,,Borivali West,242,low,magicbricks
+mum-kolshet-road-the-icon-by-risland,The Icon by Risland,Thane,Kolshet Road,2/3,773,39500,15290322,False,,Borivali West,240,low,magicbricks
+mum-kolshet-road-estella-at-kalpataru-parkcity,Estella at Kalpataru Parkcity,Thane,Kolshet Road,3,1147,63033,24400000,False,,Borivali West,234,low,magicbricks
+mum-kolshet-road-kalpataru-eternia,Kalpataru Eternia,Thane,Kolshet Road,2,636,38362,14850000,False,,Borivali West,241,low,magicbricks
+mum-kolshet-road-godrej-ascend,Godrej Ascend,Thane,Kolshet Road,2/3,935,56962,22050000,False,,Borivali West,240,low,magicbricks
+mum-kolshet-road-runwal-zenith-dhokali-thane,"Runwal Zenith, Dhokali Thane",Thane,Kolshet Road,3,1172,55025,21300000,False,,Borivali West,242,low,magicbricks
+mum-kolshet-road-oberoi-realty-forestville-kolshet-th,"Oberoi Realty Forestville, Kolshet Thane",Thane,Kolshet Road,3,1090,59933,23200000,False,,Borivali West,238,low,magicbricks
+mum-kurla-west-kohinoor-city,Kohinoor City,Chembur-Wadala,Kurla West,3,1100,720000,35000000,False,,BKC,31,high,magicbricks
+mum-kurla-west-omkar-vive,Omkar Vive,Chembur-Wadala,Kurla West,1,430,63995,24772258,False,,BKC,33,high,magicbricks
+mum-kurla-west-kurla-west-mumbai,Kurla West Mumbai,Chembur-Wadala,Kurla West,1/2,630,500000,15100000,False,,BKC,33,high,magicbricks
+mum-kurla-west-sayba-pearl-hans,Sayba Pearl Hans,Chembur-Wadala,Kurla West,2,587,75000,29032258,False,,BKC,27,high,magicbricks
+mum-kurla-west-bhoomi-midas,Bhoomi Midas,Chembur-Wadala,Kurla West,,625,140000,54193548,False,,BKC,23,moderate,magicbricks
+mum-kurla-west-hdil-premier-exotica,HDIL Premier Exotica,Chembur-Wadala,Kurla West,2/3,1200,80000,17000000,False,,BKC,34,high,magicbricks
+mum-kurla-west-ashoka-apartment,Ashoka Apartment,Chembur-Wadala,Kurla West,6,3300,700000,270967741,False,,BKC,25,high,magicbricks
+mum-kurla-west-kamani-mumbai,Kamani Mumbai,Chembur-Wadala,Kurla West,,700,52000,20129032,False,,BKC,30,high,magicbricks
+mum-kurla-west-kanakia-zillion,Kanakia Zillion,Chembur-Wadala,Kurla West,,1691,395000,64500000,False,,BKC,31,high,magicbricks
+mum-kurla-west-equinox-e-commerce-centre,Equinox E Commerce Centre,Chembur-Wadala,Kurla West,1,418,130000,50322580,False,,BKC,29,moderate,magicbricks
+mum-kurla-west-codename-bkc,Codename BKC,Chembur-Wadala,Kurla West,1,387,55000,21290322,False,,BKC,30,high,magicbricks
+mum-kurla-west-deraiya-luxurio,Deraiya Luxurio,Chembur-Wadala,Kurla West,1,440,31775,12300000,False,,BKC,28,high,magicbricks
+mum-kurla-west-kaveri-chs,Kaveri CHS,Chembur-Wadala,Kurla West,3,1109,83958,32500000,False,,BKC,31,high,magicbricks
+mum-kurla-west-n-khan-presidence-one,N Khan Presidence One,Chembur-Wadala,Kurla West,2,630,40816,15800000,False,,BKC,29,high,magicbricks
+mum-kurla-west-hdil-premier-residences,HDIL Premier Residences,Chembur-Wadala,Kurla West,1,550,178120,68950000,False,,BKC,26,high,magicbricks
+mum-kurla-west-phoenix-paragon-plaza-kamani-mumbai,"Phoenix Paragon Plaza, Kamani Mumbai",Chembur-Wadala,Kurla West,,348,28416,11000000,False,,BKC,29,high,magicbricks
+mum-kurla-west-sayba-olympia,Sayba Olympia,Chembur-Wadala,Kurla West,2,696,44950,17400000,False,,BKC,27,high,magicbricks
+mum-kurla-west-urban-bkc-crown-buddha-colony-mumbai,"Urban BKC Crown, Buddha Colony Mumbai",Chembur-Wadala,Kurla West,1,445,29966,11600000,False,,BKC,28,moderate,magicbricks
+mum-kurla-west-kapadia-nagar-mumbai,Kapadia Nagar Mumbai,Chembur-Wadala,Kurla West,2,625,46500,18000000,False,,BKC,33,high,magicbricks
+mum-kurla-west-avenor-park,Avenor Park,Chembur-Wadala,Kurla West,2,550,38750,15000000,False,,BKC,30,high,magicbricks
+mum-kurla-west-dadamiyas-deluxe-apartment,Dadamiyas Deluxe Apartment,Chembur-Wadala,Kurla West,1,406,27125,10500000,False,,BKC,28,high,magicbricks
+mum-kurla-west-kohinoor-city-phase-iii,Kohinoor City Phase III,Chembur-Wadala,Kurla West,3,882,59416,23000000,False,,BKC,32,high,magicbricks
+mum-kurla-west-ambedkar-nagar-kurla-west-mumbai,Ambedkar Nagar Kurla West Mumbai,Chembur-Wadala,Kurla West,1,500,31000,12000000,False,,BKC,25,moderate,magicbricks
+mum-lokhandwala-premium-towers,Premium Towers,Andheri-Juhu,Lokhandwala,3,1350,200000,77419354,False,,Versova,18,low,magicbricks
+mum-lokhandwala-meghdoot-tower,Meghdoot Tower,Andheri-Juhu,Lokhandwala,3,1300,190000,73548387,False,,Oshiwara,18,low,magicbricks
+mum-lokhandwala-riya-palace-apartment,Riya Palace Apartment,Andheri-Juhu,Lokhandwala,4,1100,150000,58064516,False,,Oshiwara,12,low,magicbricks
+mum-lokhandwala-link-garden,Link Garden,Andheri-Juhu,Lokhandwala,3,1050,130000,50322580,False,,Oshiwara,11,low,magicbricks
+mum-lokhandwala-dlh-orchid,DLH Orchid,Andheri-Juhu,Lokhandwala,3,850,140000,54193548,False,,Versova,18,low,magicbricks
+mum-lokhandwala-surabhi-chs,Surabhi CHS,Andheri-Juhu,Lokhandwala,3,1250,190000,73548387,False,,Oshiwara,14,low,magicbricks
+mum-lokhandwala-bharat-altavista,Bharat altavista,Andheri-Juhu,Lokhandwala,,1250,720000,278709677,False,,Oshiwara,12,low,magicbricks
+mum-lokhandwala-lokhandwala-complex-andheri-west-mum,Lokhandwala Complex Andheri West Mumbai,Andheri-Juhu,Lokhandwala,2,750,130000,50322580,False,,Oshiwara,14,low,magicbricks
+mum-lokhandwala-kenwood-apartment,Kenwood Apartment,Andheri-Juhu,Lokhandwala,1,460,52000,20129032,False,,Oshiwara,13,low,magicbricks
+mum-lokhandwala-rna-ng-eclat,RNA NG Eclat,Andheri-Juhu,Lokhandwala,2,805,130000,50322580,False,,Oshiwara,13,low,magicbricks
+mum-lokhandwala-samarth-aangan,Samarth Aangan,Andheri-Juhu,Lokhandwala,4,1800,250000,96774193,False,,Versova,18,low,magicbricks
+mum-lokhandwala-sheth-72-west,Sheth 72 West,Andheri-Juhu,Lokhandwala,3/4,1850,230000,89032258,False,,Oshiwara,16,low,magicbricks
+mum-lokhandwala-transcon-triumph-tower-3,Transcon Triumph Tower 3,Andheri-Juhu,Lokhandwala,2,650,120000,46451612,False,,Oshiwara,20,low,magicbricks
+mum-lokhandwala-cosmos-chs,Cosmos CHS,Andheri-Juhu,Lokhandwala,2,710,75000,29032258,False,,Oshiwara,16,low,magicbricks
+mum-lokhandwala-prime-rose-apartment,Prime Rose Apartment,Andheri-Juhu,Lokhandwala,2,750,85000,32903225,False,,Oshiwara,15,low,magicbricks
+mum-lokhandwala-brighton-tower,Brighton Tower,Andheri-Juhu,Lokhandwala,2,800,90000,34838709,False,,Versova,19,low,magicbricks
+mum-lokhandwala-kalpataru-vian,Kalpataru Vian,Andheri-Juhu,Lokhandwala,2/3/4,2026,228883,88600000,False,,Oshiwara,18,low,magicbricks
+mum-lokhandwala-dlf-the-westpark,DLF The Westpark,Andheri-Juhu,Lokhandwala,3,1800,342808,132700000,False,,Oshiwara,17,low,magicbricks
+mum-lokhandwala-oberoi-sky-gardens,Oberoi Sky Gardens,Andheri-Juhu,Lokhandwala,4,2600,413333,160000000,False,,Oshiwara,14,low,magicbricks
+mum-lokhandwala-windsor-grande-residences,Windsor Grande Residences,Andheri-Juhu,Lokhandwala,5,,2066666,800000000,False,,Oshiwara,13,low,magicbricks
+mum-lokhandwala-aditya-runwal-elegante,Aditya Runwal Elegante,Andheri-Juhu,Lokhandwala,3,1344,155000,60000000,False,,Oshiwara,10,low,magicbricks
+mum-lokhandwala-aston-building,Aston Building,Andheri-Juhu,Lokhandwala,,2100,200208,77500000,False,,Versova,19,low,magicbricks
+mum-lower-parel-lodha-world-crest,Lodha World Crest,South Mumbai,Lower Parel,3/4,2100,510000,149000000,False,,Worli,23,low,magicbricks
+mum-lower-parel-lodha-ciel,Lodha Ciel,South Mumbai,Lower Parel,5,5400,1700000,658064516,False,,Worli,23,low,magicbricks
+mum-lower-parel-marathon-nextgen,Marathon NextGen,South Mumbai,Lower Parel,,850,229999,89031870,False,,Worli,28,low,magicbricks
+mum-lower-parel-lower-parel-west-mumbai,Lower Parel West Mumbai,South Mumbai,Lower Parel,3,1710,530000,60000000,False,,Worli,25,low,magicbricks
+mum-lower-parel-lodha-vista,Lodha Vista,South Mumbai,Lower Parel,2/3,1477,140000,75000000,False,,Worli,18,low,magicbricks
+mum-lower-parel-indiabulls-sky,Indiabulls Sky,South Mumbai,Lower Parel,3,2200,330000,127741935,False,,Worli,24,low,magicbricks
+mum-lower-parel-nandivardhan-fortuna-blue,Nandivardhan Fortuna Blue,South Mumbai,Lower Parel,2,535,78000,30193548,False,,Worli,26,low,magicbricks
+mum-lower-parel-india-bulls-sky-forest,India Bulls Sky Forest,South Mumbai,Lower Parel,3,2050,360000,139354838,False,,Worli,27,low,magicbricks
+mum-lower-parel-marathon-futurex,Marathon Futurex,South Mumbai,Lower Parel,,1862,710000,137500000,False,,Worli,23,low,magicbricks
+mum-lower-parel-marathon-nextgen-innova,Marathon Nextgen Innova,South Mumbai,Lower Parel,,2700,1080000,418064516,False,,Worli,20,low,magicbricks
+mum-lower-parel-lodha-park-signet,Lodha Park Signet,South Mumbai,Lower Parel,,299,170000,65806451,False,,Worli,21,low,magicbricks
+mum-lower-parel-peninsula-corporate-park,Peninsula Corporate Park,South Mumbai,Lower Parel,,3470,1290000,499354838,False,,Worli,22,low,magicbricks
+mum-lower-parel-lodha-adrina,Lodha Adrina,South Mumbai,Lower Parel,3,1334,310000,120000000,False,,Worli,20,low,magicbricks
+mum-lower-parel-raheja-imperia-2,Raheja imperia 2,South Mumbai,Lower Parel,3/4/5,1752,333120,128949999,False,,Mahalaxmi,23,low,magicbricks
+mum-lower-parel-ashford-casa-grande,Ashford Casa Grande,South Mumbai,Lower Parel,3,1550,271250,105000000,False,,Worli,18,low,magicbricks
+mum-lower-parel-one-lodha-place,One Lodha Place,South Mumbai,Lower Parel,,742,226041,87500000,False,,Mahalaxmi,25,low,magicbricks
+mum-lower-parel-navkar-omnia,Navkar Omnia,South Mumbai,Lower Parel,1,430,38750,15000000,False,,Worli,26,low,magicbricks
+mum-majiwada-piramal-vaikunth,Piramal Vaikunth,Thane,Majiwada,2,530,32000,12387096,False,,Goregaon East (Dindoshi),229,low,magicbricks
+mum-majiwada-rustomjee-aurelia,Rustomjee Aurelia,Thane,Majiwada,2,668,38750,15000000,False,,Aarey JVLR,226,low,magicbricks
+mum-majiwada-lodha-luxuria,Lodha Luxuria,Thane,Majiwada,3,1250,55000,21290322,False,,Goregaon East (Dindoshi),229,low,magicbricks
+mum-majiwada-rustomjee-azziano,Rustomjee Azziano,Thane,Majiwada,2,824,46000,17806451,False,,Goregaon East (Dindoshi),226,low,magicbricks
+mum-majiwada-lodha-paradise,Lodha Paradise,Thane,Majiwada,3,1200,60000,23225806,False,,Aarey JVLR,229,low,magicbricks
+mum-majiwada-majiwada-thane,Majiwada Thane,Thane,Majiwada,,1950,200000,77419354,False,,Goregaon East (Dindoshi),222,low,magicbricks
+mum-majiwada-rustomjee-la-familia,Rustomjee La Familia,Thane,Majiwada,1/2,683,38500,14903225,False,,Aarey JVLR,228,low,magicbricks
+mum-majiwada-dosti-tulip,Dosti Tulip,Thane,Majiwada,2,580,32000,12387096,False,,Goregaon East (Dindoshi),224,low,magicbricks
+mum-majiwada-lodha-luxuria-priva,Lodha Luxuria Priva,Thane,Majiwada,2,810,42000,16258064,False,,Goregaon East (Dindoshi),231,low,magicbricks
+mum-majiwada-rustomjee-urbania,Rustomjee Urbania,Thane,Majiwada,2,698,39000,12300000,False,,Goregaon East (Dindoshi),220,low,magicbricks
+mum-majiwada-lodha-stella,Lodha Stella,Thane,Majiwada,4,1319,140000,31650000,False,,Goregaon East (Dindoshi),222,low,magicbricks
+mum-majiwada-dosti-west-county,Dosti West County,Thane,Majiwada,2,530,320000,123870967,False,,Aarey JVLR,225,low,magicbricks
+mum-majiwada-piramal-vaikunth-balkum-pada-thane,"Piramal Vaikunth, Balkum Pada Thane",Thane,Majiwada,1/2,387,24231,9380000,False,,Goregaon East (Dindoshi),223,low,magicbricks
+mum-majiwada-mextech-miraya-divine,Mextech Miraya Divine,Thane,Majiwada,2/3,1000,37820,14640000,False,,Goregaon East (Dindoshi),229,low,magicbricks
+mum-majiwada-dosti-west-county-balkum-pada-thane,"Dosti West County, Balkum Pada Thane",Thane,Majiwada,3,1033,46241,17900000,False,,Goregaon East (Dindoshi),228,low,magicbricks
+mum-majiwada-mextech-miraya-trinity-eternity,Mextech Miraya Trinity Eternity,Thane,Majiwada,4,1578,62000,24000000,False,,Aarey JVLR,233,low,magicbricks
+mum-majiwada-dosti-olive-balkum-pada-thane,"Dosti Olive, Balkum Pada Thane",Thane,Majiwada,3,1022,52441,20299999,False,,Aarey JVLR,222,low,magicbricks
+mum-majiwada-rustomjee-la-vie,Rustomjee LA VIE,Thane,Majiwada,2,663,39008,15100000,False,,Goregaon East (Dindoshi),222,low,magicbricks
+mum-majiwada-ashwin-sheth-vasant-lawns,Ashwin Sheth Vasant Lawns,Thane,Majiwada,2,840,52958,20500000,False,,Aarey JVLR,224,low,magicbricks
+mum-malabar-hill-lodha-seamont,Lodha Seamont,South Mumbai,Malabar Hill,1/3,1350,330000,127741935,False,,Mumbai Central,39,low,magicbricks
+mum-malabar-hill-dhuleva-seven,Dhuleva Seven,South Mumbai,Malabar Hill,4/6,2449,469999,240000000,False,,Mumbai Central,50,low,magicbricks
+mum-malabar-hill-malabar-hill-mumbai,"Malabar Hill, Mumbai",South Mumbai,Malabar Hill,2/3/4/6,1140,280000,820000000,False,,Mumbai Central,41,low,magicbricks
+mum-malabar-hill-anita-building,Anita Building,South Mumbai,Malabar Hill,3,1500,440000,170322580,False,,Mumbai Central,45,low,magicbricks
+mum-malabar-hill-hm-central-park,HM Central Park,South Mumbai,Malabar Hill,5,1725,434774,168299999,False,,Mumbai Central,42,low,magicbricks
+mum-malabar-hill-kalpataru-prive,Kalpataru Prive,South Mumbai,Malabar Hill,,4504,2432079,941450000,False,,Mumbai Central,39,low,magicbricks
+mum-malabar-hill-birla-anayu,Birla Anayu,South Mumbai,Malabar Hill,4,3450,1515125,586500000,False,,Mumbai Central,50,low,magicbricks
+mum-malabar-hill-runwal-malabar,Runwal Malabar,South Mumbai,Malabar Hill,3,2400,775000,300000000,False,,Mumbai Central,38,low,magicbricks
+mum-malabar-hill-mount-unique-babulnath-mumbai,"Mount Unique, Babulnath Mumbai",South Mumbai,Malabar Hill,3,1340,310000,120000000,False,,Mumbai Central,47,low,magicbricks
+mum-malabar-hill-lodha-waterview,Lodha Waterview,South Mumbai,Malabar Hill,5,,2583075,999900000,False,,Mumbai Central,45,low,magicbricks
+mum-malabar-hill-runwal-malabar-kemps-corner-malabar,"Runwal Malabar, Kemps Corner Malabar Hill Mumbai",South Mumbai,Malabar Hill,3,2600,1048833,406000000,False,,Mumbai Central,45,low,magicbricks
+mum-malabar-hill-the-primordial-house-kemps-corner-ma,"The Primordial House, Kemps Corner Malabar Hill Mumbai",South Mumbai,Malabar Hill,2,840,151900,58800000,False,,Mumbai Central,38,low,magicbricks
+mum-malabar-hill-aurum-girnar,Aurum Girnar,South Mumbai,Malabar Hill,4,2300,754591,292100000,False,,Mumbai Central,43,low,magicbricks
+mum-malabar-hill-walkeshwar-mumbai,Walkeshwar Mumbai,South Mumbai,Malabar Hill,4,3919,1550000,600000000,False,,Mumbai Central,44,low,magicbricks
+mum-malabar-hill-lodha-waterview-teen-batti-mumbai,"Lodha Waterview, Teen Batti Mumbai",South Mumbai,Malabar Hill,3,2470,957125,370500000,False,,Mumbai Central,46,low,magicbricks
+mum-malabar-hill-aurum-girnar-kemps-corner-malabar-hi,"Aurum Girnar, Kemps Corner Malabar Hill Mumbai",South Mumbai,Malabar Hill,4,2300,799541,309500000,False,,Mumbai Central,38,low,magicbricks
+mum-malabar-hill-dhuleva-seven-babulnath-mumbai,"Dhuleva Seven, Babulnath Mumbai",South Mumbai,Malabar Hill,4,2449,569625,220500000,False,,Mumbai Central,43,low,magicbricks
+mum-malad-west-k-raheja-interface-heights,K Raheja Interface Heights,Western Suburbs North,Malad West,2,1100,69000,26709677,False,,Malad West,2,low,magicbricks
+mum-malad-west-transcon-sheth-auris-bliss,Transcon & Sheth Auris Bliss,Western Suburbs North,Malad West,2,650,81000,31354838,False,,Malad West,7,low,magicbricks
+mum-malad-west-adhrit-towers,Adhrit towers,Western Suburbs North,Malad West,2,800,65000,25161290,False,,Malad West,5,low,magicbricks
+mum-malad-west-arkade-eden,Arkade Eden,Western Suburbs North,Malad West,3,1085,98000,37935483,False,,Malad West,5,low,magicbricks
+mum-malad-west-palm-spring,Palm Spring,Western Suburbs North,Malad West,2,650,75000,29032258,False,,Malad West,5,low,magicbricks
+mum-malad-west-ajmera-boulevard,AJMERA BOULEVARD,Western Suburbs North,Malad West,1/2/3,690,45000,24400000,False,,Malad West,5,low,magicbricks
+mum-malad-west-sati-darshan-apartment,Sati Darshan Apartment,Western Suburbs North,Malad West,2,840,82000,31741935,False,,Malad West,4,low,magicbricks
+mum-malad-west-orlem-mumbai,Orlem Mumbai,Western Suburbs North,Malad West,,2160,750000,290322580,False,,Malad West,10,low,magicbricks
+mum-malad-west-prabhu-plaza,Prabhu Plaza,Western Suburbs North,Malad West,3,1150,100000,38709677,False,,Malad West,4,low,magicbricks
+mum-malad-west-serenity-heights,Serenity Heights,Western Suburbs North,Malad West,2,720,60000,23225806,False,,Malad West,3,low,magicbricks
+mum-malad-west-kabra-garnet,Kabra Garnet,Western Suburbs North,Malad West,3,916,80000,30967741,False,,Malad West,4,low,magicbricks
+mum-malad-west-sheth-irene,Sheth Irene,Western Suburbs North,Malad West,1,434,48000,18580645,False,,Malad West,3,low,magicbricks
+mum-malad-west-shreeji-atlantis,Shreeji Atlantis,Western Suburbs North,Malad West,2,770,60000,23225806,False,,Malad West,7,moderate,magicbricks
+mum-malad-west-transcon-auris-serenity,Transcon Auris Serenity,Western Suburbs North,Malad West,2,805,84000,32516129,False,,Malad West,5,low,magicbricks
+mum-malad-west-lotus-sky-garden,Lotus Sky Garden,Western Suburbs North,Malad West,2,809,60000,23225806,False,,Malad West,4,low,magicbricks
+mum-malad-west-9-business-bay,9 Business Bay,Western Suburbs North,Malad West,,1179,91191,35300000,False,,Malad West,5,low,magicbricks
+mum-malad-west-chandak-treesourus,Chandak Treesourus,Western Suburbs North,Malad West,3,1068,90933,35200000,False,,Malad West,7,low,magicbricks
+mum-malad-west-narang-vivenda,Narang Vivenda,Western Suburbs North,Malad West,2/4,837,71558,27700000,False,,Malad West,6,low,magicbricks
+mum-malad-west-mahindra-marina64,Mahindra Marina64,Western Suburbs North,Malad West,3,1049,91062,35250000,False,,Malad West,7,moderate,magicbricks
+mum-malad-west-ethics-orovia,Ethics Orovia,Western Suburbs North,Malad West,3,1149,92741,35900000,False,,Malad West,3,low,magicbricks
+mum-malad-west-gurukrupa-marina-enclave-wings-q-and,Gurukrupa Marina Enclave Wings Q and R with Kindergarten,Western Suburbs North,Malad West,3,818,55800,21600000,False,,Malad West,1,low,magicbricks
+mum-malad-west-rishabraj-ceramont-evershine-nagar-m,"Rishabraj Ceramont, Evershine Nagar Mumbai",Western Suburbs North,Malad West,3,985,68716,26600000,False,,Malad West,8,low,magicbricks
+mum-malad-west-zaveri-aranya-the-park,Zaveri Aranya The Park,Western Suburbs North,Malad West,3,1166,81116,31400000,False,,Malad West,5,low,magicbricks
+mum-malad-west-ruparel-stardom,Ruparel Stardom,Western Suburbs North,Malad West,3,1260,92741,35900000,False,,Malad West,6,moderate,magicbricks
+mum-malad-west-amrapali-seeron-dyo,Amrapali Seeron Dyo,Western Suburbs North,Malad West,3,872,78791,30500000,False,,Malad West,2,low,magicbricks
+mum-malad-west-yukti-anchorpoint-aviara,Yukti Anchorpoint Aviara,Western Suburbs North,Malad West,1,424,26608,10300000,False,,Malad West,9,low,magicbricks
+mum-marol-town-center-2,Town Center 2,Andheri-Juhu,Marol,,400,110000,42580645,False,,Marol Naka,6,low,magicbricks
+mum-marol-marol-mumbai,Marol Mumbai,Andheri-Juhu,Marol,2,850,175000,635000000,False,,Marol Naka,3,low,magicbricks
+mum-marol-l-t-veridian-at-emerald-isle,L & T Veridian at Emerald Isle,Andheri-Juhu,Marol,3,1000,140000,54193548,False,,Marol Naka,9,low,magicbricks
+mum-marol-sunteck-crest,Sunteck Crest,Andheri-Juhu,Marol,,500,130000,50322580,False,,Marol Naka,5,low,magicbricks
+mum-marol-k-raheja-vistas,K Raheja Vistas,Andheri-Juhu,Marol,2,729,84900,32864516,False,,Marol Naka,4,low,magicbricks
+mum-marol-shree-naman-premier,Shree  Naman Premier,Andheri-Juhu,Marol,2,635,71000,27483870,False,,Marol Naka,3,moderate,magicbricks
+mum-marol-mittal-commercia,Mittal Commercia,Andheri-Juhu,Marol,,750,130000,50322580,False,,Marol Naka,9,low,magicbricks
+mum-marol-gamdevi-marol-mumbai,Gamdevi Marol Mumbai,Andheri-Juhu,Marol,,2200,500000,193548387,False,,Marol Naka,8,low,magicbricks
+mum-marol-wadhwa-723-avenue,Wadhwa 723 Avenue,Andheri-Juhu,Marol,,1769,159908,61900000,False,,Marol Naka,3,low,magicbricks
+mum-marol-hill-view-crest-oaks,Hill View Crest Oaks,Andheri-Juhu,Marol,2/3,739,58254,22550000,False,,Marol Naka,4,low,magicbricks
+mum-marol-i-stay-tower,I Stay Tower,Andheri-Juhu,Marol,2,611,40816,15800000,False,,Marol Naka,2,low,magicbricks
+mum-marol-1-bhk-builder-floor-for-sale-marol,1 BHK Builder Floor for sale Marol,Andheri-Juhu,Marol,1,406,26608,10300000,False,,Marol Naka,2,low,magicbricks
+mum-marol-ashok-tower,Ashok tower,Andheri-Juhu,Marol,1,456,34875,13500000,False,,Marol Naka,9,low,magicbricks
+mum-marol-bhavani-nagar-marol-mumbai,Bhavani Nagar Marol Mumbai,Andheri-Juhu,Marol,1,440,32291,12500000,False,,Marol Naka,6,low,magicbricks
+mum-marol-l-t-veridian-at-emerald-isle-tunga-v,"L & T Veridian at Emerald Isle, Tunga Village Mumbai",Andheri-Juhu,Marol,3,767,82666,32000000,False,,Marol Naka,7,low,magicbricks
+mum-marol-sheth-vasant-blossom,Sheth Vasant Blossom,Andheri-Juhu,Marol,,,47791,18500000,False,,Marol Naka,7,low,magicbricks
+mum-matunga-matunga-mumbai,"Matunga, Mumbai",South Mumbai,Matunga,1/2/3,970,175000,67741935,False,,Dadar Metro,28,moderate,magicbricks
+mum-matunga-hubtown-harmony,Hubtown Harmony,South Mumbai,Matunga,2,425,86500,33483870,False,,Dadar Metro,32,high,magicbricks
+mum-matunga-gokul-apartment,Gokul Apartment,South Mumbai,Matunga,3,1125,180000,69677419,False,,Dadar Metro,30,high,magicbricks
+mum-matunga-johaan-signature-isle,Johaan Signature Isle,South Mumbai,Matunga,2,810,130000,50322580,False,,Dadar Metro,25,moderate,magicbricks
+mum-matunga-matunga-central-railway-workshop-mum,Matunga Central Railway Workshop Mumbai,South Mumbai,Matunga,,6000,390000,150967741,False,,Dadar Metro,30,high,magicbricks
+mum-matunga-dt-amarsons-entallia,DT Amarsons Entallia,South Mumbai,Matunga,4,3600,400000,154838709,False,,Dadar Metro,23,high,magicbricks
+mum-matunga-sugee-paavan,Sugee Paavan,South Mumbai,Matunga,2,750,110000,42580645,False,,Dadar Metro,23,moderate,magicbricks
+mum-matunga-153-skye,153 Skye,South Mumbai,Matunga,2,700,110000,42580645,False,,Dadar Metro,28,high,magicbricks
+mum-matunga-rustomjee-180-bayview,Rustomjee 180 Bayview,South Mumbai,Matunga,2/4,1646,167141,64700000,False,,Dadar Metro,23,high,magicbricks
+mum-matunga-ashapura-chheda-imperial,Ashapura Chheda Imperial,South Mumbai,Matunga,4,2735,423925,164100000,False,,Dadar Metro,26,moderate,magicbricks
+mum-matunga-natu-9-uma-ishaan,Natu 9 Uma Ishaan,South Mumbai,Matunga,4,1240,136141,52699999,False,,Dadar Metro,23,high,magicbricks
+mum-matunga-lodha-divino,Lodha Divino,South Mumbai,Matunga,2/3/4,1680,205762,79650000,False,,Dadar Metro,24,high,magicbricks
+mum-matunga-gala-habitats-paramount,Gala Habitats Paramount,South Mumbai,Matunga,3,1245,160941,62300000,False,,Dadar Metro,24,moderate,magicbricks
+mum-matunga-godrej-five-gardens,Godrej Five Gardens,South Mumbai,Matunga,3,1410,270475,104700000,False,,Dadar Metro,28,high,magicbricks
+mum-matunga-baf-na-siddhgiri,BAF NA Siddhgiri,South Mumbai,Matunga,3,1286,161458,62500000,False,,Dadar Metro,27,high,magicbricks
+mum-matunga-kalpataru-matru-ashish,Kalpataru Matru Ashish,South Mumbai,Matunga,3,1613,220616,85399999,False,,Dadar Metro,20,moderate,magicbricks
+mum-mulund-west-mulund-west-mumbai,"Mulund West, Mumbai",Powai-Central,Mulund West,1/3/4,495,36000,44500000,False,,Aarey JVLR,134,low,magicbricks
+mum-mulund-west-prestige-siesta,Prestige Siesta,Powai-Central,Mulund West,3,1368,91000,35225806,False,,Aarey JVLR,128,low,magicbricks
+mum-mulund-west-runwal-greens,Runwal Greens,Powai-Central,Mulund West,2/3,1368,53000,39900000,False,,Aarey JVLR,133,low,magicbricks
+mum-mulund-west-runwal-olive,Runwal Olive,Powai-Central,Mulund West,2,725,55000,21290322,False,,Aarey JVLR,131,low,magicbricks
+mum-mulund-west-oberoi-eternia-and-enigma,Oberoi Eternia And Enigma,Powai-Central,Mulund West,3,1127,95000,36774193,False,,Aarey JVLR,130,low,magicbricks
+mum-mulund-west-piramal-revanta,Piramal Revanta,Powai-Central,Mulund West,2,1040,55000,29900000,False,,Aarey JVLR,131,low,magicbricks
+mum-mulund-west-kalpataru-summit,Kalpataru Summit,Powai-Central,Mulund West,,800,160000,24200000,False,,Aarey JVLR,131,low,magicbricks
+mum-mulund-west-flying-colors,Flying Colors,Powai-Central,Mulund West,,1700,200000,77419354,False,,Aarey JVLR,131,low,magicbricks
+mum-mulund-west-kalpataru-elitus,Kalpataru Elitus,Powai-Central,Mulund West,3,1050,100000,38709677,False,,Aarey JVLR,135,low,magicbricks
+mum-mulund-west-highland-park,Highland Park,Powai-Central,Mulund West,3,1400,150000,58064516,False,,Aarey JVLR,130,low,magicbricks
+mum-mulund-west-the-prestige-city,The Prestige City,Powai-Central,Mulund West,3,1480,95000,36774193,False,,Aarey JVLR,129,low,magicbricks
+mum-mulund-west-wadhwa-atmosphere,Wadhwa Atmosphere,Powai-Central,Mulund West,3,921,69620,26949999,False,,Aarey JVLR,128,low,magicbricks
+mum-mulund-west-runwal-pinnacle,Runwal Pinnacle,Powai-Central,Mulund West,1,457,28933,11200000,False,,Aarey JVLR,129,low,magicbricks
+mum-mulund-west-shraddha-panorama,Shraddha Panorama,Powai-Central,Mulund West,2,681,46758,18100000,False,,Aarey JVLR,126,low,magicbricks
+mum-mulund-west-shapoorji-pallonji-heartland,Shapoorji Pallonji Heartland,Powai-Central,Mulund West,3,896,59416,23000000,False,,Aarey JVLR,134,low,magicbricks
+mum-mulund-west-prestige-forest-hills,Prestige Forest Hills,Powai-Central,Mulund West,3,1054,86025,33300000,False,,Aarey JVLR,128,low,magicbricks
+mum-mulund-west-ruparel-arista,Ruparel Arista,Powai-Central,Mulund West,3,1032,71816,27799999,False,,Aarey JVLR,134,low,magicbricks
+mum-nerul-techno-shreeji-destiny,Techno Shreeji Destiny,Navi Mumbai,Nerul,,2100,360000,139354838,False,,CBD Belapur Metro,47,low,magicbricks
+mum-nerul-dream-apex-24-high,Dream Apex 24 High,Navi Mumbai,Nerul,,1350,270000,104516129,False,,CBD Belapur Metro,46,low,magicbricks
+mum-nerul-shiravane-navi-mumbai,Shiravane Navi Mumbai,Navi Mumbai,Nerul,,2000,90000,34838709,False,,CBD Belapur Metro,50,low,magicbricks
+mum-nerul-kasturi-shreeji-destiny-nx,Kasturi Shreeji Destiny Nx,Navi Mumbai,Nerul,,840,160000,61935483,False,,CBD Belapur Metro,48,low,magicbricks
+mum-nerul-vishwa-plan-s-business-park,Vishwa Plan S Business Park,Navi Mumbai,Nerul,,438,85000,32903225,False,,CBD Belapur Metro,45,low,magicbricks
+mum-nerul-juhi-greens,Juhi Greens,Navi Mumbai,Nerul,2/3,1120,90000,34838709,False,,CBD Belapur Metro,51,low,magicbricks
+mum-nerul-nerul-navi-mumbai,"Nerul, Navi Mumbai",Navi Mumbai,Nerul,2,560,54500,21096774,False,,CBD Belapur Metro,40,low,magicbricks
+mum-nerul-vaishnavi-tower,Vaishnavi Tower,Navi Mumbai,Nerul,2,691,55000,21290322,False,,CBD Belapur Metro,50,low,magicbricks
+mum-nerul-palm-beach-residency,Palm Beach Residency,Navi Mumbai,Nerul,4,2100,430000,166451612,False,,CBD Belapur Metro,51,low,magicbricks
+mum-nerul-vanashree-chs,Vanashree CHS,Navi Mumbai,Nerul,4,1500,130000,50322580,False,,CBD Belapur Metro,51,low,magicbricks
+mum-nerul-wadhwa-palm-beach-residency,Wadhwa Palm Beach Residency,Navi Mumbai,Nerul,3,1800,150000,58064516,False,,CBD Belapur Metro,43,low,magicbricks
+mum-nerul-moreshwar-19-east,Moreshwar 19 East,Navi Mumbai,Nerul,2,850,70000,27096774,False,,CBD Belapur Metro,45,low,magicbricks
+mum-nerul-mayuresh-row-house,Mayuresh Row House,Navi Mumbai,Nerul,3,2000,229999,89031870,False,,CBD Belapur Metro,46,low,magicbricks
+mum-nerul-matrix-estella,Matrix Estella,Navi Mumbai,Nerul,3,2320,86800,33600000,False,,CBD Belapur Metro,50,low,magicbricks
+mum-nerul-dream-ikon,Dream Ikon,Navi Mumbai,Nerul,,642,48308,18700000,False,,CBD Belapur Metro,39,low,magicbricks
+mum-nerul-platinum-mansionz,Platinum Mansionz,Navi Mumbai,Nerul,2,850,68200,26400000,False,,CBD Belapur Metro,44,low,magicbricks
+mum-nerul-the-royal-bay,The Royal Bay,Navi Mumbai,Nerul,2/3,1200,74141,28700000,False,,CBD Belapur Metro,46,low,magicbricks
+mum-nerul-paradise-sai-world-one-residential,Paradise Sai World One Residential,Navi Mumbai,Nerul,2/3,1254,90287,34950000,False,,CBD Belapur Metro,50,low,magicbricks
+mum-nerul-omkar-planet,Omkar Planet,Navi Mumbai,Nerul,3,1035,91708,35500000,False,,CBD Belapur Metro,44,low,magicbricks
+mum-nerul-moraj-silent-valley,Moraj Silent Valley,Navi Mumbai,Nerul,2/3,877,58641,22700000,False,,CBD Belapur Metro,44,low,magicbricks
+mum-nerul-escaso-platinum-sicily,Escaso Platinum Sicily,Navi Mumbai,Nerul,2,764,64066,24800000,False,,CBD Belapur Metro,46,low,magicbricks
+mum-nerul-paradise-sai-world-one-commercial,Paradise Sai World One Commercial,Navi Mumbai,Nerul,,1937,130200,50400000,False,,CBD Belapur Metro,41,low,magicbricks
+mum-nerul-emperia-icon,Emperia Icon,Navi Mumbai,Nerul,,265,20485,7930000,False,,CBD Belapur Metro,48,low,magicbricks
+mum-nerul-cyber-square-1,Cyber Square 1,Navi Mumbai,Nerul,,901,44691,17300000,False,,CBD Belapur Metro,40,low,magicbricks
+mum-nerul-balaji-delta-palm-beach,Balaji Delta Palm Beach,Navi Mumbai,Nerul,3,1413,92483,35800000,False,,CBD Belapur Metro,42,low,magicbricks
+mum-oshiwara-oshiwara-mumbai,"Oshiwara, Mumbai",Andheri-Juhu,Oshiwara,1/2/3,750,67500,8600000,False,,Oshiwara,9,low,magicbricks
+mum-oshiwara-windermere-chs-ltd,WINDERMERE CHS LTD.,Andheri-Juhu,Oshiwara,2,850,130000,50322580,False,,Oshiwara,6,low,magicbricks
+mum-oshiwara-evershine-green,Evershine Green,Andheri-Juhu,Oshiwara,2/4,750,87000,41750000,False,,Oshiwara,6,low,magicbricks
+mum-oshiwara-legend-siroya-level-the-residences,Legend Siroya Level The Residences,Andheri-Juhu,Oshiwara,1,350,45000,17419354,False,,Oshiwara,4,low,magicbricks
+mum-oshiwara-paradigm-antalya,Paradigm Antalya,Andheri-Juhu,Oshiwara,1/2,600,59750,23129032,False,,Oshiwara,8,low,magicbricks
+mum-oshiwara-meera-tower,meera tower,Andheri-Juhu,Oshiwara,4/5,2450,135000,52500000,False,,Oshiwara,9,low,magicbricks
+mum-oshiwara-crystal-plaza,Crystal Plaza,Andheri-Juhu,Oshiwara,,250,48000,18580645,False,,Oshiwara,6,low,magicbricks
+mum-oshiwara-dream-aspire,Dream Aspire,Andheri-Juhu,Oshiwara,,3000,950000,367741935,False,,Oshiwara,3,low,magicbricks
+mum-oshiwara-dlh-the-park-residences,DLH The Park Residences,Andheri-Juhu,Oshiwara,3,1116,200000,77419354,False,,Oshiwara,6,low,magicbricks
+mum-oshiwara-laxmi-business-park,Laxmi Business Park,Andheri-Juhu,Oshiwara,,550,160000,61935483,False,,Oshiwara,7,low,magicbricks
+mum-oshiwara-indradarshan-ii,Indradarshan II,Andheri-Juhu,Oshiwara,2/3,1000,120000,45000000,False,,Oshiwara,7,low,magicbricks
+mum-oshiwara-paradigm-alaya,Paradigm Alaya,Andheri-Juhu,Oshiwara,2/3,940,58641,22700000,False,,Oshiwara,5,low,magicbricks
+mum-oshiwara-windsor-grande-residences,Windsor Grande Residences,Andheri-Juhu,Oshiwara,4,3050,439166,170000000,False,,Oshiwara,3,low,magicbricks
+mum-oshiwara-dlh-leo,DLH Leo,Andheri-Juhu,Oshiwara,2,670,69750,27000000,False,,Oshiwara,5,low,magicbricks
+mum-oshiwara-indra-darshan-apartment,Indra Darshan Apartment,Andheri-Juhu,Oshiwara,4,1500,160683,62200000,False,,Oshiwara,2,low,magicbricks
+mum-oshiwara-gurukrupa-ekam,Gurukrupa Ekam,Andheri-Juhu,Oshiwara,2,815,77758,30099999,False,,Oshiwara,4,low,magicbricks
+mum-panvel-palaspe-phata-navi-mumbai,Palaspe Phata Navi Mumbai,Navi Mumbai,Panvel,,2000,2230000,863225806,False,,Kharghar Village,119,low,magicbricks
+mum-panvel-valley-shilp,Valley Shilp,Navi Mumbai,Panvel,2,750,35000,13548387,False,,Kharghar Village,119,low,magicbricks
+mum-panvel-paradise-sai-world-city,Paradise Sai World City,Navi Mumbai,Panvel,2/3/4,1308,32000,24400000,False,,Kharghar Village,123,low,magicbricks
+mum-panvel-panvel-navi-mumbai,"Panvel, Navi Mumbai",Navi Mumbai,Panvel,2/3,750,41500,16064516,False,,Kharghar Village,122,low,magicbricks
+mum-panvel-ekta-residency-chs,Ekta Residency CHS,Navi Mumbai,Panvel,2,700,26000,10064516,False,,Kharghar Village,121,low,magicbricks
+mum-panvel-indiabulls-greens-panvel,Indiabulls Greens Panvel,Navi Mumbai,Panvel,2,700,25000,9677419,False,,Kharghar Village,121,low,magicbricks
+mum-panvel-shree-ganesh-delta-elite,Shree Ganesh Delta Elite,Navi Mumbai,Panvel,2,650,20000,7741935,False,,Kharghar Village,121,low,magicbricks
+mum-panvel-shree-laxmi-solgem,Shree Laxmi Solgem,Navi Mumbai,Panvel,2,650,32000,12387096,False,,Kharghar Village,127,low,magicbricks
+mum-panvel-tirupati-heights,Tirupati Heights,Navi Mumbai,Panvel,3,1350,120000,46451612,False,,Kharghar Village,119,low,magicbricks
+mum-panvel-arihant-aspire,Arihant Aspire,Navi Mumbai,Panvel,1/2,732,24000,6160000,False,,Kharghar Village,126,low,magicbricks
+mum-panvel-karanjade-navi-mumbai,Karanjade Navi Mumbai,Navi Mumbai,Panvel,,380,8000,3096774,False,,Kharghar Village,129,low,magicbricks
+mum-panvel-marathon-nexzone,Marathon Nexzone,Navi Mumbai,Panvel,3/5,1431,35000,20600000,False,,Kharghar Village,122,low,magicbricks
+mum-panvel-embassy-park,Embassy Park,Navi Mumbai,Panvel,2,699,35908,13899999,False,,Kharghar Village,124,low,magicbricks
+mum-panvel-l-and-t-crestoria-estates,L and T Crestoria Estates,Navi Mumbai,Panvel,2/4,1421,64583,25000000,False,,Kharghar Village,124,low,magicbricks
+mum-panvel-jindal-air,Jindal Air,Navi Mumbai,Panvel,1,334,11625,4500000,False,,Kharghar Village,128,low,magicbricks
+mum-panvel-hiranandani-fortune-city,Hiranandani Fortune City,Navi Mumbai,Panvel,3,1635,58125,22500000,False,,Kharghar Village,126,low,magicbricks
+mum-panvel-the-arena-at-hiranandani-fortune-cit,The Arena at Hiranandani Fortune city,Navi Mumbai,Panvel,4,1896,84862,32850000,False,,Kharghar Village,123,low,magicbricks
+mum-panvel-wadhwa-wise-city,Wadhwa Wise City,Navi Mumbai,Panvel,1,389,15086,5840000,False,,Kharghar Village,127,low,magicbricks
+mum-pokhran-road-tenx-habitat-raymond-realty,TenX Habitat Raymond Realty,Thane,Pokhran Road,1/2,635,41500,14500000,False,,Borivali West,199,low,magicbricks
+mum-pokhran-road-tata-glendale,Tata Glendale,Thane,Pokhran Road,2,710,43000,16645161,False,,Goregaon East (Dindoshi),192,low,magicbricks
+mum-pokhran-road-samata-nagar-thane-west-thane,Samata Nagar Thane West Thane,Thane,Pokhran Road,2,635,35000,14000000,False,,Goregaon East (Dindoshi),194,low,magicbricks
+mum-pokhran-road-tenx-era-raymond-realty,TenX ERA Raymond Realty,Thane,Pokhran Road,3,814,54508,21100000,False,,Goregaon East (Dindoshi),198,low,magicbricks
+mum-pokhran-road-the-address-by-gs,The Address By GS,Thane,Pokhran Road,3,1150,68458,26500000,False,,Goregaon East (Dindoshi),202,low,magicbricks
+mum-pokhran-road-tata-glendale-samata-nagar-thane-wes,"Tata Glendale, Samata Nagar Thane West Thane",Thane,Pokhran Road,3,1050,50375,19500000,False,,Borivali West,194,low,magicbricks
+mum-pokhran-road-tenx-habitat-raymond-realty-samata-n,"TenX Habitat Raymond Realty, Samata Nagar Thane West Thane",Thane,Pokhran Road,1/2,615,38491,14900000,False,,Goregaon East (Dindoshi),200,low,magicbricks
+mum-pokhran-road-ashar-metro-towers,Ashar Metro Towers,Thane,Pokhran Road,1,478,25058,9700000,False,,Goregaon East (Dindoshi),200,low,magicbricks
+mum-powai-shapoorji-pallonji-vicinia,Shapoorji Pallonji Vicinia,Powai-Central,Powai,2/3,1070,110000,42580645,False,,Saki Naka,39,low,magicbricks
+mum-powai-l-t-emerald-isle,L&T Emerald Isle,Powai-Central,Powai,3,950,120000,46451612,False,,Saki Naka,43,low,magicbricks
+mum-powai-hiranandani-gardens-valencia,Hiranandani Gardens Valencia,Powai-Central,Powai,3,1200,160000,61935483,False,,Saki Naka,38,low,magicbricks
+mum-powai-tulipia-and-tilia-apartment,Tulipia And Tilia Apartment,Powai-Central,Powai,3,1080,130000,36500000,False,,Saki Naka,38,low,magicbricks
+mum-powai-hiranandani-gardens-florentine,Hiranandani Gardens Florentine,Powai-Central,Powai,2,800,90000,34838709,False,,Saki Naka,37,low,magicbricks
+mum-powai-l-t-elixir-reserve,L&T Elixir Reserve,Powai-Central,Powai,2/3,840,110000,45450000,False,,Saki Naka,37,low,magicbricks
+mum-powai-lake-pleasant,Lake Pleasant,Powai-Central,Powai,2,670,78000,30193548,False,,Saki Naka,42,low,magicbricks
+mum-powai-hiranandani-regent-hill,Hiranandani Regent Hill,Powai-Central,Powai,1,389,79000,30580645,False,,Saki Naka,36,low,magicbricks
+mum-powai-kalpataru-woods-ville,Kalpataru Woods Ville,Powai-Central,Powai,3,1237,130000,50322580,False,,Saki Naka,39,low,magicbricks
+mum-powai-sapphire-lakeside,Sapphire Lakeside,Powai-Central,Powai,1,500,51000,19741935,False,,Saki Naka,39,low,magicbricks
+mum-powai-hiranandani-highland,Hiranandani Highland,Powai-Central,Powai,1/3,784,75000,43500000,False,,Saki Naka,36,low,magicbricks
+mum-powai-hiranandani-gardens-kingston,Hiranandani Gardens Kingston,Powai-Central,Powai,1,420,50000,19354838,False,,Saki Naka,39,low,magicbricks
+mum-powai-lake-bloom,Lake Bloom,Powai-Central,Powai,2,750,59000,22838709,False,,Saki Naka,37,low,magicbricks
+mum-powai-hiranandani-castle-rock,Hiranandani Castle Rock,Powai-Central,Powai,2,777,130000,50322580,False,,Saki Naka,39,low,magicbricks
+mum-powai-hiranandani-gardens-lake-castle,Hiranandani Gardens Lake Castle,Powai-Central,Powai,3,987,130000,50322580,False,,Saki Naka,44,low,magicbricks
+mum-powai-hiranandani-empress-hill,Hiranandani Empress Hill,Powai-Central,Powai,3,1064,132525,51300000,False,,Saki Naka,36,low,magicbricks
+mum-powai-nahars-chandi-valley-chandivali-mumb,"Nahars Chandi Valley, Chandivali Mumbai",Powai-Central,Powai,3,1537,152675,59100000,False,,Saki Naka,37,low,magicbricks
+mum-powai-dhanani-shree-krishna,Dhanani Shree Krishna,Powai-Central,Powai,2,610,40300,15600000,False,,Saki Naka,40,low,magicbricks
+mum-powai-lake-florence,Lake Florence,Powai-Central,Powai,3,1365,109791,42500000,False,,Saki Naka,41,low,magicbricks
+mum-powai-hiranandani-atlantis,Hiranandani Atlantis,Powai-Central,Powai,2,771,103333,40000000,False,,Saki Naka,36,low,magicbricks
+mum-powai-hiranandani-verona-co-op-housing-soc,Hiranandani Verona Co op Housing Society Ltd,Powai-Central,Powai,3,1000,138208,53500000,False,,Saki Naka,39,low,magicbricks
+mum-powai-synchronicity-chandivali-mumbai,"Synchronicity, Chandivali Mumbai",Powai-Central,Powai,3,1100,94291,36500000,False,,Saki Naka,43,low,magicbricks
+mum-powai-panchvati-b,Panchvati B,Powai-Central,Powai,2,650,44433,17200000,False,,Saki Naka,46,low,magicbricks
+mum-powai-mountain-breeze,Mountain Breeze,Powai-Central,Powai,1,305,20666,8000000,False,,Saki Naka,39,low,magicbricks
+mum-prabhadevi-rustomjee-crown,Rustomjee Crown,South Mumbai,Prabhadevi,3/4/5,1753,600000,114400000,False,,Siddhivinayak,5,low,magicbricks
+mum-prabhadevi-hubtown-25-south,Hubtown 25 South,South Mumbai,Prabhadevi,3/4,2142,570000,228600000,False,,Siddhivinayak,8,low,magicbricks
+mum-prabhadevi-naman-midtown,Naman Midtown,South Mumbai,Prabhadevi,,4500,1889999,731612516,False,,Siddhivinayak,7,low,magicbricks
+mum-prabhadevi-omega-luxuria,Omega Luxuria,South Mumbai,Prabhadevi,3,1700,300000,116129032,False,,Siddhivinayak,6,low,magicbricks
+mum-prabhadevi-prabhadevi-mumbai,Prabhadevi Mumbai,South Mumbai,Prabhadevi,,2085,505000,195483870,False,,Siddhivinayak,6,low,magicbricks
+mum-prabhadevi-grand-palazo,Grand Palazo,South Mumbai,Prabhadevi,4,2100,4300000,1664516129,False,,Siddhivinayak,6,low,magicbricks
+mum-prabhadevi-vision-crest,Vision Crest,South Mumbai,Prabhadevi,4,2200,430000,166451612,False,,Siddhivinayak,5,low,magicbricks
+mum-prabhadevi-cosmos-majestic,Cosmos Majestic,South Mumbai,Prabhadevi,3,1100,170000,65806451,False,,Siddhivinayak,2,low,magicbricks
+mum-prabhadevi-kalpataru-oceana,Kalpataru Oceana,South Mumbai,Prabhadevi,5,3940,769833,298000000,False,,Siddhivinayak,2,low,magicbricks
+mum-prabhadevi-naman-midtown-kamgar-nagar-prabhadev,"Naman Midtown, Kamgar Nagar Prabhadevi Mumbai",South Mumbai,Prabhadevi,,735,161458,62500000,False,,Siddhivinayak,2,low,magicbricks
+mum-santacruz-west-vogue,Vogue,Bandra-Santacruz,Santacruz West,3,1950,500000,193548387,False,,Santacruz Metro,24,low,magicbricks
+mum-santacruz-west-paramvir-westend-apartments,Paramvir Westend Apartments,Bandra-Santacruz,Santacruz West,4,3300,800000,309677419,False,,Santacruz Metro,26,low,magicbricks
+mum-santacruz-west-ariisto-ria-apartment,Ariisto Ria Apartment,Bandra-Santacruz,Santacruz West,4,2500,450000,174193548,False,,Santacruz Metro,21,moderate,magicbricks
+mum-santacruz-west-nav-kiran,Nav Kiran,Bandra-Santacruz,Santacruz West,2/3,1200,285000,110322580,False,,Santacruz Metro,18,moderate,magicbricks
+mum-santacruz-west-tkl-shivdham-chs,TKL Shivdham CHS,Bandra-Santacruz,Santacruz West,3,1200,330000,127741935,False,,Santacruz Metro,23,moderate,magicbricks
+mum-santacruz-west-santacruz-west-mumbai,"Santacruz West, Mumbai",Bandra-Santacruz,Santacruz West,2/3/4/5,1347,350000,56600000,False,,Santacruz Metro,23,low,magicbricks
+mum-santacruz-west-kings-acres-apartment,Kings Acres Apartment,Bandra-Santacruz,Santacruz West,2,800,220000,85161290,False,,Santacruz Metro,23,low,magicbricks
+mum-santacruz-west-tapovan-apartment,Tapovan Apartment,Bandra-Santacruz,Santacruz West,4/5,5000,800000,220000000,False,,Santacruz Metro,19,moderate,magicbricks
+mum-santacruz-west-saraswat-colony-potohar-nagar-mumbai,Saraswat Colony Potohar Nagar Mumbai,Bandra-Santacruz,Santacruz West,6,2800,550000,212903225,False,,Santacruz Metro,19,moderate,magicbricks
+mum-santacruz-west-seasons-height,Seasons Height,Bandra-Santacruz,Santacruz West,3,1600,280000,108387096,False,,Santacruz Metro,21,low,magicbricks
+mum-santacruz-west-new-diamond-palace,New Diamond Palace,Bandra-Santacruz,Santacruz West,3,1500,160000,61935483,False,,Santacruz Metro,25,low,magicbricks
+mum-santacruz-west-lucrative-gateway-residential,Lucrative Gateway Residential,Bandra-Santacruz,Santacruz West,2,780,103075,39900000,False,,Santacruz Metro,27,low,magicbricks
+mum-santacruz-west-shree-commerz-54,Shree Commerz 54,Bandra-Santacruz,Santacruz West,,1500,255750,99000000,False,,Santacruz Metro,20,moderate,magicbricks
+mum-santacruz-west-ruparel-panache,Ruparel Panache,Bandra-Santacruz,Santacruz West,3/4,1470,178766,69200000,False,,Santacruz Metro,20,moderate,magicbricks
+mum-santacruz-west-pranav-priyadarshini-chs,Pranav Priyadarshini CHS,Bandra-Santacruz,Santacruz West,3,1078,152933,59200000,False,,Santacruz Metro,26,low,magicbricks
+mum-santacruz-west-pranav-pearl-palace,Pranav Pearl Palace,Bandra-Santacruz,Santacruz West,4,1677,265050,102600000,False,,Santacruz Metro,15,high,magicbricks
+mum-santacruz-west-forishna-nav-chetna,Forishna Nav Chetna,Bandra-Santacruz,Santacruz West,3,1075,174375,67500000,False,,Santacruz Metro,21,moderate,magicbricks
+mum-santacruz-west-monarch-apartment-willingdon-mumbai,"Monarch Apartment, Willingdon Mumbai",Bandra-Santacruz,Santacruz West,3,1250,193750,75000000,False,,Santacruz Metro,21,moderate,magicbricks
+mum-santacruz-west-pentagon-mantri-prerana,Pentagon Mantri Prerana,Bandra-Santacruz,Santacruz West,3,1005,142083,55000000,False,,Santacruz Metro,19,moderate,magicbricks
+mum-santacruz-west-raheja-park-west-saraswat-colony-pot,"Raheja Park West, Saraswat Colony Potohar Nagar Mumbai",Bandra-Santacruz,Santacruz West,4,2000,348750,135000000,False,,Santacruz Metro,25,low,magicbricks
+mum-santacruz-west-vascon-orchids,Vascon Orchids,Bandra-Santacruz,Santacruz West,2,753,87316,33800000,False,,Santacruz Metro,24,low,magicbricks
+mum-seawoods-vanashree-chs,Vanashree CHS,Navi Mumbai,Seawoods,3,1400,150000,58064516,False,,CBD Belapur Metro,33,low,magicbricks
+mum-seawoods-bhakti-avenue,Bhakti Avenue,Navi Mumbai,Seawoods,3,1050,65000,25161290,False,,CBD Belapur Metro,38,low,magicbricks
+mum-seawoods-seawoods-grand-central,Seawoods Grand Central,Navi Mumbai,Seawoods,,3850,1024999,65000000,False,,CBD Belapur Metro,35,low,magicbricks
+mum-seawoods-chamunda-serene,Chamunda Serene,Navi Mumbai,Seawoods,2,766,75000,29032258,False,,CBD Belapur Metro,32,low,magicbricks
+mum-seawoods-akshar-shreeji-heights,Akshar Shreeji Heights,Navi Mumbai,Seawoods,4,2200,160000,77500000,False,,CBD Belapur Metro,41,low,magicbricks
+mum-seawoods-shagoofa-chs,Shagoofa CHS,Navi Mumbai,Seawoods,4,2500,135000,52258064,False,,CBD Belapur Metro,34,low,magicbricks
+mum-seawoods-seawoods-estate,Seawoods Estate,Navi Mumbai,Seawoods,2,830,85000,32903225,False,,CBD Belapur Metro,40,low,magicbricks
+mum-seawoods-l-and-t-the-villas-at-seawoods-resid,L And T The Villas At Seawoods Residences,Navi Mumbai,Seawoods,2,780,80000,30967741,False,,CBD Belapur Metro,38,low,magicbricks
+mum-seawoods-l-and-t-realty-seawoods-west-square,L and T Realty Seawoods West Square,Navi Mumbai,Seawoods,2/3/4,1200,130000,30000000,False,,CBD Belapur Metro,36,low,magicbricks
+mum-seawoods-seawoods-navi-mumbai,Seawoods Navi Mumbai,Navi Mumbai,Seawoods,2/3/5,820,110000,28900000,False,,CBD Belapur Metro,31,low,magicbricks
+mum-seawoods-studio-apartment-for-rent-in-seawood,"Studio Apartment for Rent in Seawoods, Navi Mumbai",Navi Mumbai,Seawoods,,250,15000,5806451,False,,CBD Belapur Metro,38,low,magicbricks
+mum-seawoods-l-and-t-realty-seawoods-west-manor-t,L and T Realty Seawoods West Manor Tower A and B,Navi Mumbai,Seawoods,,2200,450000,174193548,False,,CBD Belapur Metro,38,low,magicbricks
+mum-seawoods-palm-amore,Palm Amore,Navi Mumbai,Seawoods,3/4,2471,210541,81500000,False,,CBD Belapur Metro,41,low,magicbricks
+mum-seawoods-nri-complex-phase,NRI Complex Phase,Navi Mumbai,Seawoods,3,1350,232500,90000000,False,,CBD Belapur Metro,38,low,magicbricks
+mum-sion-dosti-mezzo-22,Dosti Mezzo 22,Chembur-Wadala,Sion,2/3,958,150000,31000000,False,,BKC,32,low,magicbricks
+mum-sion-rustomjee-aspiree,Rustomjee Aspiree,Chembur-Wadala,Sion,,5226,1140000,441290322,False,,BKC,40,low,magicbricks
+mum-sion-arihant-residency,Arihant Residency,Chembur-Wadala,Sion,3,850,80000,30967741,False,,BKC,43,moderate,magicbricks
+mum-sion-sion-mumbai,Sion Mumbai,Chembur-Wadala,Sion,2/3,1050,170000,65806451,False,,BKC,42,low,magicbricks
+mum-sion-godrej-coliseum,Godrej Coliseum,Chembur-Wadala,Sion,,7500,1709999,661935096,False,,BKC,39,low,magicbricks
+mum-sion-everard-nagar-mumbai,Everard Nagar Mumbai,Chembur-Wadala,Sion,,2000,2800000,1083870967,False,,BKC,37,low,magicbricks
+mum-sion-sion-koliwada-mumbai,Sion Koliwada Mumbai,Chembur-Wadala,Sion,3,1220,80000,30967741,False,,BKC,43,moderate,magicbricks
+mum-sion-baysquare-the-ivy,Baysquare THE IVY,Chembur-Wadala,Sion,4,1656,243350,94200000,False,,BKC,41,low,magicbricks
+mum-sion-raheja-amaltis,Raheja Amaltis,Chembur-Wadala,Sion,3/4,1900,207183,80200000,False,,BKC,40,low,magicbricks
+mum-sion-sheth-beaumonte,Sheth Beaumonte,Chembur-Wadala,Sion,3/5,2492,224233,86800000,False,,BKC,41,moderate,magicbricks
+mum-sion-lodha-vero,Lodha Vero,Chembur-Wadala,Sion,3/4,2180,327825,126900000,False,,BKC,41,low,magicbricks
+mum-sion-transindia-meridian,TransIndia Meridian,Chembur-Wadala,Sion,2/3,677,51150,19800000,False,,BKC,45,moderate,magicbricks
+mum-sion-raymond-the-address-by-gs-sion,Raymond The Address By Gs Sion,Chembur-Wadala,Sion,3/4,1454,140533,54400000,False,,BKC,41,low,magicbricks
+mum-thane-west-wagle-industrial-estate-thane,Wagle Industrial Estate Thane,Thane,Thane West,,7731,915000,354193548,False,,Borivali West,218,low,magicbricks
+mum-thane-west-centrum-it-park,centrum it park,Thane,Thane West,,3900,700000,270967741,False,,Borivali West,220,low,magicbricks
+mum-thane-west-thane-west-thane,"Thane West, Thane",Thane,Thane West,2,700,47000,18193548,False,,Borivali West,223,low,magicbricks
+mum-thane-west-opal-square,Opal Square,Thane,Thane West,,1100,210000,81290322,False,,Goregaon East (Dindoshi),225,low,magicbricks
+mum-thane-west-wagle-estate-thane,Wagle Estate Thane,Thane,Thane West,,384,53760,20810322,False,,Goregaon East (Dindoshi),219,low,magicbricks
+mum-thane-west-lodha-supremus-2,Lodha Supremus 2,Thane,Thane West,,1014,150000,58064516,False,,Borivali West,225,low,magicbricks
+mum-thane-west-bhairaav-milestone-wagle-industrial,"Bhairaav Milestone, Wagle Industrial Estate Thane",Thane,Thane West,,5000,975000,377419354,False,,Borivali West,225,low,magicbricks
+mum-thane-west-nitco-biz-park,Nitco Biz Park,Thane,Thane West,,1000,120000,46451612,False,,Borivali West,224,low,magicbricks
+mum-thane-west-lokpuram-complex,Lokpuram Complex,Thane,Thane West,2,600,28000,10838709,False,,Borivali West,224,low,magicbricks
+mum-thane-west-hiranandani-the-walk-ventana,Hiranandani The Walk Ventana,Thane,Thane West,1,450,35000,13548387,False,,Borivali West,223,low,magicbricks
+mum-thane-west-piramal-vaikunth,Piramal Vaikunth,Thane,Thane West,2,530,32000,12387096,False,,Goregaon East (Dindoshi),218,low,magicbricks
+mum-thane-west-ashwin-sheth-avalon,Ashwin Sheth Avalon,Thane,Thane West,3,1469,116250,45000000,False,,Borivali West,220,low,magicbricks
+mum-thane-west-trividh-naupada-thane,"Trividh, Naupada Thane",Thane,Thane West,3,1112,70266,27200000,False,,Goregaon East (Dindoshi),221,low,magicbricks
+mum-thane-west-midas-o22-business-park-wagle-estate,"Midas O22 Business Park, Wagle Estate Thane",Thane,Thane West,,1495,107208,41500000,False,,Borivali West,219,low,magicbricks
+mum-thane-west-squarefeet-green-square-kavesar-than,"Squarefeet Green Square, Kavesar Thane",Thane,Thane West,2,632,24490,9480000,False,,Borivali West,217,low,magicbricks
+mum-thane-west-piramal-vaikunth-balkum-pada-thane,"Piramal Vaikunth, Balkum Pada Thane",Thane,Thane West,1/2,518,27977,10830000,False,,Borivali West,224,low,magicbricks
+mum-thane-west-l-t-evara-heights,L & T Evara Heights,Thane,Thane West,3,1057,75175,29100000,False,,Borivali West,226,low,magicbricks
+mum-thane-west-hiranandani-westgate-kavesar-thane,"Hiranandani Westgate, Kavesar Thane",Thane,Thane West,4,1761,144666,55999999,False,,Borivali West,217,low,magicbricks
+mum-thane-west-l-t-realty-vayam-wagle-estate-thane,"L&T Realty Vayam, Wagle Estate Thane",Thane,Thane West,3,1263,85250,33000000,False,,Goregaon East (Dindoshi),222,low,magicbricks
+mum-thane-west-dosti-604-wagle-estate-thane,"Dosti 604, Wagle Estate Thane",Thane,Thane West,2,760,41591,16100000,False,,Borivali West,217,low,magicbricks
+mum-thane-west-ace-parkside-kasarvadavali-thane,"Ace Parkside, Kasarvadavali Thane",Thane,Thane West,2,662,23172,8970000,False,,Borivali West,217,low,magicbricks
+mum-thane-west-mextech-miraya-divine-majiwada-thane,"Mextech Miraya Divine, Majiwada Thane",Thane,Thane West,3,1000,51150,19800000,False,,Borivali West,219,low,magicbricks
+mum-thane-west-km-horizon-pearl-2-owale-thane,"KM Horizon Pearl 2, Owale Thane",Thane,Thane West,2,662,27383,10600000,False,,Goregaon East (Dindoshi),218,low,magicbricks
+mum-thane-west-rustomjee-urbania-majiwada-thane,"Rustomjee Urbania, Majiwada Thane",Thane,Thane West,2,698,31775,12300000,False,,Borivali West,224,low,magicbricks
+mum-thane-west-iris-at-kashish-park,IRIS at Kashish Park,Thane,Thane West,2/3,1124,57220,22150000,False,,Borivali West,218,low,magicbricks
+mum-thane-west-dosti-west-county-balkum-pada-thane,"Dosti West County, Balkum Pada Thane",Thane,Thane West,3,1033,46241,17900000,False,,Borivali West,219,low,magicbricks
+mum-ulwe-payal-paradise,Payal Paradise,Navi Mumbai,Ulwe,2,670,31000,12000000,False,,CBD Belapur Metro,87,low,magicbricks
+mum-ulwe-ulwe-navi-mumbai,"Ulwe, Navi Mumbai",Navi Mumbai,Ulwe,1/2/3,650,40000,2900000,False,,CBD Belapur Metro,89,low,magicbricks
+mum-ulwe-mahaavir-mannat,MAHAAVIR MANNAT,Navi Mumbai,Ulwe,3,1460,75000,29032258,False,,CBD Belapur Metro,89,low,magicbricks
+mum-ulwe-irs-tower,IRS Tower,Navi Mumbai,Ulwe,3,1000,37500,14516129,False,,CBD Belapur Metro,87,low,magicbricks
+mum-ulwe-today-global-callisto,Today Global Callisto,Navi Mumbai,Ulwe,2,700,33000,12774193,False,,CBD Belapur Metro,83,low,magicbricks
+mum-ulwe-delta,Delta,Navi Mumbai,Ulwe,2,800,45000,17419354,False,,CBD Belapur Metro,82,low,magicbricks
+mum-ulwe-nms-icon,NMS Icon,Navi Mumbai,Ulwe,,767,37000,14322580,False,,CBD Belapur Metro,87,low,magicbricks
+mum-ulwe-satyam-mayfair,Satyam Mayfair,Navi Mumbai,Ulwe,2,850,50000,19354838,False,,CBD Belapur Metro,79,low,magicbricks
+mum-ulwe-gomaji-kasturi,Gomaji Kasturi,Navi Mumbai,Ulwe,2,780,42000,16258064,False,,CBD Belapur Metro,81,low,magicbricks
+mum-ulwe-shankar-harmony,Shankar Harmony,Navi Mumbai,Ulwe,1,400,18000,6967741,False,,CBD Belapur Metro,81,low,magicbricks
+mum-ulwe-balaji-delta-tower,Balaji Delta Tower,Navi Mumbai,Ulwe,2,740,66000,25548387,False,,CBD Belapur Metro,80,low,magicbricks
+mum-ulwe-lakhani-rajesh-presidency,Lakhani Rajesh Presidency,Navi Mumbai,Ulwe,3,1400,50000,19354838,False,,CBD Belapur Metro,86,low,magicbricks
+mum-ulwe-payal-palace,Payal Palace,Navi Mumbai,Ulwe,3,900,40000,15483870,False,,CBD Belapur Metro,86,low,magicbricks
+mum-ulwe-sai-shell,Sai Shell,Navi Mumbai,Ulwe,3,1111,56833,22000000,False,,CBD Belapur Metro,91,low,magicbricks
+mum-ulwe-bhaveshwar-infinity,Bhaveshwar Infinity,Navi Mumbai,Ulwe,2,1345,29708,11500000,False,,CBD Belapur Metro,89,low,magicbricks
+mum-ulwe-pristine-bhaveshwar-phoenix,Pristine Bhaveshwar Phoenix,Navi Mumbai,Ulwe,2,1145,27125,10500000,False,,CBD Belapur Metro,81,low,magicbricks
+mum-ulwe-balaji-mayuresh-delta,Balaji Mayuresh Delta,Navi Mumbai,Ulwe,3,1850,95583,37000000,False,,CBD Belapur Metro,84,low,magicbricks
+mum-ulwe-delta-flora-pushpak-nagar-navi-mumba,"Delta Flora, Pushpak Nagar Navi Mumbai",Navi Mumbai,Ulwe,2,1125,22216,8600000,False,,CBD Belapur Metro,83,low,magicbricks
+mum-ulwe-bhagwati-elysia-pushpak-nagar-navi-m,"Bhagwati Elysia, Pushpak Nagar Navi Mumbai",Navi Mumbai,Ulwe,1/2,630,17566,6800000,False,,CBD Belapur Metro,85,low,magicbricks
+mum-ulwe-vikas-147-greens,Vikas 147 Greens,Navi Mumbai,Ulwe,1,380,15009,5810000,False,,CBD Belapur Metro,84,low,magicbricks
+mum-ulwe-precious-fortune-sector-16-ulwe-navi,"Precious Fortune, Sector 16 Ulwe Navi Mumbai",Navi Mumbai,Ulwe,1,432,14983,5800000,False,,CBD Belapur Metro,87,low,magicbricks
+mum-ulwe-unnati-tower,Unnati Tower,Navi Mumbai,Ulwe,2,750,38233,14800000,False,,CBD Belapur Metro,78,low,magicbricks
+mum-ulwe-royal-palm,Royal Palm,Navi Mumbai,Ulwe,2,760,38750,15000000,False,,CBD Belapur Metro,91,low,magicbricks
+mum-ulwe-the-domus-26-east,The Domus 26 East,Navi Mumbai,Ulwe,2,732,31000,12000000,False,,CBD Belapur Metro,79,low,magicbricks
+mum-ulwe-gems-corner,Gems Corner,Navi Mumbai,Ulwe,2,690,24541,9500000,False,,CBD Belapur Metro,79,low,magicbricks
+mum-ulwe-balaji-shradha,Balaji Shradha,Navi Mumbai,Ulwe,2,750,28416,11000000,False,,CBD Belapur Metro,80,low,magicbricks
+mum-ulwe-delta-palacio,Delta Palacio,Navi Mumbai,Ulwe,3,970,40041,15500000,False,,CBD Belapur Metro,88,low,magicbricks
+mum-ulwe-harsh-precious-majestic-pushpak-naga,"Harsh Precious Majestic, Pushpak Nagar Navi Mumbai",Navi Mumbai,Ulwe,2,680,20666,8000000,False,,CBD Belapur Metro,88,low,magicbricks
+mum-vashi-sector-30a-vashi-navi-mumbai,Sector 30A Vashi Navi Mumbai,Navi Mumbai,Vashi,,300,65000,25161290,False,,Central Park Kharghar,120,low,magicbricks
+mum-vashi-sector-17-vashi-navi-mumbai,Sector 17 Vashi Navi Mumbai,Navi Mumbai,Vashi,4,1450,1400000,541935483,False,,Central Park Kharghar,126,low,magicbricks
+mum-vashi-satra-plaza,Satra Plaza,Navi Mumbai,Vashi,,1000,135000,52258064,False,,Central Park Kharghar,122,low,magicbricks
+mum-vashi-cyber-one,Cyber One,Navi Mumbai,Vashi,,3028,529999,205160903,False,,CBD Belapur Metro,122,low,magicbricks
+mum-vashi-akshar-business-park,Akshar Business Park,Navi Mumbai,Vashi,,3219,235000,90967741,False,,CBD Belapur Metro,119,low,magicbricks
+mum-vashi-vashi-navi-mumbai,Vashi Navi Mumbai,Navi Mumbai,Vashi,2,844,377500,29100000,False,,Central Park Kharghar,127,low,magicbricks
+mum-vashi-the-ambience-court,The Ambience Court,Navi Mumbai,Vashi,,1000,120000,46451612,False,,CBD Belapur Metro,121,low,magicbricks
+mum-vashi-juhu-nagar-navi-mumbai,Juhu Nagar Navi Mumbai,Navi Mumbai,Vashi,,1200,45000,17419354,False,,CBD Belapur Metro,120,low,magicbricks
+mum-vashi-pleasant-view-chs,Pleasant View CHS,Navi Mumbai,Vashi,4,3000,100000,38709677,False,,CBD Belapur Metro,124,low,magicbricks
+mum-vashi-raheja-atlantis,Raheja Atlantis,Navi Mumbai,Vashi,2,800,85000,32903225,False,,CBD Belapur Metro,121,low,magicbricks
+mum-vashi-tech-akshar-elevate,Tech Akshar Elevate,Navi Mumbai,Vashi,,2590,170241,65900000,False,,CBD Belapur Metro,121,low,magicbricks
+mum-vashi-goodwill-wisteria,Goodwill Wisteria,Navi Mumbai,Vashi,5/6,2338,189616,73400000,False,,CBD Belapur Metro,121,low,magicbricks
+mum-vashi-ev-10-marina-bay,EV 10 Marina Bay,Navi Mumbai,Vashi,3,812,90158,34900000,False,,CBD Belapur Metro,120,low,magicbricks
+mum-vashi-haware-intelligentia-centroid,Haware Intelligentia Centroid,Navi Mumbai,Vashi,2,772,53991,20900000,False,,CBD Belapur Metro,127,low,magicbricks
+mum-vashi-progressive-one,Progressive One,Navi Mumbai,Vashi,4,1956,310000,120000000,False,,CBD Belapur Metro,122,low,magicbricks
+mum-vashi-arihant-advika,Arihant Advika,Navi Mumbai,Vashi,2,769,57866,22400000,False,,Central Park Kharghar,122,low,magicbricks
+mum-vashi-godrej-bayview,Godrej Bayview,Navi Mumbai,Vashi,3,1268,120641,46700000,False,,CBD Belapur Metro,124,low,magicbricks
+mum-vashi-gami-avant,Gami Avant,Navi Mumbai,Vashi,2,606,45983,17800000,False,,CBD Belapur Metro,124,low,magicbricks
+mum-vashi-akshar-business-park-sector-25-vashi,"Akshar Business Park, Sector 25 Vashi Navi Mumbai",Navi Mumbai,Vashi,,2200,100750,39000000,False,,Central Park Kharghar,122,low,magicbricks
+mum-versova-lodha-world-crest-lodha-world-crest,"Lodha World Crest, Lodha World Crest, Lower Parel",Andheri-Juhu,Versova,3,3000,450000,174193548,False,,Versova,11,low,magicbricks
+mum-versova-oberoi-sky-city-oberoi-sky-city-bori,"Oberoi Sky City, Oberoi Sky City, Borivali East",Andheri-Juhu,Versova,3,1390,140000,60000000,False,,Versova,15,low,magicbricks
+mum-versova-trump-tower-trump-tower-worli,"Trump Tower, Trump Tower, Worli",Andheri-Juhu,Versova,4,1600,400000,154838709,False,,Versova,11,low,magicbricks
+mum-versova-calvin-la-paloma-calvin-la-paloma-ba,"Calvin La Paloma , Calvin La Paloma, Bandra West",Andheri-Juhu,Versova,2,950,260000,100645161,False,,Versova,11,low,magicbricks
+mum-versova-kalpataru-magnus-kalpataru-magnus-ba,"Kalpataru Magnus, Kalpataru Magnus, Bandra East",Andheri-Juhu,Versova,3,1150,210000,81290322,False,,Versova,10,low,magicbricks
+mum-versova-shapoorji-pallonji-vicinia,Shapoorji Pallonji Vicinia,Andheri-Juhu,Versova,2,700,75000,29032258,False,,Versova,15,low,magicbricks
+mum-versova-ekta-tripolis,Ekta Tripolis,Andheri-Juhu,Versova,3,1084,120000,46451612,False,,Versova,16,low,magicbricks
+mum-versova-andheri-east-mumbai,Andheri East Mumbai,Andheri-Juhu,Versova,,6300,1900000,735483870,False,,Versova,16,low,magicbricks
+mum-versova-oberoi-sky-heights,Oberoi Sky Heights,Andheri-Juhu,Versova,4,2300,450000,174193548,False,,Versova,15,low,magicbricks
+mum-versova-nine-dimensions-ramaa-krishna,Nine Dimensions Ramaa Krishna,Andheri-Juhu,Versova,3,750,150000,58064516,False,,Versova,11,low,magicbricks
+mum-versova-oberoi-esquire,Oberoi Esquire,Andheri-Juhu,Versova,3,1515,290000,112258064,False,,Versova,10,low,magicbricks
+mum-versova-piramal-mahalaxmi,Piramal Mahalaxmi,Andheri-Juhu,Versova,3,1380,290000,112258064,False,,Versova,21,low,magicbricks
+mum-versova-kanakia-rainforest,Kanakia Rainforest,Andheri-Juhu,Versova,3,850,110000,42580645,False,,Versova,10,low,magicbricks
+mum-versova-acme-oasis,Acme Oasis,Andheri-Juhu,Versova,3,920,60000,23225806,False,,Versova,17,low,magicbricks
+mum-versova-apraulic-sterling-court-d,Apraulic Sterling Court D,Andheri-Juhu,Versova,3,1130,130000,50322580,False,,Versova,12,low,magicbricks
+mum-versova-wadhwa-the-address,Wadhwa The Address,Andheri-Juhu,Versova,4,2364,300000,116129032,False,,Versova,13,low,magicbricks
+mum-versova-godrej-the-trees,Godrej The Trees,Andheri-Juhu,Versova,2,770,120000,46451612,False,,Versova,20,low,magicbricks
+mum-versova-k-raheja-maestro-k-raheja-maestro-ju,"K Raheja Maestro, K Raheja Maestro, Juhu",Andheri-Juhu,Versova,4,3549,779133,301600000,False,,Versova,18,low,magicbricks
+mum-versova-godrej-avenue-eleven-godrej-avenue-e,"Godrej Avenue Eleven, Godrej Avenue Eleven, Mahalakshmi",Andheri-Juhu,Versova,4,2459,531779,205850000,False,,Versova,11,low,magicbricks
+mum-versova-lodha-adrina-lodha-adrina-worli,"Lodha Adrina, Lodha Adrina, Worli",Andheri-Juhu,Versova,5,2536,458025,177300000,False,,Versova,17,low,magicbricks
+mum-versova-adani-linkbay-residences-adani-linkb,"Adani Linkbay Residences, Adani Linkbay Residences, Andheri West",Andheri-Juhu,Versova,4,1515,155516,60199999,False,,Versova,9,low,magicbricks
+mum-versova-rustomjee-prive-rustomjee-prive-band,"Rustomjee Prive, Rustomjee Prive, Bandra East",Andheri-Juhu,Versova,3,1090,162491,62900000,False,,Versova,10,low,magicbricks
+mum-versova-naman-habitat-naman-habitat-andheri,"Naman Habitat, Naman Habitat, Andheri West",Andheri-Juhu,Versova,2,750,65358,25299999,False,,Versova,13,low,magicbricks
+mum-versova-raheja-modern-vivarea-raheja-modern,"Raheja Modern Vivarea, Raheja Modern Vivarea, Mahalakshmi",Andheri-Juhu,Versova,5,2809,653066,252800000,False,,Versova,17,low,magicbricks
+mum-versova-shapoorji-pallonji-one-hills-shapoor,"Shapoorji Pallonji One Hills, Shapoorji Pallonji One Hills, Kandivali East",Andheri-Juhu,Versova,4,2447,195816,75800000,False,,Versova,16,low,magicbricks
+mum-versova-9-business-bay-malad-west-mumbai,"9 Business Bay, Malad West Mumbai",Andheri-Juhu,Versova,,1179,91191,35300000,False,,Versova,18,low,magicbricks
+mum-versova-viceroy-savana-viceroy-savana-kandiv,"Viceroy SAVANA, Viceroy SAVANA, Kandivali East",Andheri-Juhu,Versova,3,1014,127616,49400000,False,,Versova,18,low,magicbricks
+mum-versova-kalpataru-vivant-kalpataru-vivant-jo,"Kalpataru Vivant, Kalpataru Vivant, Jogeshwari Vikhroli Link Road",Andheri-Juhu,Versova,2,755,50891,19700000,False,,Versova,19,low,magicbricks
+mum-versova-hiranandani-empress-hill-hiranandani,"Hiranandani Empress Hill, Hiranandani Empress Hill, Powai",Andheri-Juhu,Versova,3,1064,132525,51300000,False,,Versova,20,low,magicbricks
+mum-versova-kumar-vibe-mangrove-kumar-vibe-mangr,"Kumar Vibe Mangrove, Kumar Vibe Mangrove, Goregaon West",Andheri-Juhu,Versova,3,1090,95325,36900000,False,,Versova,13,low,magicbricks
+mum-versova-127-raj-home-127-raj-home-mira-road,"127 Raj Home, 127 Raj Home, Mira Road East",Andheri-Juhu,Versova,2,653,27641,10700000,False,,Versova,18,low,magicbricks
+mum-versova-oberoi-elysian-oberoi-elysian-gorega,"Oberoi Elysian, Oberoi Elysian, Goregaon East",Andheri-Juhu,Versova,4,2415,274866,106400000,False,,Versova,15,low,magicbricks
+mum-versova-godrej-horizon-godrej-horizon-wadala,"Godrej Horizon, Godrej Horizon, Wadala",Andheri-Juhu,Versova,3,1053,116766,45199999,False,,Versova,11,low,magicbricks
+mum-vikhroli-west-godrej-the-trees-phase-2,Godrej The Trees Phase 2,Powai-Central,Vikhroli West,,5000,1000000,387096774,False,,Ghatkopar,53,low,magicbricks
+mum-vikhroli-west-mayfair-the-view,Mayfair The View,Powai-Central,Vikhroli West,2,710,62500,24193548,False,,Ghatkopar,49,low,magicbricks
+mum-vikhroli-west-gandhi-nagar-vikhroli-west-mumbai,Gandhi Nagar Vikhroli West Mumbai,Powai-Central,Vikhroli West,,5000,2800000,1083870967,False,,Ghatkopar,55,low,magicbricks
+mum-vikhroli-west-kailas-corporate-lounge,Kailas Corporate Lounge,Powai-Central,Vikhroli West,,450,60000,23225806,False,,Ghatkopar,47,low,magicbricks
+mum-vikhroli-west-surya-nagar-mumbai,Surya Nagar Mumbai,Powai-Central,Vikhroli West,,3600,650000,251612903,False,,Ghatkopar,56,low,magicbricks
+mum-vikhroli-west-mayfair-hillcrest,Mayfair Hillcrest,Powai-Central,Vikhroli West,2,700,65000,25161290,False,,Ghatkopar,52,low,magicbricks
+mum-vikhroli-west-mayfair-sonata-greens,Mayfair Sonata Greens,Powai-Central,Vikhroli West,2,750,70000,27096774,False,,Ghatkopar,52,low,magicbricks
+mum-vikhroli-west-raj-lagacy-i,Raj Lagacy I,Powai-Central,Vikhroli West,1,600,42000,16258064,False,,Ghatkopar,56,low,magicbricks
+mum-vikhroli-west-jaswanti-landmark,Jaswanti Landmark,Powai-Central,Vikhroli West,,6500,1250000,483870967,False,,Ghatkopar,53,low,magicbricks
+mum-vikhroli-west-raj-legacy,Raj Legacy,Powai-Central,Vikhroli West,2,650,61000,21000000,False,,Ghatkopar,45,low,magicbricks
+mum-vikhroli-west-kailas-business-park,Kailas Business Park,Powai-Central,Vikhroli West,,322,46000,17806451,False,,Ghatkopar,50,low,magicbricks
+mum-vikhroli-west-vikhroli-west-mumbai,Vikhroli West Mumbai,Powai-Central,Vikhroli West,3,2000,620000,47550000,False,,Ghatkopar,48,low,magicbricks
+mum-vikhroli-west-vikhroli-park-site-mumbai,Vikhroli Park Site Mumbai,Powai-Central,Vikhroli West,,,20000,7741935,False,,Ghatkopar,51,low,magicbricks
+mum-vikhroli-west-lodha-riservo,Lodha Riservo,Powai-Central,Vikhroli West,3/4,1788,132395,51250000,False,,Ghatkopar,49,low,magicbricks
+mum-vikhroli-west-kalpataru-virtus,Kalpataru Virtus,Powai-Central,Vikhroli West,,1112,66262,25650000,False,,Ghatkopar,48,low,magicbricks
+mum-vikhroli-west-lodha-codename-evergreen,Lodha Codename Evergreen,Powai-Central,Vikhroli West,2,540,47275,18300000,False,,Ghatkopar,45,low,magicbricks
+mum-vikhroli-west-kalpataru-virtus-gandhi-nagar-vikhro,"Kalpataru Virtus, Gandhi Nagar Vikhroli West Mumbai",Powai-Central,Vikhroli West,,622,61225,23700000,False,,Ghatkopar,47,low,magicbricks
+mum-vikhroli-west-lodha-riservo-vikhroli-west,Lodha Riservo Vikhroli West,Powai-Central,Vikhroli West,3,1074,110825,42900000,False,,Ghatkopar,53,low,magicbricks
+mum-vikhroli-west-lodha-codename-rare-fortune,Lodha Codename Rare Fortune,Powai-Central,Vikhroli West,,630,55283,21400000,False,,Ghatkopar,49,low,magicbricks
+mum-vile-parle-west-rustomjee-ashiana,Rustomjee Ashiana,Bandra-Santacruz,Vile Parle West,3,1314,310000,120000000,False,,Andheri,37,low,magicbricks
+mum-vile-parle-west-vile-parle-west-mumbai,"Vile Parle West, Mumbai",Bandra-Santacruz,Vile Parle West,1/2/3/4,1175,300000,14750000,False,,Santacruz Metro,35,low,magicbricks
+mum-vile-parle-west-rustomjee-ashiana-jvpd-scheme-mumbai,"Rustomjee Ashiana, JVPD Scheme Mumbai",Bandra-Santacruz,Vile Parle West,3/4,1954,293466,113600000,False,,DN Nagar,40,low,magicbricks
+mum-vile-parle-west-shreepati-jade-park,Shreepati Jade park,Bandra-Santacruz,Vile Parle West,3,1001,112116,43400000,False,,Andheri,35,low,magicbricks
+mum-vile-parle-west-chandak-vansham,Chandak Vansham,Bandra-Santacruz,Vile Parle West,3/4,1365,176441,68300000,False,,Andheri,34,low,magicbricks
+mum-vile-parle-west-new-india-gautam-dhan,New India Gautam Dhan,Bandra-Santacruz,Vile Parle West,2,788,80341,31100000,False,,Santacruz Metro,34,low,magicbricks
+mum-vile-parle-west-avant-park-west,Avant Park West,Bandra-Santacruz,Vile Parle West,4,1625,176183,68200000,False,,Andheri,37,low,magicbricks
+mum-vile-parle-west-juhu-scheme-mumbai,Juhu Scheme Mumbai,Bandra-Santacruz,Vile Parle West,3,1700,176958,68500000,False,,Andheri,35,low,magicbricks
+mum-vile-parle-west-bhoomi-ashish-jvpd-scheme-mumbai,"Bhoomi Ashish, JVPD Scheme Mumbai",Bandra-Santacruz,Vile Parle West,4,2350,424958,164500000,False,,Andheri,36,low,magicbricks
+mum-wadala-lodha-dioro,Lodha Dioro,Chembur-Wadala,Wadala,2,930,140000,54193548,False,,Dadar Metro,37,low,magicbricks
+mum-wadala-lodha-new-cuffe-parade,Lodha New Cuffe Parade,Chembur-Wadala,Wadala,1/2/3,1309,190000,49500000,False,,Dadar Metro,40,low,magicbricks
+mum-wadala-lloyds-estate,Lloyds Estate,Chembur-Wadala,Wadala,2,700,73000,28258064,False,,Dadar Metro,39,low,magicbricks
+mum-wadala-lodha-altia,Lodha Altia,Chembur-Wadala,Wadala,1,514,75000,29032258,False,,Dadar Metro,41,low,magicbricks
+mum-wadala-ajmera-treon,Ajmera Treon,Chembur-Wadala,Wadala,2,994,140000,54193548,False,,Dadar Metro,38,low,magicbricks
+mum-wadala-dosti-eastern-bay,Dosti Eastern Bay,Chembur-Wadala,Wadala,1/2,743,110000,19100000,False,,Dadar Metro,38,low,magicbricks
+mum-wadala-ajmera-bhakti-park-sector-i-and-ii,Ajmera Bhakti Park Sector I and II,Chembur-Wadala,Wadala,1,440,60000,23225806,False,,Dadar Metro,36,low,magicbricks
+mum-wadala-dignity-divine,Dignity Divine,Chembur-Wadala,Wadala,3,1000,160000,61935483,False,,Dadar Metro,37,low,magicbricks
+mum-wadala-dosti-acres,Dosti Acres,Chembur-Wadala,Wadala,3,913,110000,42580645,False,,Dadar Metro,38,low,magicbricks
+mum-wadala-lodha-supremus,Lodha Supremus,Chembur-Wadala,Wadala,,500,130000,50322580,False,,Dadar Metro,37,low,magicbricks
+mum-wadala-wadala-mumbai,"Wadala, Mumbai",Chembur-Wadala,Wadala,1,800,90000,34838709,False,,Dadar Metro,40,low,magicbricks
+mum-wadala-ajmera-i-land,Ajmera I Land,Chembur-Wadala,Wadala,4,2400,250000,96774193,False,,Dadar Metro,32,low,magicbricks
+mum-wadala-godrej-horizon,Godrej Horizon,Chembur-Wadala,Wadala,2/3,1053,116766,45199999,False,,Dadar Metro,37,low,magicbricks
+mum-wadala-ajmera-manhattan,Ajmera Manhattan,Chembur-Wadala,Wadala,3/4,1239,119479,46250000,False,,Dadar Metro,34,low,magicbricks
+mum-wadala-raymond-the-address-by-gs-wadala,Raymond The Address by GS Wadala,Chembur-Wadala,Wadala,2/3,1313,109533,42400000,False,,Dadar Metro,40,low,magicbricks
+mum-wadala-siddha-sky,Siddha Sky,Chembur-Wadala,Wadala,2,717,52183,20200000,False,,Dadar Metro,38,low,magicbricks
+mum-wadala-lodha-aura,Lodha Aura,Chembur-Wadala,Wadala,3,953,100750,39000000,False,,Dadar Metro,35,low,magicbricks
+mum-worli-lodha-park,Lodha Park,South Mumbai,Worli,3,1300,380000,147096774,False,,Siddhivinayak,19,low,magicbricks
+mum-worli-worli-mumbai,"Worli, Mumbai",South Mumbai,Worli,3/4,1300,350000,135483870,False,,Worli,17,low,magicbricks
+mum-worli-trump-tower,Trump Tower,South Mumbai,Worli,3/4,1600,400000,154838709,False,,Siddhivinayak,18,low,magicbricks
+mum-worli-pitale-prasad,Pitale Prasad,South Mumbai,Worli,4,3500,830000,321290322,False,,Siddhivinayak,22,low,magicbricks
+mum-worli-lodha-marquise,Lodha Marquise,South Mumbai,Worli,4,2000,380000,147096774,False,,Worli,20,low,magicbricks
+mum-worli-aurus-chambers,Aurus Chambers,South Mumbai,Worli,,1100,190000,73548387,False,,Worli,19,low,magicbricks
+mum-worli-kalpataru-horizon,Kalpataru Horizon,South Mumbai,Worli,5,4890,1500000,580645161,False,,Worli,22,low,magicbricks
+mum-worli-lodha-kiara,Lodha Kiara,South Mumbai,Worli,3,1410,340000,131612903,False,,Worli,21,low,magicbricks
+mum-worli-omkar-1973,Omkar 1973,South Mumbai,Worli,3,1350,280000,108387096,False,,Worli,13,low,magicbricks
+mum-worli-vraj-tiara,Vraj Tiara,South Mumbai,Worli,2,1200,250000,96774193,False,,Siddhivinayak,23,low,magicbricks
+mum-worli-shubhada-tower,Shubhada Tower,South Mumbai,Worli,3,1300,180000,69677419,False,,Worli,18,low,magicbricks
+mum-worli-raheja-imperia-i,Raheja Imperia I,South Mumbai,Worli,5,3000,1000000,387096774,False,,Worli,25,low,magicbricks
+mum-worli-lodha-adrina,Lodha Adrina,South Mumbai,Worli,2/4/5,2116,382075,147900000,False,,Worli,19,low,magicbricks
+mum-worli-techno-aakasa,Techno Aakasa,South Mumbai,Worli,4,1600,351333,136000000,False,,Siddhivinayak,18,low,magicbricks
+mum-worli-godrej-trilogy-seafront,Godrej Trilogy Seafront,South Mumbai,Worli,3/4,2430,627750,243000000,False,,Worli,17,low,magicbricks
+mum-worli-kabra-dvayam,Kabra Dvayam,South Mumbai,Worli,3/4,2353,512404,198350000,False,,Worli,13,low,magicbricks
+mum-worli-lodha-park-tower-6-adrina,Lodha Park Tower 6 Adrina,South Mumbai,Worli,2/3,1254,204470,79150000,False,,Siddhivinayak,21,low,magicbricks
+mum-worli-birla-niyaara,Birla Niyaara,South Mumbai,Worli,4,3028,742966,287600000,False,,Worli,16,low,magicbricks
+mum-worli-prestige-nautilus,Prestige Nautilus,South Mumbai,Worli,5,6336,2266358,877300000,False,,Worli,16,low,magicbricks
+mum-worli-k-raheja-artesia,K Raheja Artesia,South Mumbai,Worli,4,3702,1411791,546500000,False,,Worli,15,low,magicbricks
+mum-worli-embassy-citadel,Embassy Citadel,South Mumbai,Worli,5,5560,1048445,405850000,False,,Worli,13,low,magicbricks
+mum-worli-runwal-raaya,Runwal Raaya,South Mumbai,Worli,5,4250,740641,286700000,False,,Worli,19,low,magicbricks
+mum-airoli-codename-blue-vista,Codename Blue Vista,Navi Mumbai,Airoli,2,690,42625,16500000,False,,Ghatkopar,196,low,99acres
+mum-airoli-new-palm-beach,New Palm Beach,Navi Mumbai,Airoli,3,,82408,31900000,False,,Ghatkopar,200,low,99acres
+mum-airoli-alliaance-galaxy,Alliaance Galaxy,Navi Mumbai,Airoli,2,748,46500,18000000,False,,Ghatkopar,202,low,99acres
+mum-airoli-parth-lakeview,Parth Lakeview,Navi Mumbai,Airoli,3,942,38750,15000000,False,,Ghatkopar,195,low,99acres
