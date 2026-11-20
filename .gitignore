@@ -15,3 +15,6 @@ finish_setup.py
 daily_sync.ps1
 supervisor.ps1
 run_crashproof.bat
+
+fix_*.py
+upgrade_*.py
