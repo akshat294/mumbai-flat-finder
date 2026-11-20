@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Mumbai Homes — Mumbai, Thane and Navi Mumbai</title>
-  <link rel="stylesheet" href="[https://unpkg.com/leaflet@1.9.4/dist/leaflet.css](https://unpkg.com/leaflet@1.9.4/dist/leaflet.css)" />
-  <script src="[https://unpkg.com/leaflet@1.9.4/dist/leaflet.js](https://unpkg.com/leaflet@1.9.4/dist/leaflet.js)"></script>
+  <link rel="stylesheet" href="./vendor/leaflet.min.css" />
+  <script src="./vendor/leaflet.min.js"></script>
   <style>
     :root {
       --bg:#0a0f1c; --surf:#111827; --card:#151e30; --hover:#1b263d; --line:#233047;
@@ -363,14 +363,17 @@
   </div>
 
   <script>
+    window.addEventListener("error", e => { const b = document.getElementById("freshBadge"); if (b) b.textContent = "Error: " + (e.message || "script error"); });
     const RENT_MAX = 500000, BUY_MAX = 150000000, SQFT_MAX = 4000;
     const st = {
       mode:"rent", theme:localStorage.getItem("mhf_t")||"dark", mapStyle:"dark",
       bhks:new Set(), realOnly:false, zero:false, flood:false, mapBounds:false, savedOnly:false,
       showMetro:true, showFlood:false, page:36, sel:null, cmp:[],
       pLo:0, pHi:RENT_MAX, sLo:0, sHi:SQFT_MAX,
-      saved:JSON.parse(localStorage.getItem("mhf_s3")||'{"ids":[],"notes":{}}')
+      saved:(() => { try { return JSON.parse(localStorage.getItem("mhf_s3") || '{"ids":[],"notes":{}}'); } catch { return { ids:[], notes:{} }; } })()
     };
+    if (!st.saved || !Array.isArray(st.saved.ids)) st.saved = { ids:[], notes:{} };
+    if (!st.saved.notes) st.saved.notes = {};
     let societies = [], filtered = [];
 
     const map = L.map("map", { preferCanvas: true }).setView([19.085, 72.905], 11);
@@ -786,7 +789,7 @@
       renderAll();
       const oid = new URLSearchParams(location.search).get("open");
       if (oid) { const t = societies.find(s => s.id === oid); if (t) { map.setView([t.lat, t.lng], 15); openDetail(t); } }
-    }).catch(() => { document.getElementById("freshBadge").textContent = "Tap refresh to reload data."; });
+    }).catch(err => { document.getElementById("freshBadge").textContent = "Load failed: " + (err?.message || "retry"); });
   </script>
 </body>
 </html>
