@@ -36,7 +36,8 @@ def parse_inr(text: Any) -> Optional[int]:
     return int(digits) if (digits and len(digits) >= 4) else (int(val) if val >= 5000 else None)
 
 def parse_bhk(t: str) -> Optional[int]:
-    m = re.search(r"(\d)\s*(?:bhk|rk)", t or "", re.I)
+    if re.search(r"\b1[\s\-]*rk\b|\bstudio\b", t or "", re.I): return 0
+    m = re.search(r"(\d)\s*bhk", t or "", re.I)
     return int(m.group(1)) if m else None
 
 def parse_sqft(t: str) -> Optional[float]:
@@ -266,6 +267,87 @@ class NoBrokerConnector(BaseConnector):
                 "bhk": parse_bhk(title), "rent_inr": rent, "deposit_inr": dep,
                 "carpet_sqft": parse_sqft(ct), "furnishing": parse_furnishing(ct), "tenant": parse_tenant(ct),
                 "zero_brokerage": True, "url": exact_url or geo.get("url"),
+            })
+            if len(items) >= limit: break
+        return items
+
+
+class NinetyNineAcresConnector(BaseConnector):
+    source_name = "99acres"
+
+    def run_localities(self, loc_meta: List[Dict[str, str]], limit_per_locality: int = 40, fresh_hours: float = 20.0) -> int:
+        try:
+            from curl_cffi import requests as c_req
+        except ImportError:
+            print("[99acres] curl_cffi not installed - skipping.")
+            return 0
+        meta_map = {m["locality"]: m for m in loc_meta}
+        self.db.register_jobs(self.source_name, list(meta_map.keys()))
+        pending = [j for j in self.db.next_pending_jobs(self.source_name) if j["locality"] in meta_map]
+        if not pending: return 0
+
+        PROTO = "https" + "://"
+        saved = 0
+        for job in pending:
+            loc, info = job["locality"], meta_map[job["locality"]]
+            self.db.mark_job(job["job_key"], "in_progress")
+            try:
+                cached = self.read_cache(f"99c:{loc}", max_age_hours=fresh_hours)
+                if not cached:
+                    slug = re.sub(r"[^a-z0-9]+", "-", loc.lower()).strip("-")
+                    city_slug = info["city"].lower().replace(" ", "-")
+                    candidates = [
+                        f"{PROTO}www.99acres.com/property-in-{slug}-mumbai-south-west-ffid",
+                        f"{PROTO}www.99acres.com/property-in-{slug}-mumbai-andheri-dahisar-ffid",
+                        f"{PROTO}www.99acres.com/property-in-{slug}-central-mumbai-suburbs-ffid",
+                        f"{PROTO}www.99acres.com/property-in-{slug}-{city_slug}-ffid",
+                    ] if city_slug == "mumbai" else [f"{PROTO}www.99acres.com/property-in-{slug}-{city_slug}-ffid"]
+                    cached = []
+                    for u in candidates:
+                        resp = c_req.get(u, impersonate="chrome", timeout=18, allow_redirects=True)
+                        if resp.status_code == 200 and len(resp.text) > 80000:
+                            cached = self._parse_html(resp.text, loc, str(resp.url), limit_per_locality)
+                            if cached:
+                                break
+                    if cached:
+                        self.write_cache(f"99c:{loc}", cached)
+                for it in cached:
+                    self.db.upsert_raw_record(
+                        self.source_name, it["id"], it["name"], it,
+                        locality=loc, zone=info["zone"], rera_id=it.get("rera_id"), source_url=it.get("url"),
+                    )
+                    saved += 1
+                self.db.mark_job(job["job_key"], "done" if cached else "failed", None if cached else "0 records")
+            except Exception as exc:
+                self.db.mark_job(job["job_key"], "failed", str(exc)[:300])
+        return saved
+
+    def _parse_html(self, html: str, locality: str, url: str, limit: int) -> List[Dict[str, Any]]:
+        PROTO = "https" + "://"
+        soup = BeautifulSoup(html, "html.parser")
+        cards = soup.select("[data-label='SRP_TUPLE'], .tupleNew__tupleWrap, .projectTuple__cardWrap, section[data-propid]")
+        items, seen = [], set()
+        for idx, card in enumerate(cards):
+            txt = card.get_text(" ", strip=True)
+            if "₹" not in txt or len(txt) < 40 or len(txt) > 2500: continue
+            h = card.select_one("a[title], h2, h3, .tupleNew__propertyHeading, .projectTuple__projectName")
+            if not h: continue
+            name = clean_name(h.get_text(" ", strip=True), locality)
+            if len(name) < 3 or name.lower() in seen or name.lower() == locality.lower() or COMM_RE.search(name) or JUNK_NAME.search(name): continue
+            seen.add(name.lower())
+            prices = [parse_inr(m) for m in re.findall(r"₹\s*[0-9,.]+\s*(?:Cr|Crore|Lac|Lakh|L)?", txt, re.I)]
+            buys = [p for p in prices if p and p >= 3_000_000]
+            rents = [p for p in prices if p and 8_000 <= p < 850_000]
+            if not buys and not rents: continue
+            rm = RERA_RE.search(txt)
+            href = h.get("href") or ""
+            full_url = href if href.startswith("http") else (f"{PROTO}www.99acres.com{href}" if href.startswith("/") else None)
+            items.append({
+                "id": f"99a-{re.sub(r'[^a-z0-9]','',locality.lower())[:10]}-{idx}-{re.sub(r'[^a-z0-9]','',name.lower())[:14]}",
+                "name": name, "locality": locality, "bhk": parse_bhk(txt),
+                "buy_inr": buys[0] if buys else None, "rent_inr": rents[0] if rents else None,
+                "carpet_sqft": parse_sqft(txt), "furnishing": parse_furnishing(txt), "tenant": parse_tenant(txt),
+                "rera_id": rm.group(0) if rm else None, "url": full_url,
             })
             if len(items) >= limit: break
         return items

@@ -30,3 +30,6 @@ fix_boot.py
 _check_js.js
 
 repair_links.py
+
+upgrade_v6_backend.py
+patch_v6_web.py
