@@ -47,6 +47,16 @@
       if (st.bhks.size && u.b !== null && u.b !== undefined) {
         if (![...st.bhks].some(b => b === 4 ? u.b >= 4 : u.b === b)) return false;
       }
+      if (!matchingUnits(s).length) return false;
+      const ftags = s.features?.tags || [];
+      if (st.seaview && !ftags.includes("sea_view")) return false;
+      if (st.balcony && !ftags.includes("balcony")) return false;
+      if (st.terrace && !(ftags.includes("terrace") || ftags.includes("garden"))) return false;
+      if (st.drop && !(s.price_drop && s.price_drop[st.mode])) return false;
+      if (st.hub !== "ALL") {
+        const cm = s.commutes?.[st.hub];
+        if (!cm || cm > st.hubMin) return false;
+      }
       return true;
     });
   }
@@ -104,6 +114,24 @@
 
   const cv = L.canvas({ padding: 0.5 });
   const mLayer = L.layerGroup().addTo(map);
+  const hubLayer = L.layerGroup().addTo(map);
+  const HUB_META = {
+    bkc: { name: "BKC", ll: [19.0653, 72.8681] },
+    lower_parel: { name: "Lower Parel", ll: [18.9985, 72.8295] },
+    nariman_point: { name: "Nariman Pt", ll: [18.9281, 72.8235] },
+    seepz: { name: "SEEPZ", ll: [19.1242, 72.8742] },
+    powai: { name: "Powai", ll: [19.1197, 72.9051] },
+    mindspace: { name: "Mindspace", ll: [19.1802, 72.8334] }
+  };
+  function drawHubRing() {
+    hubLayer.clearLayers();
+    const hm = HUB_META[st.hub];
+    if (!hm) return;
+    const radM = Math.max(1500, ((st.hubMin - 4) / 60) * 19500 / 1.28);
+    L.circle(hm.ll, { radius: radM, color: "#c49e5c", weight: 1.6, dashArray: "5 5", fillColor: "#c49e5c", fillOpacity: 0.08, interactive: false }).addTo(hubLayer);
+    L.circleMarker(hm.ll, { radius: 6, color: "#162a27", weight: 2, fillColor: "#c49e5c", fillOpacity: 1 }).bindTooltip(`${hm.name} · ≤${st.hubMin} min`, { direction: "top" }).addTo(hubLayer);
+  }
+
   const metroL = L.layerGroup().addTo(map);
   const floodL = L.layerGroup();
 
@@ -186,7 +214,7 @@
   }
 
   function renderMap() {
-    mLayer.clearLayers(); pillEls.clear();
+    mLayer.clearLayers(); pillEls.clear(); drawHubRing();
     const z = map.getZoom(), bounds = map.getBounds().pad(0.12);
     const inView = filtered.filter(s => s.lat && s.lng && bounds.contains([s.lat, s.lng]));
     if (!inView.length) return;
@@ -410,16 +438,126 @@
   }
 
   function renderList() {
-    const box = $("cardList");
-    if (!filtered.length) {
-      box.innerHTML = `<div class="empty"><p>No homes match these filters.</p><button class="btn pri" id="emptyReset">Reset Filters</button></div>`;
-      $("emptyReset").onclick = resetAll; return;
+    const isBuy = st.mode === "buy";
+    const PORTALS = {
+      magicbricks:"MagicBricks", nobroker:"NoBroker", squareyards:"Square Yards",
+      makaan:"Makaan", commonfloor:"CommonFloor", community:"Flatmates",
+      reddit:"Flatmates", "99acres":"99acres", housing:"Housing.com", owner:"Direct Owner"
+    };
+    const socMap = new Map();
+    const flats = [];
+    for (const s of filtered) {
+      socMap.set(s.id, s);
+      const us = matchingUnits(s);
+      for (let i = 0; i < us.length; i++) {
+        flats.push({ s, u: us[i], idx: i });
+      }
     }
-    const hub = $("fHub").value;
-    box.innerHTML = filtered.slice(0, st.page).map(s => renderCardHtml(s, hub)).join("") +
-      (filtered.length > st.page ? `<button class="btn" id="moreBtn" style="grid-column:1/-1;width:100%;">Show More (${filtered.length - st.page} left)</button>` : "");
-    bindCardEvents(box);
-    const mb = $("moreBtn"); if (mb) mb.onclick = () => { st.page += 36; renderList(); };
+
+    if (st.sort === "price_asc") flats.sort((a, b) => a.u.p - b.u.p);
+    else if (st.sort === "price_desc") flats.sort((a, b) => b.u.p - a.u.p);
+    else if (st.sort === "metro") flats.sort((a, b) => (a.s.mumbai_context?.nearest_metro?.walk_min ?? 99) - (b.s.mumbai_context?.nearest_metro?.walk_min ?? 99));
+    else if (st.sort === "rating") flats.sort((a, b) => (b.s.google?.rating || 0) - (a.s.google?.rating || 0));
+    else {
+      flats.sort((a, b) => {
+        const imgA = (a.u.img || a.s.thumb) ? 1 : 0, imgB = (b.u.img || b.s.thumb) ? 1 : 0;
+        if (imgB !== imgA) return imgB - imgA;
+        const exA = a.s.coords_approx ? 0 : 1, exB = b.s.coords_approx ? 0 : 1;
+        if (exB !== exA) return exB - exA;
+        const rA = a.s.google?.rating || 0, rB = b.s.google?.rating || 0;
+        if (rB !== rA) return rB - rA;
+        return a.u.p - b.u.p;
+      });
+    }
+
+    const exSocs = filtered.filter(s => !s.coords_approx).length;
+    const sumTxt = `${flats.length.toLocaleString("en-IN")} flats · ${filtered.length.toLocaleString("en-IN")} buildings (${exSocs.toLocaleString("en-IN")} exact pins)`;
+    const sumEl = $("resSummary") || $("resCount") || document.querySelector(".res-meta");
+    if (sumEl) sumEl.textContent = sumTxt;
+
+    const listEl = $("cardList");
+    if (!flats.length) {
+      listEl.innerHTML = `<div class="empty" style="grid-column:1/-1;text-align:center;padding:42px 16px;color:var(--mut);">No flats match these filters. Try widening budget or resetting chips.</div>`;
+      return;
+    }
+
+    const slice = flats.slice(0, st.page);
+    const archSvg = `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 20V11a8 8 0 0 1 16 0v9"/><path d="M8 20v-7a4 4 0 0 1 8 0v7"/><path d="M2 20h20"/></svg>`;
+
+    listEl.innerHTML = slice.map(({ s, u }) => {
+      const img = u.img || s.thumb || "";
+      const bhkTxt = u.b === 0 ? "1 RK" : (u.b ? `${u.b} BHK` : "");
+      const sq = u.sq || s.rera_carpet_sqft;
+      const specTxt = [bhkTxt, sq ? `${sq} sq ft` : ""].filter(Boolean).join(" · ");
+      const psf = (u.p && sq) ? Math.round(u.p / sq) : 0;
+      const psfTxt = psf ? `₹${psf >= 1000 ? (psf / 1000).toFixed(1) + "k" : psf}/sf` : "";
+      const metroMin = s.mumbai_context?.nearest_metro?.walk_min;
+      const subTxt = [s.locality, metroMin && metroMin <= 25 ? `${metroMin}m Metro` : "", s.google?.rating ? `★ ${s.google.rating}` : ""].filter(Boolean).join(" · ");
+      const portal = PORTALS[u.s] || u.s || "Portal";
+      const saved = st.saved && st.saved.has(s.id);
+      const sel = st.selectedId === s.id;
+
+      const topPills = [];
+      const dr = s.price_drop?.[st.mode];
+      if (dr) topPills.push(`<span class="fc-pill dr">↓${dr.pct}% Drop</span>`);
+      else if (u.zb) topPills.push(`<span class="fc-pill zb">Zero Brok</span>`);
+      const ft = s.features?.tags || [], vt = s.features?.vision_tags || [];
+      if (ft.includes("sea_view")) topPills.push(`<span class="fc-pill sea">Sea View</span>`);
+
+      const tags = [];
+      const deal = getDeal(s);
+      if (deal?.label === "Great Value") tags.push(`<span class="tag good">${Math.abs(deal.pct)}% below avg</span>`);
+      if (ft.includes("balcony")) tags.push(`<span class="tag out">Balcony${vt.includes("balcony") ? " · Photo" : ""}</span>`);
+      else if (ft.includes("terrace")) tags.push(`<span class="tag out">Terrace</span>`);
+      else if (ft.includes("garden")) tags.push(`<span class="tag out">Garden</span>`);
+      if (st.hub !== "ALL" && s.commutes?.[st.hub]) tags.push(`<span class="tag ai-v">~${s.commutes[st.hub]}m ${HUB_META[st.hub]?.name}</span>`);
+      else if (u.f) tags.push(`<span class="tag">${esc(u.f)}</span>`);
+
+      const directHref = u.u || (isBuy ? (s.sources_buy || {}) : (s.sources_rent || {}))[u.s] || (s.sources || {})[u.s] || "";
+
+      return `
+        <article class="fc${sel ? " sel" : ""}" data-id="${esc(s.id)}">
+          <div class="fc-media">
+            <div class="fc-ph">${archSvg}<span>${esc(s.locality)}</span></div>
+            ${img ? `<img class="fc-img" src="${esc(img)}" referrerpolicy="no-referrer" loading="lazy" alt="" onerror="this.remove()" />` : ""}
+            ${topPills.length ? `<div class="fc-badges-top">${topPills.slice(0, 2).join("")}</div>` : ""}
+            <button class="fc-heart${saved ? " on" : ""}" data-save="${esc(s.id)}" aria-label="Save flat">${saved ? "♥" : "♡"}</button>
+          </div>
+          <div class="fc-body">
+            <div class="fc-price-row">
+              <div class="fc-price">${fmt(u.p, isBuy)}${psfTxt ? `<span class="fc-psf">${psfTxt}</span>` : ""}</div>
+              <div class="fc-bhk">${esc(specTxt)}</div>
+            </div>
+            <div class="fc-title" title="${esc(s.name)}">${esc(s.name)}</div>
+            <div class="fc-sub">${esc(subTxt)}</div>
+            <div class="fc-foot">
+              <div class="fc-tags">${tags.slice(0, 2).join("")}</div>
+              ${directHref ? `<a class="fc-src" target="_blank" href="${esc(directHref)}" onclick="event.stopPropagation()">${esc(portal)} ↗</a>` : `<span class="fc-src">${esc(portal)}</span>`}
+            </div>
+          </div>
+        </article>`;
+    }).join("") + (flats.length > st.page ? `<div class="load-more-wrap"><button id="loadMoreBtn" class="btn">Show more flats (${(flats.length - st.page).toLocaleString("en-IN")} left)</button></div>` : "");
+
+    listEl.querySelectorAll(".fc").forEach(el => {
+      const s = socMap.get(el.dataset.id);
+      if (!s) return;
+      el.onclick = () => {
+        st.selectedId = s.id;
+        if (!s.coords_approx && s.lat && s.lng) map.panTo([s.lat, s.lng], { animate: true });
+        if (typeof openDetail === "function") openDetail(s);
+        else if (typeof onPinClick === "function") onPinClick(s);
+      };
+      el.onmouseenter = () => pillEls.get(s.id)?.classList.add("hi");
+      el.onmouseleave = () => pillEls.get(s.id)?.classList.remove("hi");
+    });
+    listEl.querySelectorAll("[data-save]").forEach(btn => {
+      btn.onclick = e => {
+        e.stopPropagation();
+        if (typeof toggleSave === "function") toggleSave(btn.dataset.save);
+      };
+    });
+    const lm = $("loadMoreBtn");
+    if (lm) lm.onclick = () => { st.page += 36; renderList(); };
   }
 
   function highlightPin(id, on) {
@@ -722,7 +860,39 @@
           toast("Listing published live!");
           ["pName","pLoc","pPrice","pSqft","pContact"].forEach(id => $(id).value = "");
           $("postModal").style.display = "none";
-          loadDirectListings();
+        
+  document.querySelectorAll("#viewToggle button").forEach(b => {
+    b.onclick = () => {
+      st.view = b.dataset.v;
+      document.querySelectorAll("#viewToggle button").forEach(x => x.classList.toggle("active", x.dataset.v === st.view));
+      document.body.classList.toggle("gallery-mode", st.view === "gallery");
+      if (st.view === "split") setTimeout(() => map.invalidateSize(), 120);
+      st.page = 48; renderAll();
+    };
+  });
+  if ($("fHub")) {
+    const syncHubUI = () => {
+      st.hub = $("fHub").value;
+      st.hubMin = Number($("fHubMin").value || 45);
+      if ($("hubVal")) $("hubVal").textContent = st.hub === "ALL" ? "Any" : `≤ ${st.hubMin} min to ${HUB_META[st.hub]?.name || st.hub}`;
+      if (st.hub !== "ALL" && HUB_META[st.hub]) map.flyTo(HUB_META[st.hub].ll, 12, { duration: 0.5 });
+      st.page = 36; renderAll();
+    };
+    $("fHub").addEventListener("change", syncHubUI);
+    $("fHubMin").addEventListener("input", syncHubUI);
+  }
+  document.addEventListener("keydown", e => {
+    if (e.key === "/" && document.activeElement?.tagName !== "INPUT" && document.activeElement?.tagName !== "TEXTAREA") {
+      e.preventDefault(); $("searchInput")?.focus();
+    } else if (e.key === "Escape") {
+      if ($("detailSheet")) $("detailSheet").classList.remove("open");
+      if ($("filterSheet")) $("filterSheet").classList.remove("open");
+      if ($("savedModal")) $("savedModal").style.display = "none";
+      if ($("postModal")) $("postModal").style.display = "none";
+    }
+  });
+
+  loadDirectListings();
         } else {
           toast(res.error || "Bind D1 database in Cloudflare first");
         }
