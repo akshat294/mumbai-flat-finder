@@ -1,5 +1,5 @@
 from __future__ import annotations
-import argparse, hashlib, io, json, time
+import argparse, hashlib, io, json, os, time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -11,17 +11,20 @@ from PIL import Image
 CACHE_PATH = Path("data/vision_tags_cache.json")
 INDEX_PATH = Path("web/public/data/mumbai-index.json")
 REPO_ID = "onnx-community/siglip2-base-patch16-224-ONNX"
+CACHE_VER = 2
 
 PROMPTS: List[Tuple[str, str]] = [
-    ("balcony",   "an apartment balcony or sit-out with a railing"),
-    ("terrace",   "a spacious private rooftop terrace or wide open outdoor deck"),
-    ("garden",    "a residential home with a private garden, lawn, or lush green park view"),
-    ("sea_view",  "an ocean or sea view with water and coastline seen from an apartment window or balcony"),
-    ("bright",    "a bright sunlit modern apartment living room with large windows and daylight"),
-    ("neg_plan",  "an architectural 2D floor plan diagram or blueprint"),
-    ("neg_ext",   "a tall residential apartment building exterior viewed from the road"),
+    ("balcony",   "this is a photo of an apartment balcony with a railing and outdoor view."),
+    ("terrace",   "this is a photo of a spacious private rooftop terrace or outdoor patio deck."),
+    ("garden",    "this is a photo of a residential apartment overlooking a green garden, park, or lawn."),
+    ("sea_view",  "this is a photo of an ocean or sea view with water seen from an apartment window or balcony."),
+    ("bright",    "this is a photo of a bright sunlit modern living room with large windows."),
+    ("bg_room",   "this is a photo of an indoor apartment bedroom or empty living room."),
+    ("bg_kb",     "this is a photo of an indoor kitchen or tiled bathroom."),
+    ("bg_ext",    "this is a photo of a tall residential apartment building exterior from outside."),
+    ("bg_plan",   "this is a photo of a 2d architectural floor plan blueprint diagram."),
 ]
-THRESH = {"balcony": 0.065, "terrace": 0.055, "garden": 0.065, "sea_view": 0.055, "bright": 0.095}
+
 UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/131.0.0.0 Safari/537.36"}
 
 def url_hash(u: str) -> str:
@@ -46,72 +49,84 @@ def _download_one(item: Tuple[str, str, str]) -> Optional[Tuple[str, str, np.nda
             if im.width < 120 or im.height < 90: return None
             im = im.resize((224, 224), Image.BICUBIC)
             arr = (np.asarray(im, dtype=np.float32) / 255.0 - 0.5) / 0.5
-            arr = np.transpose(arr, (2, 0, 1))
-            return h, name, arr
+            return h, name, np.transpose(arr, (2, 0, 1))
     except Exception:
         return None
 
-def _sigmoid(x: np.ndarray) -> np.ndarray:
-    x = np.clip(x, -40.0, 40.0)
-    return 1.0 / (1.0 + np.exp(-x))
+def _encode_siglip2_ids(tok, texts: List[str], max_len: int = 64) -> np.ndarray:
+    eos_id = tok.token_to_id("</s>") or tok.token_to_id("<eos>") or 1
+    pad_id = tok.token_to_id("<pad>")
+    if pad_id is None: pad_id = 0
+    rows = []
+    for t in texts:
+        ids = tok.encode(t.lower()).ids
+        if not ids or ids[-1] != eos_id:
+            ids = ids[:max_len - 1] + [eos_id]
+        else:
+            ids = ids[:max_len]
+        if len(ids) < max_len:
+            ids = ids + [pad_id] * (max_len - len(ids))
+        rows.append(ids)
+    return np.array(rows, dtype=np.int64)
 
-def _load_onnx_engine():
+def _load_onnx_split():
     import onnxruntime as ort
     from huggingface_hub import hf_hub_download
     from tokenizers import Tokenizer
 
-    tok_path = hf_hub_download(repo_id=REPO_ID, filename="tokenizer.json")
+    hf_tok = os.environ.get("HF_TOKEN") or None
+    tok_path = hf_hub_download(repo_id=REPO_ID, filename="tokenizer.json", token=hf_tok)
     tok = Tokenizer.from_file(tok_path)
-    tok.enable_truncation(max_length=64)
-    tok.enable_padding(length=64, pad_id=0)
 
     sess_opts = ort.SessionOptions()
     sess_opts.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+    sess_opts.intra_op_num_threads = max(1, (os.cpu_count() or 4))
     providers = ["CPUExecutionProvider"]
 
-    for fname in ("onnx/model_int8.onnx", "onnx/model_quantized.onnx", "onnx/model_uint8.onnx", "onnx/model_q4.onnx", "onnx/model.onnx"):
+    t_sess = v_sess = None
+    for tf in ("onnx/text_model.onnx", "onnx/text_model_fp16.onnx", "onnx/text_model_int8.onnx"):
         try:
-            mp = hf_hub_download(repo_id=REPO_ID, filename=fname)
-            sess = ort.InferenceSession(mp, sess_options=sess_opts, providers=providers)
-            print(f"[vision-onnx] Loaded combined model: {fname}", flush=True)
-            return "combined", tok, sess, None
+            tp = hf_hub_download(repo_id=REPO_ID, filename=tf, token=hf_tok)
+            t_sess = ort.InferenceSession(tp, sess_options=sess_opts, providers=providers)
+            print(f"[vision-onnx] Text encoder: {tf}", flush=True)
+            break
+        except Exception:
+            continue
+    for vf in ("onnx/vision_model_uint8.onnx", "onnx/vision_model_int8.onnx", "onnx/vision_model_quantized.onnx", "onnx/vision_model.onnx"):
+        try:
+            vp = hf_hub_download(repo_id=REPO_ID, filename=vf, token=hf_tok)
+            v_sess = ort.InferenceSession(vp, sess_options=sess_opts, providers=providers)
+            print(f"[vision-onnx] Vision encoder: {vf}", flush=True)
+            break
         except Exception:
             continue
 
-    v_path = hf_hub_download(repo_id=REPO_ID, filename="onnx/vision_model_int8.onnx")
-    t_path = hf_hub_download(repo_id=REPO_ID, filename="onnx/text_model_int8.onnx")
-    v_sess = ort.InferenceSession(v_path, sess_options=sess_opts, providers=providers)
-    t_sess = ort.InferenceSession(t_path, sess_options=sess_opts, providers=providers)
-    print("[vision-onnx] Loaded split INT8 vision + text models!", flush=True)
-    return "split", tok, v_sess, t_sess
+    if t_sess is not None and v_sess is not None:
+        return "split", tok, v_sess, t_sess
 
-def _encode_prompts(tok, texts: List[str]) -> np.ndarray:
-    encs = tok.encode_batch([t.lower() for t in texts])
-    return np.array([e.ids for e in encs], dtype=np.int64)
+    for cf in ("onnx/model_quantized.onnx", "onnx/model_int8.onnx", "onnx/model.onnx"):
+        try:
+            cp = hf_hub_download(repo_id=REPO_ID, filename=cf, token=hf_tok)
+            sess = ort.InferenceSession(cp, sess_options=sess_opts, providers=providers)
+            print(f"[vision-onnx] Combined fallback: {cf}", flush=True)
+            return "combined", tok, sess, None
+        except Exception:
+            continue
+    raise RuntimeError("Could not download SigLIP2 ONNX files from Hugging Face Hub")
 
-def _run_batch(mode: str, sess, t_emb: Optional[np.ndarray], input_ids: np.ndarray, pixels: np.ndarray) -> np.ndarray:
-    if mode == "combined":
-        in_names = {inp.name for inp in sess.get_inputs()}
-        feed: Dict[str, Any] = {"input_ids": input_ids, "pixel_values": pixels}
-        if "attention_mask" in in_names:
-            feed["attention_mask"] = (input_ids != 0).astype(np.int64)
-        out_names = [o.name for o in sess.get_outputs()]
-        outs = sess.run(None, feed)
-        by_name = dict(zip(out_names, outs))
-        logits = by_name.get("logits_per_image")
-        if logits is None: logits = outs[0]
-        return _sigmoid(np.asarray(logits, dtype=np.float32))
-    else:
-        v_in = sess.get_inputs()[0].name
-        v_outs = sess.run(None, {v_in: pixels})
-        v_map = dict(zip([o.name for o in sess.get_outputs()], v_outs))
-        v_emb = v_map.get("pooler_output")
-        if v_emb is None: v_emb = v_outs[-1]
-        v_emb = v_emb / np.maximum(np.linalg.norm(v_emb, axis=-1, keepdims=True), 1e-8)
-        logits = (v_emb @ t_emb.T) * 112.6689 - 12.93
-        return _sigmoid(logits.astype(np.float32))
+def _l2_norm(x: np.ndarray) -> np.ndarray:
+    return x / np.maximum(np.linalg.norm(x, axis=-1, keepdims=True), 1e-8)
 
-def scan_photos(limit: int = 600, batch_size: int = 16, max_workers: int = 16, max_seconds: float = 240.0) -> Dict[str, Any]:
+def _get_pooler(sess, outs: List[np.ndarray]) -> np.ndarray:
+    by_name = dict(zip([o.name for o in sess.get_outputs()], outs))
+    for k in ("pooler_output", "image_embeds", "text_embeds"):
+        if k in by_name: return np.asarray(by_name[k], dtype=np.float32)
+    for arr in outs:
+        a = np.asarray(arr, dtype=np.float32)
+        if a.ndim == 2: return a
+    return np.asarray(outs[-1], dtype=np.float32)
+
+def scan_photos(limit: int = 800, batch_size: int = 16, max_workers: int = 16, max_seconds: float = 240.0) -> Dict[str, Any]:
     if not INDEX_PATH.exists():
         print(f"[vision-onnx] Missing {INDEX_PATH}, skipping.", flush=True)
         return {"scanned": 0}
@@ -130,27 +145,27 @@ def scan_photos(limit: int = 600, batch_size: int = 16, max_workers: int = 16, m
         u = s.get("thumb")
         if not u or not isinstance(u, str) or not u.startswith("http"): continue
         h = url_hash(u)
-        if h in cache or h in seen_h: continue
+        if h in seen_h: continue
+        if h in cache and int(cache[h].get("v", 1)) >= CACHE_VER: continue
         seen_h.add(h)
         todo.append((h, u, s.get("name") or ""))
     if limit > 0: todo = todo[:limit]
 
-    print(f"[vision-onnx] Cached: {len(cache):,} | Queued this run: {len(todo):,}", flush=True)
+    already_v2 = sum(1 for v in cache.values() if isinstance(v, dict) and int(v.get("v", 1)) >= CACHE_VER)
+    print(f"[vision-onnx] v2 Cached: {already_v2:,} | Queued this run: {len(todo):,}", flush=True)
     if not todo: return {"scanned": 0, "cached_total": len(cache)}
 
-    mode, tok, sess, t_sess = _load_onnx_engine()
+    mode, tok, v_sess, t_sess = _load_onnx_split()
     prompt_keys = [k for k, _ in PROMPTS]
     prompt_texts = [t for _, t in PROMPTS]
-    input_ids = _encode_prompts(tok, prompt_texts)
+    input_ids = _encode_siglip2_ids(tok, prompt_texts)
 
     t_emb = None
     if mode == "split" and t_sess is not None:
-        t_in = t_sess.get_inputs()[0].name
-        t_outs = t_sess.run(None, {t_in: input_ids})
-        t_map = dict(zip([o.name for o in t_sess.get_outputs()], t_outs))
-        t_emb = t_map.get("pooler_output")
-        if t_emb is None: t_emb = t_outs[-1]
-        t_emb = t_emb / np.maximum(np.linalg.norm(t_emb, axis=-1, keepdims=True), 1e-8)
+        t_in = {inp.name for inp in t_sess.get_inputs()}
+        t_feed: Dict[str, Any] = {"input_ids": input_ids}
+        if "attention_mask" in t_in: t_feed["attention_mask"] = (input_ids != 0).astype(np.int64)
+        t_emb = _l2_norm(_get_pooler(t_sess, t_sess.run(None, t_feed)))
 
     t0, scanned = time.monotonic(), 0
     hits = {"balcony": 0, "terrace": 0, "garden": 0, "sea_view": 0, "bright": 0}
@@ -159,7 +174,7 @@ def scan_photos(limit: int = 600, batch_size: int = 16, max_workers: int = 16, m
     chunk_sz = batch_size * 3
     for start in range(0, len(todo), chunk_sz):
         if (time.monotonic() - t0) > max_seconds:
-            print(f"[vision-onnx] Reached {max_seconds:.0f}s cloud budget — saving progress.", flush=True)
+            print(f"[vision-onnx] Reached {max_seconds:.0f}s budget — saving progress.", flush=True)
             break
         chunk = todo[start:start + chunk_sz]
         downloaded: List[Tuple[str, str, np.ndarray]] = []
@@ -172,22 +187,49 @@ def scan_photos(limit: int = 600, batch_size: int = 16, max_workers: int = 16, m
             if (time.monotonic() - t0) > max_seconds: break
             batch = downloaded[bi:bi + batch_size]
             pixels = np.stack([x[2] for x in batch], axis=0).astype(np.float32)
-            probs = _run_batch(mode, sess, t_emb, input_ids, pixels).tolist()
 
-            for (h, name, _), row in zip(batch, probs):
-                scores = dict(zip(prompt_keys, row))
-                is_plan = scores["neg_plan"] > 0.18
-                is_ext  = scores["neg_ext"] > 0.25 and scores["balcony"] < 0.15
+            if mode == "split":
+                v_in = v_sess.get_inputs()[0].name
+                v_emb = _l2_norm(_get_pooler(v_sess, v_sess.run(None, {v_in: pixels})))
+                sims = (v_emb @ t_emb.T).tolist()
+            else:
+                in_names = {inp.name for inp in v_sess.get_inputs()}
+                feed = {"input_ids": input_ids, "pixel_values": pixels}
+                if "attention_mask" in in_names: feed["attention_mask"] = (input_ids != 0).astype(np.int64)
+                outs = v_sess.run(None, feed)
+                by_name = dict(zip([o.name for o in v_sess.get_outputs()], outs))
+                if "image_embeds" in by_name and "text_embeds" in by_name:
+                    sims = (_l2_norm(by_name["image_embeds"]) @ _l2_norm(by_name["text_embeds"]).T).tolist()
+                else:
+                    lg = np.asarray(by_name.get("logits_per_image", outs[0]), dtype=np.float32)
+                    sims = ((lg + 14.0) / 112.0).tolist()
+
+            for (h, name, _), row in zip(batch, sims):
+                sc = dict(zip(prompt_keys, row))
+                bg_max = max(sc["bg_room"], sc["bg_kb"], sc["bg_ext"], sc["bg_plan"])
+                is_plan = sc["bg_plan"] >= max(sc["balcony"], sc["terrace"], sc["garden"], sc["sea_view"], sc["bg_room"]) + 0.015
+                is_kb   = sc["bg_kb"] >= bg_max - 0.002 and sc["bg_kb"] > sc["balcony"] + 0.015
+
                 tags = []
-                if not is_plan:
-                    for tag in ("balcony","terrace","garden","sea_view"):
-                        if scores[tag] >= THRESH[tag] and not (is_ext and tag in ("balcony","terrace")):
-                            tags.append(tag); hits[tag] += 1
-                bright = (not is_plan) and (not is_ext) and (scores["bright"] >= THRESH["bright"])
+                if not is_plan and not is_kb:
+                    if sc["balcony"] >= 0.095 and sc["balcony"] >= (bg_max - 0.012):
+                        tags.append("balcony"); hits["balcony"] += 1
+                    if sc["terrace"] >= 0.095 and sc["terrace"] >= (bg_max - 0.005):
+                        tags.append("terrace"); hits["terrace"] += 1
+                    if sc["garden"] >= 0.098 and sc["garden"] >= (bg_max - 0.008):
+                        tags.append("garden"); hits["garden"] += 1
+                    if sc["sea_view"] >= 0.095 and sc["sea_view"] >= (bg_max - 0.010):
+                        tags.append("sea_view"); hits["sea_view"] += 1
+
+                bright = (not is_plan) and (sc["bright"] >= 0.105) and (sc["bright"] >= sc["bg_ext"] + 0.005)
                 if bright: hits["bright"] += 1
-                cache[h] = {"tags": tags, "bright": bright, "s": {k: round(scores[k], 3) for k in ("balcony","terrace","garden","sea_view")}}
+
+                cache[h] = {
+                    "v": CACHE_VER, "tags": tags, "bright": bright,
+                    "s": {k: round(sc[k], 3) for k in ("balcony","terrace","garden","sea_view","bg_room","bg_ext")},
+                }
                 scanned += 1
-                if tags and len(samples) < 8:
+                if tags and len(samples) < 10:
                     samples.append(f"  - {name}: {tags} ({cache[h]['s']})")
 
         save_cache(cache)
@@ -195,11 +237,11 @@ def scan_photos(limit: int = 600, batch_size: int = 16, max_workers: int = 16, m
         print(f"[vision-onnx] {min(start + chunk_sz, len(todo)):,}/{len(todo):,} fetched | {scanned:,} scored ({rate:.1f} img/s) | hits={hits}", flush=True)
 
     if samples: print("[vision-onnx] Sample detections:\n" + "\n".join(samples), flush=True)
-    return {"engine": f"onnx-{mode}", "scanned": scanned, "cached_total": len(cache), "hits": hits}
+    return {"engine": f"onnx-{mode}-v2", "scanned": scanned, "cached_total": len(cache), "hits": hits}
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("--limit", type=int, default=600)
+    ap.add_argument("--limit", type=int, default=800)
     ap.add_argument("--batch-size", type=int, default=16)
     ap.add_argument("--max-seconds", type=float, default=240.0)
     args = ap.parse_args()

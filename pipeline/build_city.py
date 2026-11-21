@@ -135,6 +135,33 @@ def _merge_duplicates(compiled: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
             cur["features"]["bright"] = bool(cur["features"].get("bright") or s["features"].get("bright"))
     return list(by_key.values())
 
+def _merge_with_previous_index(compiled: List[Dict[str, Any]], vision_cache: Dict[str, Any], prev_path: Path, hist_path: Path = Path("data/price_history.json"), max_days: int = 28) -> List[Dict[str, Any]]:
+    import time as _t
+    if not prev_path.exists(): return compiled
+    try: prev_socs = json.loads(prev_path.read_text(encoding="utf-8")).get("societies") or []
+    except Exception: return compiled
+    hist = {}
+    if hist_path.exists():
+        try: hist = json.loads(hist_path.read_text(encoding="utf-8"))
+        except Exception: hist = {}
+    cutoff = int(_t.time()) - max_days * 86400
+    cur_keys = {(re.sub(r"[^a-z0-9]+", "", s["name"].lower()), s["locality"].lower()) for s in compiled}
+    preserved = 0
+    for ps in prev_socs:
+        if not (ps.get("units_rent") or ps.get("units_buy")): continue
+        if any("findghosla.com" in str(u.get("u") or "") for u in (ps.get("units_rent") or []) + (ps.get("units_buy") or [])): continue
+        k = (re.sub(r"[^a-z0-9]+", "", (ps.get("name") or "").lower()), (ps.get("locality") or "").lower())
+        if k in cur_keys: continue
+        hrec = hist.get(ps.get("id"))
+        if hrec and int(hrec.get("last_seen", cutoff + 1)) < cutoff: continue
+        if ps.get("thumb") and ps.get("lat") and ps.get("lng"):
+            ps["features"] = extract_outdoor_features(ps.get("name") or "", [], float(ps["lat"]), float(ps["lng"]), ps.get("thumb"), vision_cache)
+            if not ps.get("commutes"): ps["commutes"] = compute_commutes(float(ps["lat"]), float(ps["lng"]))
+        compiled.append(ps); cur_keys.add(k); preserved += 1
+    if preserved:
+        print(f"[build] Rolling 28-day merge preserved {preserved:,} active societies from previous index.", flush=True)
+    return compiled
+
 def _attach_deals(compiled: List[Dict[str, Any]]) -> int:
     by_r, by_b = {}, {}
     for s in compiled:
@@ -255,6 +282,7 @@ def build_mumbai(db_path: str | Path = "pipeline/staging/mumbai_raw.db", max_goo
         })
 
     compiled = _merge_duplicates(compiled)
+    compiled = _merge_with_previous_index(compiled, vision_cache, Path("web/public/data/mumbai-index.json"))
     exact_hits = sum(1 for s in compiled if not s["coords_approx"])
     great = _attach_deals(compiled)
     drops, new_cnt = update_price_history(compiled)
