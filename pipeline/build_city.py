@@ -11,7 +11,7 @@ from pipeline.geo_guard import is_valid_mmr_land, safe_approx_coords, enrich_wit
 from pipeline.mumbai_enricher import enrich_mumbai, load_transit
 from pipeline.mumbai_features import (
     compute_commutes, extract_outdoor_features, is_outer_city_mismatch,
-    load_vision_cache, update_price_history,
+    classify_lister_type, load_vision_cache, parse_bhk_value, update_price_history,
 )
 from pipeline.osm_buildings import load_osm_buildings, OSMBuildingIndex
 from pipeline.pricing_engine import summarize_portal_prices
@@ -45,12 +45,9 @@ def _build_units(raw_by_source: Dict[str, List[Dict[str, Any]]], loc: str):
             u_img = r.get("image") if isinstance(r.get("image"), str) and r["image"].startswith("http") else None
             if not thumb and u_img: thumb = u_img
             low_u = (valid_u or "").lower()
-            bhk = r.get("bhk")
-            if RK_RE.search(str(r.get("url") or "") + " " + str(r.get("name") or "")): bhk = 0
-            elif bhk is not None:
-                try: bhk = int(bhk)
-                except Exception: bhk = None
-                if bhk is not None and not (0 <= bhk <= 6): bhk = None
+            hint_all = f"{r.get('name') or ''} {r.get('title') or ''} {r.get('description') or ''} {r.get('url') or ''}"
+            bhk = parse_bhk_value(r.get("bhk_exact") if r.get("bhk_exact") is not None else r.get("bhk"), hint_all)
+            ltype = classify_lister_type(src_k, r, hint_all)
             sqft = r.get("carpet_sqft")
             try: sqft = int(round(float(sqft))) if sqft and 140 <= float(sqft) <= 8000 else None
             except Exception: sqft = None
@@ -60,13 +57,13 @@ def _build_units(raw_by_source: Dict[str, List[Dict[str, Any]]], loc: str):
             rv = r.get("rent_inr")
             if rv and 6_000 <= int(rv) <= 550_000:
                 pv = int(rv)
-                if (bhk == 0 and pv > 85_000) or (bhk == 1 and pv > 165_000) or (bhk == 2 and pv > 320_000): continue
+                if (bhk == 0 and pv > 85_000) or (bhk is not None and 0 < bhk <= 1.5 and pv > 210_000) or (bhk is not None and 1.5 < bhk <= 2.5 and pv > 380_000): continue
                 if low_u.endswith("/project") or "/project/" in low_u or "/sale/" in low_u or "for-sale" in low_u: continue
                 if valid_u: sources_rent.setdefault(src_k, valid_u); clean_sources.setdefault(src_k, valid_u)
                 ded = (src_k, bhk, pv, (sqft // 50) if sqft else 0)
                 if ded not in seen_r and valid_u:
                     seen_r.add(ded)
-                    units_r.append({"p": pv, "b": bhk, "sq": sqft, "s": src_k, "u": valid_u, "zb": zb, "f": furn, "img": u_img})
+                    units_r.append({"p": pv, "b": bhk, "sq": sqft, "s": src_k, "u": valid_u, "zb": (zb or ltype == "owner"), "lt": ltype, "f": furn, "img": u_img})
 
             bv = r.get("buy_inr")
             if bv and 2_000_000 <= int(bv) <= 600_000_000:
@@ -76,7 +73,7 @@ def _build_units(raw_by_source: Dict[str, List[Dict[str, Any]]], loc: str):
                 ded = (src_k, bhk, pv, (sqft // 50) if sqft else 0)
                 if ded not in seen_b and valid_u:
                     seen_b.add(ded)
-                    units_b.append({"p": pv, "b": bhk, "sq": sqft, "s": src_k, "u": valid_u, "zb": zb, "f": furn, "img": u_img})
+                    units_b.append({"p": pv, "b": bhk, "sq": sqft, "s": src_k, "u": valid_u, "zb": (zb or ltype == "owner"), "lt": ltype, "f": furn, "img": u_img})
 
     if len(units_r) >= 2:
         med_r = sorted(x["p"] for x in units_r)[len(units_r) // 2]
@@ -154,6 +151,10 @@ def _merge_with_previous_index(compiled: List[Dict[str, Any]], vision_cache: Dic
         if k in cur_keys: continue
         hrec = hist.get(ps.get("id"))
         if hrec and int(hrec.get("last_seen", cutoff + 1)) < cutoff: continue
+        for _uk in ("units_rent", "units_buy"):
+            for _u in (ps.get(_uk) or []):
+                if not _u.get("lt"):
+                    _u["lt"] = "shared" if _u.get("s") in ("community", "reddit") else ("owner" if _u.get("zb") or _u.get("s") in ("nobroker", "owner") else "broker")
         if ps.get("thumb") and ps.get("lat") and ps.get("lng"):
             ps["features"] = extract_outdoor_features(ps.get("name") or "", [], float(ps["lat"]), float(ps["lng"]), ps.get("thumb"), vision_cache)
             if not ps.get("commutes"): ps["commutes"] = compute_commutes(float(ps["lat"]), float(ps["lng"]))

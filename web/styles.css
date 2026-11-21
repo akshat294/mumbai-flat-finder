@@ -363,3 +363,8 @@ table.ctbl th { background:var(--bg); color:var(--mut); font-weight:600; }
 body.gallery-mode .map-pane { display:none !important; }
 body.gallery-mode .list-pane { width:100% !important; max-width:100% !important; min-width:0 !important; border-right:none; }
 body.gallery-mode #cardList { grid-template-columns:repeat(auto-fill, minmax(290px, 1fr)) !important; gap:18px; padding:18px 26px 64px; }
+
+/* v15: Owner / Broker / Shared Badges & Responsive Lister Toggle */
+.fc-pill.sh { background:rgba(31,107,92,.88); color:#fff; }
+.fc-pill.br { background:rgba(24,30,28,.72); color:#e7e3da; }
+#listerToggle { display:inline-flex !important; }

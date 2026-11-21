@@ -72,6 +72,7 @@
       <button class="chip" data-q="drop">Price Drop</button>
       <button class="chip" data-q="rated">4★+</button>
     </div>
+    <div id="listerToggle" class="view-seg" role="group" aria-label="Posted by"><button class="active" data-lt="ALL">All</button><button data-lt="owner">Owner</button><button data-lt="broker">Broker</button><button data-lt="shared">Shared</button></div>
     <div id="viewToggle" class="view-seg" role="group" aria-label="View mode"><button class="active" data-v="split">Map</button><button data-v="gallery">Gallery</button></div>
     <select id="sortSelect" class="sort-sel" aria-label="Sort results">
       <option value="rec">Best Match</option>
@@ -137,9 +138,9 @@
         <label>Configuration</label>
         <div class="pill-row">
           <button class="p-opt bhk-opt" data-bhk="0">1 RK</button>
-          <button class="p-opt bhk-opt" data-bhk="1">1 BHK</button>
-          <button class="p-opt bhk-opt" data-bhk="2">2 BHK</button>
-          <button class="p-opt bhk-opt" data-bhk="3">3 BHK</button>
+          <button class="p-opt bhk-opt" data-bhk="1">1 BHK</button><button class="pill" data-bhk="1.5">1.5 BHK</button>
+          <button class="p-opt bhk-opt" data-bhk="2">2 BHK</button><button class="pill" data-bhk="2.5">2.5 BHK</button>
+          <button class="p-opt bhk-opt" data-bhk="3">3 BHK</button><button class="pill" data-bhk="3.5">3.5 BHK</button>
           <button class="p-opt bhk-opt" data-bhk="4">4+ BHK</button>
         </div>
       </div>
@@ -262,7 +263,7 @@
         </div>
         <div class="g2">
           <div class="f-sec"><label>Price (₹)</label><input id="pPrice" type="number" placeholder="e.g. 65000" /></div>
-          <div class="f-sec"><label>BHK</label><select id="pBhk"><option value="0">1 RK</option><option value="1">1 BHK</option><option value="2" selected>2 BHK</option><option value="3">3 BHK</option><option value="4">4+ BHK</option></select></div>
+          <div class="f-sec"><label>BHK</label><select id="pBhk"><option value="0">1 RK</option><option value="1">1 BHK</option><option value="1.5">1.5 BHK</option><option value="2" selected>2 BHK</option><option value="2.5">2.5 BHK</option><option value="3">3 BHK</option><option value="3.5">3.5 BHK</option><option value="4">4+ BHK</option></select></div>
         </div>
         <div class="g2">
           <div class="f-sec"><label>Carpet (sq ft)</label><input id="pSqft" type="number" placeholder="e.g. 750" /></div>

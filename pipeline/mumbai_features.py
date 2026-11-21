@@ -25,10 +25,10 @@ OUTER_CITY_RE = re.compile(
     r"\b(kalyan|dombivli|dombivali|badlapur|ambernath|ulhasnagar|vasai|virar|nallasopara|nalasopara|naigaon|bhiwandi|boisar|karjat|khopoli|palghar|titwala|shahad|dahanu)\b",
     re.I,
 )
-BALCONY_RE = re.compile(r"\b(balcon(?:y|ies)|sit[\s-]?out|verandah|veranda|french\s+balcony|attached\s+balcony|open\s+balcony)\b", re.I)
-TERRACE_RE = re.compile(r"\b(terrace|sky\s*deck|private\s*deck|sundeck|sun\s*deck|rooftop|penthouse\s*deck|open\s*deck|attached\s*terrace)\b", re.I)
-GARDEN_RE  = re.compile(r"\b(private\s*garden|garden\s*facing|garden\s*view|park\s*facing|lawn|courtyard|overlooking\s*garden|landscaped\s*garden)\b", re.I)
-SEA_RE     = re.compile(r"\b(sea\s*view|sea[\s-]?facing|arabian\s*sea|ocean\s*view|ocean[\s-]?facing|overlooking\s*(?:the\s*)?sea|water\s*view|beach\s*facing|bandstand\s*view|marine\s*drive\s*view)\b", re.I)
+BALCONY_RE = re.compile(r"\b(balcon(?:y|ies)|sit[\s-]?out|sitout|verandah|veranda|french\s+(?:balcony|window)|attached\s+balcony|open\s+balcony|private\s+balcony|balc\.?)\b", re.I)
+TERRACE_RE = re.compile(r"\b(terrace|sky\s*deck|private\s*deck|sundeck|sun\s*deck|rooftop|penthouse|open\s*deck|attached\s*terrace|patio|deck)\b", re.I)
+GARDEN_RE  = re.compile(r"\b(private\s*garden|garden\s*facing|garden\s*view|park\s*facing|park\s*view|lawn|courtyard|overlooking\s*(?:the\s*)?(?:garden|park)|landscaped\s*garden|green\s*view|garden)\b", re.I)
+SEA_RE     = re.compile(r"\b(sea\s*view|sea[\s-]?facing|arabian\s*sea|ocean\s*view|ocean[\s-]?facing|overlooking\s*(?:the\s*)?sea|water\s*view|waterfront|beach\s*(?:view|facing)|bandstand|marine\s*drive|worli\s*sea\s*face)\b", re.I)
 
 def is_outer_city_mismatch(text: str, locality: str) -> bool:
     if not text: return False
@@ -162,3 +162,34 @@ def update_price_history(compiled: List[Dict[str, Any]], path: str | Path = "dat
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(json.dumps(hist, separators=(",", ":")), encoding="utf-8")
     return drops, new_cnt
+
+HALF_BHK_PAT = re.compile(r"\b([1-5]\.5)\s*[-]?\s*bhk\b|\b([1-5])-5-bhk\b", re.I)
+WHOLE_BHK_PAT = re.compile(r"\b([1-6])\s*[-]?\s*bhk\b", re.I)
+RK_PAT = re.compile(r"\b1[\s\-]*rk\b|\bstudio\b", re.I)
+SHARED_LIST_PAT = re.compile(r"\b(flatmate|flat\s*mate|roommate|room\s*mate|twin\s*sharing|double\s*sharing|triple\s*sharing|single\s*occupancy|double\s*occupancy|sharing\s*room|shared\s*flat|paying\s*guest|\bpg\b|co[\s-]?living|bed\s*space|girls?\s*only|boys?\s*only)\b", re.I)
+OWNER_LIST_PAT  = re.compile(r"\b(posted\s*by\s*owner|direct\s*owner|owner\s*listing|owner\s*flat|zero\s*brokerage|no\s*brokerage|by\s*owner)\b", re.I)
+
+def parse_bhk_value(raw_bhk: Any, text_hint: str = ""):
+    if RK_PAT.search(text_hint or ""): return 0
+    m = HALF_BHK_PAT.search(text_hint or "")
+    if m:
+        val = float(m.group(1) or f"{m.group(2)}.5")
+        if 0.5 <= val <= 6.5: return val
+    if raw_bhk is not None and raw_bhk != "":
+        try:
+            fv = float(str(raw_bhk).strip())
+            if 0.0 <= fv <= 6.5 and abs((fv * 2) - round(fv * 2)) < 0.05:
+                fv = round(fv * 2) / 2.0
+                return int(fv) if fv.is_integer() else fv
+        except Exception: pass
+    wm = WHOLE_BHK_PAT.search(text_hint or "")
+    return int(wm.group(1)) if wm else None
+
+def classify_lister_type(src_k: str, r: Dict[str, Any], text_hint: str = "") -> str:
+    if src_k in ("community", "reddit"): return "shared"
+    explicit = str(r.get("lister_type") or "").lower()
+    if explicit in ("shared", "owner", "broker"): return explicit
+    if SHARED_LIST_PAT.search(text_hint or ""): return "shared"
+    if r.get("zero_brokerage") or src_k in ("nobroker", "nobrokerage", "owner") or OWNER_LIST_PAT.search(text_hint or ""):
+        return "owner"
+    return "broker"
