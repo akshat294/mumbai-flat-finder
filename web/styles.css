@@ -459,3 +459,98 @@ body.gallery-mode #mapPane, body.gallery-mode #map { display:none !important; }
 body.gallery-mode #listPane { width:100% !important; max-width:100% !important; min-width:0 !important; flex:1 1 100% !important; border-right:none !important; }
 body.gallery-mode #cardList { grid-template-columns:repeat(auto-fill, minmax(285px, 1fr)) !important; gap:18px !important; padding:18px 26px 64px !important; }
 body.gallery-mode .fc-media { height:172px !important; min-height:172px !important; }
+
+/* v15.7: Resizable Split Pane, Dynamic Card Columns, Unclipped Chip Bar & Hide Sort Dropdown */
+:root { --pane-w: 560px; }
+
+#sortSelect, .sort-sel { display:none !important; }
+
+.chips {
+  display:flex !important;
+  align-items:center !important;
+  flex-wrap:nowrap !important;
+  gap:5px !important;
+  overflow-x:auto !important;
+  scrollbar-width:none !important;
+  padding-right:16px !important;
+  min-width:0 !important;
+  flex:1 1 auto !important;
+}
+.chips::-webkit-scrollbar { display:none; }
+.chips .chip { padding:4px 9px !important; font-size:11.5px !important; white-space:nowrap !important; }
+
+
+@media (min-width: 901px) {
+  .ws { grid-template-columns: var(--pane-w, 560px) minmax(240px, 1fr) !important; }
+}
+body.gallery-mode .ws { display:block !important; grid-template-columns:1fr !important; }
+
+@media (min-width: 901px) {
+  #listPane {
+    width:var(--pane-w, 560px) !important;
+    min-width:290px !important;
+    max-width:82vw !important;
+    flex:0 0 var(--pane-w, 560px) !important;
+  }
+  #mapPane {
+    position:relative !important;
+    min-width:240px !important;
+    flex:1 1 auto !important;
+  }
+}
+
+/* Cards adapt smoothly to 1, 2, 3, or 4 columns as you drag the panel */
+#cardList {
+  grid-template-columns:repeat(auto-fill, minmax(235px, 1fr)) !important;
+}
+@media (max-width: 900px) {
+  #cardList { grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)) !important; }
+}
+
+/* Tactile Pull Handle on the Map's Left Seam (never overlaps #cardList scrollbar) */
+#paneResizer {
+  position:absolute;
+  top:0;
+  left:0;
+  bottom:0;
+  width:12px;
+  z-index:1150;
+  cursor:col-resize;
+  touch-action:none;
+  user-select:none;
+  background:transparent;
+  transition:background .15s ease;
+}
+#paneResizer:hover, body.resizing-pane #paneResizer { background:rgba(196,158,92,.22); }
+#paneResizer::after {
+  content:"";
+  position:absolute;
+  top:50%;
+  left:0;
+  transform:translateY(-50%);
+  width:14px;
+  height:52px;
+  border-radius:0 9px 9px 0;
+  background:var(--card);
+  border:1px solid var(--line);
+  border-left:none;
+  box-shadow:3px 0 12px rgba(22,42,39,.14);
+  background-image:radial-gradient(circle, rgba(22,42,39,.48) 1.3px, transparent 1.5px);
+  background-size:6px 7px;
+  background-position:center;
+  background-repeat:repeat-y;
+  transition:background-color .15s, border-color .15s, width .15s;
+}
+[data-theme="dark"] #paneResizer::after {
+  background-image:radial-gradient(circle, rgba(196,158,92,.75) 1.3px, transparent 1.5px);
+}
+#paneResizer:hover::after, body.resizing-pane #paneResizer::after {
+  width:17px;
+  border-color:var(--brass);
+  background-color:var(--pine);
+  background-image:radial-gradient(circle, #e8cfa0 1.4px, transparent 1.6px);
+}
+body.resizing-pane { cursor:col-resize !important; user-select:none !important; }
+body.resizing-pane #map { pointer-events:none !important; }
+body.gallery-mode #paneResizer { display:none !important; }
+@media (max-width: 900px) { #paneResizer { display:none !important; } }

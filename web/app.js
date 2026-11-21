@@ -1259,4 +1259,96 @@
   });
   /* === END V15.6 CONTROLS === */
 
+
+  /* === V15.7 RESIZER & CHIP SCROLL === */
+  const chipStrip = document.querySelector(".chips");
+  if (chipStrip && chipStrip.addEventListener) {
+    chipStrip.addEventListener("wheel", e => {
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX) && chipStrip.scrollWidth > chipStrip.clientWidth) {
+        e.preventDefault();
+        chipStrip.scrollLeft += e.deltaY;
+      }
+    }, { passive: false });
+  }
+
+  const mapHost = document.querySelector("#mapPane") || $("map");
+  if (mapHost && mapHost.appendChild && !$("paneResizer")) {
+    const handle = document.createElement("div");
+    handle.id = "paneResizer";
+    handle.title = "Drag to resize panel · Double-click to reset";
+    handle.setAttribute("role", "separator");
+    handle.setAttribute("aria-orientation", "vertical");
+    mapHost.appendChild(handle);
+
+    const DEFAULT_W = 560;
+    const clampW = w => {
+      const vw = (typeof window !== "undefined" && window.innerWidth) ? window.innerWidth : 1440;
+      return Math.round(Math.max(290, Math.min(vw - 260, w)));
+    };
+    const applyPaneW = (w, persist = false) => {
+      const cw = clampW(w);
+      if (document.documentElement?.style?.setProperty) {
+        document.documentElement.style.setProperty("--pane-w", cw + "px");
+      }
+      if (persist) {
+        try { localStorage.setItem("bh_pane_w", String(cw)); } catch {}
+      }
+    };
+
+    try {
+      const savedW = Number(localStorage.getItem("bh_pane_w") || 0);
+      if (savedW >= 290) applyPaneW(savedW, false);
+    } catch {}
+
+    let dragging = false, rafId = 0;
+    const syncMapSize = () => {
+      rafId = 0;
+      try { map.invalidateSize({ animate: false }); } catch {}
+    };
+
+    handle.addEventListener("pointerdown", e => {
+      if (e.button && e.button !== 0) return;
+      dragging = true;
+      document.body.classList.add("resizing-pane");
+      if (handle.setPointerCapture) handle.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    });
+
+    handle.addEventListener("pointermove", e => {
+      if (!dragging) return;
+      applyPaneW(e.clientX, false);
+      if (!rafId && typeof requestAnimationFrame === "function") {
+        rafId = requestAnimationFrame(syncMapSize);
+      }
+    });
+
+    const endDrag = e => {
+      if (!dragging) return;
+      dragging = false;
+      document.body.classList.remove("resizing-pane");
+      if (e && e.clientX) applyPaneW(e.clientX, true);
+      try { map.invalidateSize({ animate: false }); } catch {}
+      try { renderMap(); } catch {}
+    };
+    handle.addEventListener("pointerup", endDrag);
+    handle.addEventListener("pointercancel", endDrag);
+
+    handle.addEventListener("dblclick", () => {
+      applyPaneW(DEFAULT_W, true);
+      setTimeout(() => {
+        try { map.invalidateSize({ animate: false }); renderMap(); } catch {}
+      }, 40);
+    });
+
+    if (typeof window !== "undefined" && window.addEventListener) {
+      window.addEventListener("resize", () => {
+        try {
+          const cur = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--pane-w"), 10);
+          if (cur) applyPaneW(cur, false);
+        } catch {}
+      });
+    }
+  }
+  /* === END V15.7 === */
+
 })();
