@@ -31,9 +31,13 @@ def build_mumbai(db_path: str | Path = "pipeline/staging/mumbai_raw.db", max_goo
         for l in zinfo["localities"]:
             loc_to_zone[l.lower()] = zname
 
+    print(f"[build] Resolving {len(raw)} raw records...", flush=True)
     canonicals, _ = resolve_entities(raw)
+    print(f"[build] Deduplicated to {len(canonicals)} societies. Running Google Places...", flush=True)
     google_calls = enrich_with_google_places(db, canonicals, max_calls=max_google_calls)
+    print(f"[build] Google Places done ({google_calls} calls). Running OSM Photon...", flush=True)
     osm_cache = enrich_with_osm_photon(canonicals, max_calls=max_osm_calls)
+    print(f"[build] OSM Photon done ({len(osm_cache)} cached). Writing bundle...", flush=True)
     transit = load_transit()
 
     gcache = {}

@@ -98,16 +98,18 @@ def safe_approx_coords(soc_id: str, locality: str) -> Tuple[float, float]:
     return base[0], base[1]
 
 def enrich_with_osm_photon(societies: List[Dict], max_calls: int = 40) -> Dict[str, List[float]]:
+    import time
     cache: Dict[str, List[float]] = {}
     if OSM_CACHE.exists():
         try: cache = json.loads(OSM_CACHE.read_text(encoding="utf-8-sig"))
         except Exception: cache = {}
     if max_calls <= 0:
         return cache
-    calls = 0
-    with httpx.Client(timeout=8.0, headers={"User-Agent": "MumbaiHomesFinder/1.0"}) as client:
+    calls, consec_err = 0, 0
+    deadline = time.monotonic() + 45.0
+    with httpx.Client(timeout=5.0, headers={"User-Agent": "MumbaiHomesFinder/1.0"}) as client:
         for soc in societies:
-            if calls >= max_calls:
+            if calls >= max_calls or time.monotonic() > deadline or consec_err >= 3:
                 break
             cid = soc["id"]
             if cid in cache:
@@ -116,21 +118,21 @@ def enrich_with_osm_photon(societies: List[Dict], max_calls: int = 40) -> Dict[s
                 continue
             loc = soc.get("locality") or "Mumbai"
             q = f"{soc['name']}, {loc}, Mumbai"
+            calls += 1
             try:
                 r = client.get(PHOTON_URL, params={"q": q, "limit": 1, "lat": 19.08, "lon": 72.88})
-                calls += 1
                 if r.status_code != 200:
+                    consec_err += 1
                     continue
+                consec_err = 0
                 feats = r.json().get("features") or []
                 if not feats:
                     cache[cid] = []
                     continue
                 lon, lat = feats[0]["geometry"]["coordinates"][:2]
-                if is_valid_mmr_land(lat, lon, loc):
-                    cache[cid] = [round(float(lat), 6), round(float(lon), 6)]
-                else:
-                    cache[cid] = []
+                cache[cid] = [round(float(lat), 6), round(float(lon), 6)] if is_valid_mmr_land(lat, lon, loc) else []
             except Exception:
+                consec_err += 1
                 continue
     OSM_CACHE.parent.mkdir(parents=True, exist_ok=True)
     OSM_CACHE.write_text(json.dumps(cache, separators=(",", ":")), encoding="utf-8")
