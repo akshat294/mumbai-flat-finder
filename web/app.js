@@ -380,7 +380,7 @@
           <strong class="hc-price">${getPriceLabel(s)}</strong>
           <div class="hc-tags">
             ${deal?.label === "Great Value" ? `<span class="tag good">${Math.abs(deal.pct)}% below avg</span>` : ""}
-            ${(s.pricing?.has_zero_brokerage || us.some(u => u.zb)) ? `<span class="tag good">Zero Brok</span>` : ""}
+            ${(s.pricing?.has_zero_brokerage || us.some(u => u.zb)) ? `<span class="tag zb-brass">Zero Brok</span>` : ""}
           </div>
         </div>
         <div class="hc-row3">
@@ -573,6 +573,7 @@
     st.bhks.clear(); document.querySelectorAll(".bhk-opt").forEach(b => b.classList.remove("active"));
     st.zero = st.dealOnly = st.flood = st.exactOnly = st.showEst = st.mapBounds = false; st.page = 36;
     document.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
+    document.querySelectorAll(".n-chip").forEach(c => c.classList.toggle("active", c.dataset.nb === "ALL"));
     ["fExactOnly","fShowEst","mapAreaBtn"].forEach(id => $(id).classList.remove("active"));
     populateLocalities(); renderAll();
   }
@@ -628,7 +629,29 @@
     };
   });
 
-  $("fZone").addEventListener("change", () => { populateLocalities(); st.page = 36; renderAll(); });
+
+  const NB_VIEWS = {
+    "ALL": [19.088, 72.885, 11],
+    "South Mumbai": [18.972, 72.820, 13],
+    "Bandra-Santacruz": [19.064, 72.838, 14],
+    "Andheri-Juhu": [19.124, 72.838, 13],
+    "Powai-Central": [19.118, 72.908, 13],
+    "Thane": [19.222, 72.974, 13],
+    "Navi Mumbai": [19.048, 73.035, 12]
+  };
+  document.querySelectorAll(".n-chip").forEach(btn => {
+    btn.onclick = () => {
+      const nb = btn.dataset.nb;
+      $("fZone").value = nb;
+      populateLocalities();
+      document.querySelectorAll(".n-chip").forEach(x => x.classList.toggle("active", x.dataset.nb === nb));
+      const v = NB_VIEWS[nb];
+      if (v) map.flyTo([v[0], v[1]], v[2], { duration: 0.55 });
+      st.page = 36; renderAll();
+    };
+  });
+
+  $("fZone").addEventListener("change", () => { document.querySelectorAll(".n-chip").forEach(x => x.classList.toggle("active", x.dataset.nb === $("fZone").value)); populateLocalities(); st.page = 36; renderAll(); });
   $("sortSelect").addEventListener("change", () => { st.page = 36; renderAll(); });
   ["mpMin","mpMax"].forEach(id => $(id).addEventListener("input", () => { syncPriceSliders(Number($("mpMin").value), Number($("mpMax").value)); st.page = 36; scheduleRender(); }));
   ["sMin","sMax"].forEach(id => $(id).addEventListener("input", () => { syncSqftSlider(); st.page = 36; scheduleRender(); }));

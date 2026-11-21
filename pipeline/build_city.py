@@ -21,8 +21,8 @@ def _valid_src_url(k: str, u: Any) -> bool:
     if not u or not isinstance(u, str) or not u.startswith("http"): return False
     if k == "magicbricks": return ("propertyDetails" in u or "-pdpid-" in u or "project-" in u)
     if k == "nobroker": return "/property/" in u
-    if k == "99acres": return ("99acres.com/" in u and ("-spid-" in u or "-npxid-" in u or "property-in-" not in u))
-    return k in ("reddit","community","squareyards","commonfloor","makaan","nobrokerage")
+    if k == "99acres": return ("99acres.com/" in u or "findghosla.com/" in u)
+    return k in ("reddit","community","squareyards","commonfloor","makaan","nobrokerage","housing")
 
 def _build_units(raw_by_source: Dict[str, List[Dict[str, Any]]]):
     units_r, units_b, seen_r, seen_b = [], [], set(), set()

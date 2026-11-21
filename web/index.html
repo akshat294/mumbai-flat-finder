@@ -50,14 +50,22 @@
     </div>
   </header>
 
-  <section class="subbar" aria-label="Quick filters">
+  <section class="subbar" aria-label="Neighbourhoods and quick filters">
     <div class="chips">
+      <button class="n-chip active" data-nb="ALL">All Bombay</button>
+      <button class="n-chip" data-nb="South Mumbai">South Bombay</button>
+      <button class="n-chip" data-nb="Bandra-Santacruz">Bandra–Khar</button>
+      <button class="n-chip" data-nb="Andheri-Juhu">Andheri–Juhu</button>
+      <button class="n-chip" data-nb="Powai-Central">Powai</button>
+      <button class="n-chip" data-nb="Thane">Thane</button>
+      <button class="n-chip" data-nb="Navi Mumbai">Navi Mumbai</button>
+      <span class="chip-sep" aria-hidden="true"></span>
       <button class="chip" data-q="zero">Zero Brokerage</button>
       <button class="chip" data-q="deal">Great Value</button>
       <button class="chip" data-q="metro">Near Metro</button>
       <button class="chip" data-q="flood">Monsoon Safe</button>
       <button class="chip" data-q="community">Flatmates</button>
-      <button class="chip" data-q="rated">4★+ Rated</button>
+      <button class="chip" data-q="rated">4★+</button>
     </div>
     <select id="sortSelect" class="sort-sel" aria-label="Sort results">
       <option value="rec">Best Match</option>
