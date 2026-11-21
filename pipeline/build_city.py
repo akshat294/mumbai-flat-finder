@@ -119,7 +119,7 @@ def build_mumbai(db_path: str | Path = "pipeline/staging/mumbai_raw.db", max_goo
             if k == "magicbricks" and ("propertyDetails" in u or "-pdpid-" in u or "project-" in u): clean_sources[k] = u
             elif k == "nobroker" and "/property/" in u: clean_sources[k] = u
             elif k == "99acres" and ("-spid-" in u or "-npxid-" in u or "99acres.com/" in u): clean_sources[k] = u
-            elif k == "reddit" and "reddit.com/" in u: clean_sources[k] = u
+            elif k in ("reddit", "community", "squareyards", "commonfloor", "makaan", "nobrokerage") and u.startswith("http"): clean_sources[k] = u
 
         gblock = None
         if gplace:

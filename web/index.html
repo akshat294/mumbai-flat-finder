@@ -3,46 +3,73 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Mumbai Homes — Honest Mumbai, Thane and Navi Mumbai Flat Finder</title>
-  <meta name="description" content="Compare Mumbai, Thane and Navi Mumbai societies with Fair Price deal verdicts, 2026 Metro walk times, monsoon safety, nearby hospitals and parks, and direct verified links." />
+  <title>Mumbai Homes — Mumbai, Thane & Navi Mumbai</title>
+  <meta name="description" content="Honest Mumbai, Thane and Navi Mumbai home search with Fair Price verdicts, 2026 Metro walk times, monsoon safety, and zero-brokerage options." />
   <link rel="stylesheet" href="./vendor/leaflet.min.css" />
   <link rel="stylesheet" href="./styles.css" />
   <script src="./vendor/leaflet.min.js"></script>
 </head>
 <body class="view-split">
-  <header>
+  <header class="topbar">
     <div class="brand">
-      <div class="logo" aria-hidden="true">M</div>
+      <div class="logo" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><path d="M9 22V12h6v10"/></svg>
+      </div>
       <div class="brand-txt">
         <h1>Mumbai Homes</h1>
         <small id="freshBadge">Loading MMR homes...</small>
       </div>
     </div>
 
-    <div class="seg" role="group" aria-label="Rent or Buy">
-      <button id="modeRent" class="active">Rent</button>
-      <button id="modeBuy">Buy</button>
+    <div class="omni-pill">
+      <div class="seg-mini" role="group" aria-label="Rent or Buy">
+        <button id="modeRent" class="active">Rent</button>
+        <button id="modeBuy">Buy</button>
+      </div>
+      <div class="omni-div"></div>
+      <div class="search-wrap">
+        <svg class="ic s-ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7.5"/><path d="m20 20-3.8-3.8"/></svg>
+        <input id="searchBox" type="text" placeholder="Search Bandra, Powai, Oberoi..." />
+      </div>
+      <div class="omni-div desk-only"></div>
+      <select id="commuteQuick" class="omni-sel desk-only" aria-label="Commuting to">
+        <option value="">Commute to...</option>
+        <option value="bkc">BKC</option>
+        <option value="lower_parel">Lower Parel</option>
+        <option value="andheri_seepz">Andheri / SEEPZ</option>
+        <option value="powai">Powai</option>
+        <option value="goregaon_nesco">Goregaon</option>
+        <option value="nariman_point">Nariman Pt</option>
+      </select>
+      <div class="omni-div desk-only"></div>
+      <div class="desk-only desk-slider range-wrap">
+        <div class="range-top"><span id="dPriceLbl">Rent</span><strong id="dPriceVal">Any Price</strong></div>
+        <div class="dual">
+          <div class="d-track"></div><div class="d-fill" id="dPriceFill"></div>
+          <input id="dpMin" type="range" min="0" max="25" step="1" value="0" />
+          <input id="dpMax" type="range" min="0" max="25" step="1" value="25" />
+        </div>
+      </div>
     </div>
 
     <div class="h-right">
-      <div class="seg desk-only" role="group" aria-label="Layout view">
+      <button id="openFilterBtn" class="btn">
+        <svg class="ic" viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="20" y2="12"/><line x1="12" y1="18" x2="20" y2="18"/><circle cx="6" cy="12" r="2"/><circle cx="10" cy="18" r="2"/></svg>
+        <span class="desk-lbl">Filters</span>
+        <span class="badge" id="filterCount" style="visibility:hidden;">0</span>
+      </button>
+      <div class="seg desk-only" role="group" aria-label="View">
         <button id="viewSplit" class="active">Split</button>
         <button id="viewList">List</button>
         <button id="viewMap">Map</button>
       </div>
-      <button id="savedBtn" class="btn desk-only">
+      <button id="savedBtn" class="btn desk-only" aria-label="Saved homes">
         <svg class="ic" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
-        <span>Saved</span>
         <span class="badge" id="savedCount">0</span>
       </button>
-      <button id="compareBtn" class="btn desk-only">
+      <button id="compareBtn" class="btn desk-only" aria-label="Compare homes">
         <svg class="ic" viewBox="0 0 24 24"><path d="M16 16v3a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h3"/><rect x="9" y="3" width="12" height="12" rx="2"/></svg>
-        <span>Compare</span>
         <span class="badge" id="cmpCount">0</span>
-      </button>
-      <button id="clipBtn" class="btn desk-only" title="Add from Housing.com or 99acres">
-        <svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-        <span>Clip External</span>
       </button>
       <button id="themeBtn" class="btn icon" title="Switch Day / Night" aria-label="Switch theme">
         <svg class="ic" id="themeIcon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
@@ -50,50 +77,22 @@
     </div>
   </header>
 
-  <section class="toolbar">
-    <div class="search-box">
-      <svg class="ic s-ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-      <input id="searchBox" type="text" placeholder="Search society or locality (Bandra, Powai, Thane...)" />
-    </div>
-    <select id="commuteQuick" class="desk-only" aria-label="Commuting to">
-      <option value="">Commuting to...</option>
-      <option value="bkc">BKC</option>
-      <option value="lower_parel">Lower Parel</option>
-      <option value="andheri_seepz">Andheri / SEEPZ</option>
-      <option value="powai">Powai</option>
-      <option value="goregaon_nesco">Goregaon</option>
-      <option value="nariman_point">Nariman Point</option>
-    </select>
-    <div class="desk-only desk-slider range-wrap">
-      <div class="range-top"><span id="dPriceLbl">Rent</span><strong id="dPriceVal">Any Price</strong></div>
-      <div class="dual">
-        <div class="d-track"></div><div class="d-fill" id="dPriceFill"></div>
-        <input id="dpMin" type="range" min="0" max="25" step="1" value="0" />
-        <input id="dpMax" type="range" min="0" max="25" step="1" value="25" />
-      </div>
-    </div>
-    <select id="sortSelect" class="desk-only" aria-label="Sort homes">
-      <option value="rec">Best Match</option>
-      <option value="deal">Best Value Deals</option>
-      <option value="p_asc">Price: Low to High</option>
-      <option value="p_desc">Price: High to Low</option>
+  <section class="missions" aria-label="Quick collections">
+    <button class="m-chip" data-mission="zerobrok60">Zero-Brokerage ≤₹60k</button>
+    <button class="m-chip" data-mission="deals">Great Value Deals</button>
+    <button class="m-chip" data-mission="metro10">Walk to Metro ≤10m</button>
+    <button class="m-chip" data-mission="family">Monsoon-Safe Family</button>
+    <button class="m-chip" data-mission="community">Flatmates & Direct Owner</button>
+    <button class="m-chip" data-mission="rated">4★+ Google Rated</button>
+    <div class="m-spacer"></div>
+    <select id="sortSelect" class="sort-mini desk-only" aria-label="Sort results">
+      <option value="rec">Sort: Best Match</option>
+      <option value="deal">Sort: Best Value</option>
+      <option value="p_asc">Price: Low → High</option>
+      <option value="p_desc">Price: High → Low</option>
       <option value="metro">Closest to Metro</option>
       <option value="rate">Top Google Rated</option>
     </select>
-    <button id="openFilterBtn" class="btn">
-      <svg class="ic" viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="20" y2="12"/><line x1="12" y1="18" x2="20" y2="18"/><circle cx="6" cy="12" r="2"/><circle cx="10" cy="18" r="2"/></svg>
-      <span>Filters</span>
-      <span class="badge" id="filterCount" style="visibility:hidden;">0</span>
-    </button>
-  </section>
-
-  <section class="missions" aria-label="Quick starting views">
-    <button class="m-chip" data-mission="zerobrok60">Zero-Brok under ₹60k</button>
-    <button class="m-chip" data-mission="deals">Great Value Deals</button>
-    <button class="m-chip" data-mission="metro10">Walk to Metro (≤10m)</button>
-    <button class="m-chip" data-mission="family">Monsoon-Safe Family</button>
-    <button class="m-chip" data-mission="reddit">Reddit Direct Owner</button>
-    <button class="m-chip" data-mission="rated">4★+ Google Rated</button>
   </section>
 
   <main class="ws">
@@ -102,7 +101,7 @@
         <span id="resSum">0 homes</span>
         <div style="display:flex;gap:6px;align-items:center;">
           <button id="shareShortlistBtn" class="btn xs" style="display:none;">Share Shortlist</button>
-          <button id="mobSortBtn" class="btn xs">Filters / Sort</button>
+          <button id="mobSortBtn" class="btn xs">Filters & Sort</button>
         </div>
       </div>
       <div id="activeBar"></div>
@@ -118,8 +117,10 @@
           <button id="msDark">Dark</button>
           <button id="msSat">Sat</button>
         </div>
-        <button id="togMetro" class="btn xs active">Metro</button>
-        <button id="togFlood" class="btn xs">Flood</button>
+        <div style="display:flex;gap:6px;">
+          <button id="togMetro" class="btn xs active">Metro</button>
+          <button id="togFlood" class="btn xs">Flood</button>
+        </div>
       </div>
       <div id="mapPreview" class="map-preview" style="display:none;"></div>
     </section>
@@ -127,7 +128,7 @@
 
   <nav class="mob-nav" aria-label="Mobile Navigation">
     <button id="mTabList" class="active">
-      <svg class="ic" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <svg class="ic" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><path d="M9 22V12h6v10"/></svg>
       <span>Homes</span>
     </button>
     <button id="mTabMap">
@@ -146,21 +147,21 @@
 
   <div id="filterBackdrop" class="backdrop"></div>
   <aside id="filterSheet" class="sheet" aria-label="Filters">
-    <div class="s-head">
-      <h2>Filters</h2>
-      <button class="btn icon" id="closeFilterBtn" aria-label="Close">✕</button>
-    </div>
+    <div class="s-head"><h2>Filters</h2><button class="btn icon" id="closeFilterBtn" aria-label="Close">✕</button></div>
     <div class="s-body">
-      <div class="f-sec">
-        <label>Area / Zone</label>
-        <select id="fZone">
-          <option value="ALL">All Areas (Mumbai + Thane + Navi Mumbai)</option>
-          <option>South Mumbai</option><option>Bandra-Santacruz</option><option>Andheri-Juhu</option>
-          <option>Western Suburbs North</option><option>Powai-Central</option><option>Chembur-Wadala</option>
-          <option>Thane</option><option>Navi Mumbai</option>
-        </select>
+      <div class="g2">
+        <div class="f-sec">
+          <label>Area / Zone</label>
+          <select id="fZone">
+            <option value="ALL">All MMR Zones</option>
+            <option>South Mumbai</option><option>Bandra-Santacruz</option><option>Andheri-Juhu</option>
+            <option>Western Suburbs North</option><option>Powai-Central</option><option>Chembur-Wadala</option>
+            <option>Thane</option><option>Navi Mumbai</option>
+          </select>
+        </div>
+        <div class="f-sec"><label>Locality</label><select id="fLoc"><option value="ALL">All Localities</option></select></div>
       </div>
-      <div class="f-sec"><label>Locality</label><select id="fLoc"><option value="ALL">All Localities</option></select></div>
+
       <div class="f-sec">
         <label>Home Size</label>
         <div class="pill-row">
@@ -171,6 +172,7 @@
           <button class="p-opt bhk-opt" data-bhk="4">4+ BHK</button>
         </div>
       </div>
+
       <div class="f-sec range-wrap">
         <div class="range-top"><label id="mPriceLbl">Monthly Rent</label><strong id="mPriceVal">Any Price</strong></div>
         <div class="dual">
@@ -179,6 +181,7 @@
           <input id="mpMax" type="range" min="0" max="25" step="1" value="25" />
         </div>
       </div>
+
       <div class="f-sec range-wrap">
         <div class="range-top"><label>Carpet Area (sq ft)</label><strong id="sqftVal">Any Size</strong></div>
         <div class="dual">
@@ -187,6 +190,7 @@
           <input id="sMax" type="range" min="0" max="4000" step="50" value="4000" />
         </div>
       </div>
+
       <div class="f-sec">
         <label>Essentials</label>
         <div class="pill-row">
@@ -194,31 +198,48 @@
           <button class="p-opt" id="fZero">Zero Brokerage</button>
           <button class="p-opt" id="fDealOnly">Great Value Deals</button>
           <button class="p-opt" id="fFlood">Monsoon Safe</button>
-          <button class="p-opt" id="fRedditOnly">Reddit Direct Owner</button>
         </div>
       </div>
+
       <div class="f-sec">
-        <label>Max Walk to Metro</label>
-        <select id="fMetro"><option value="0">Any distance</option><option value="5">Within 5 min walk</option><option value="10">Within 10 min walk</option><option value="15">Within 15 min walk</option><option value="25">Within 25 min walk</option></select>
+        <label>Listing Source</label>
+        <select id="fSource">
+          <option value="ALL">All Sources</option>
+          <option value="magicbricks">MagicBricks</option>
+          <option value="nobroker">NoBroker (0% Brok)</option>
+          <option value="squareyards">Square Yards</option>
+          <option value="commonfloor">CommonFloor</option>
+          <option value="makaan">Makaan.com</option>
+          <option value="nobrokerage">NoBrokerage.com</option>
+          <option value="community">Reddit & OLX Flatmates</option>
+          <option value="99acres">99acres</option>
+          <option value="housing">Housing.com (Saved)</option>
+        </select>
       </div>
+
+      <div class="g2">
+        <div class="f-sec"><label>Max Walk to Metro</label><select id="fMetro"><option value="0">Any distance</option><option value="5">≤ 5 min walk</option><option value="10">≤ 10 min walk</option><option value="15">≤ 15 min walk</option><option value="25">≤ 25 min walk</option></select></div>
+        <div class="f-sec"><label>Google Rating</label><select id="fRate"><option value="0">Any</option><option value="3.5">3.5★+</option><option value="4.0">4.0★+</option><option value="4.3">4.3★+</option></select></div>
+      </div>
+
       <div class="f-sec">
-        <label>Commute to Office Hub</label>
+        <label>Office Hub Commute</label>
         <div class="g2">
           <select id="fHub"><option value="">Any Hub</option><option value="bkc">BKC</option><option value="lower_parel">Lower Parel</option><option value="andheri_seepz">Andheri / SEEPZ</option><option value="powai">Powai</option><option value="goregaon_nesco">Goregaon</option><option value="nariman_point">Nariman Point</option></select>
           <select id="fHubMin"><option value="0">Any time</option><option value="20">Under 20 min</option><option value="30">Under 30 min</option><option value="45">Under 45 min</option><option value="60">Under 60 min</option></select>
         </div>
       </div>
+
       <div class="g2">
         <div class="f-sec"><label>Furnishing</label><select id="fFurn"><option value="ALL">Any</option><option value="furnished">Furnished</option><option value="semi">Semi-Furnished</option><option value="unfurnished">Unfurnished</option></select></div>
         <div class="f-sec"><label>Tenant</label><select id="fTen"><option value="ALL">Any</option><option value="bachelors_ok">Bachelors OK</option><option value="family">Family</option></select></div>
       </div>
+
+      <div class="f-sec"><label>Sort Results</label><select id="fSort"><option value="rec">Best Match</option><option value="deal">Best Value Deals</option><option value="p_asc">Price: Low to High</option><option value="p_desc">Price: High to Low</option><option value="sqft">Largest Carpet</option><option value="metro">Closest to Metro</option><option value="rate">Top Google Rated</option></select></div>
+
       <div class="g2">
-        <div class="f-sec"><label>Google Rating</label><select id="fRate"><option value="0">Any</option><option value="3.5">3.5★+</option><option value="4.0">4.0★+</option><option value="4.3">4.3★+</option></select></div>
-        <div class="f-sec"><label>Sort Results</label><select id="fSort"><option value="rec">Best Match</option><option value="deal">Best Value Deals</option><option value="p_asc">Price: Low to High</option><option value="p_desc">Price: High to Low</option><option value="sqft">Largest Carpet</option><option value="metro">Closest to Metro</option><option value="rate">Top Google Rated</option></select></div>
-      </div>
-      <div class="g2">
-        <button id="openClipFromFilter" class="btn">+ Clip Housing / 99acres</button>
-        <button id="exportBtn" class="btn">Download CSV</button>
+        <button id="openClipFromFilter" class="btn">+ Save External URL</button>
+        <button id="exportBtn" class="btn">Export CSV</button>
       </div>
     </div>
     <div class="s-foot">
@@ -227,12 +248,15 @@
     </div>
   </aside>
 
+  <div id="clusterBackdrop" class="backdrop"></div>
+  <aside id="clusterSheet" class="sheet" aria-label="Homes in this area">
+    <div class="s-head"><div><h2 id="clTitle">Homes here</h2><div id="clSub" class="sub-line"></div></div><button class="btn icon" id="closeClusterBtn" aria-label="Close">✕</button></div>
+    <div class="s-body" id="clBody"></div>
+  </aside>
+
   <div id="detailBackdrop" class="backdrop"></div>
   <aside id="detailSheet" class="sheet" aria-label="Home Details">
-    <div class="s-head">
-      <div style="min-width:0;"><h2 id="dName"></h2><div id="dSub" class="sub-line"></div></div>
-      <button class="btn icon" id="closeDetailBtn" aria-label="Close">✕</button>
-    </div>
+    <div class="s-head"><div style="min-width:0;"><h2 id="dName"></h2><div id="dSub" class="sub-line"></div></div><button class="btn icon" id="closeDetailBtn" aria-label="Close">✕</button></div>
     <div class="s-body" id="dBody"></div>
   </aside>
 
@@ -241,8 +265,9 @@
       <div class="m-head">
         <h2>Side-by-Side Comparison</h2>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="btn wa" id="shareCmpWa">Share on WhatsApp</button>
-          <button class="btn" id="copyCmpLink">Copy Shortlist Link</button>
+          <button class="btn" id="openClipFromCmp">+ Add Housing / 99acres</button>
+          <button class="btn wa" id="shareCmpWa">Share WhatsApp</button>
+          <button class="btn" id="copyCmpLink">Copy Link</button>
           <button class="btn" id="clearCmp">Clear</button>
           <button class="btn pri" id="closeCmp">Done</button>
         </div>
@@ -252,30 +277,28 @@
   </div>
 
   <div id="clipModal" class="modal-bg">
-    <div class="mcard" style="max-width:560px;">
-      <div class="m-head">
-        <h2>Add from Housing.com or 99acres</h2>
-        <button class="btn icon" id="closeClip">✕</button>
-      </div>
+    <div class="mcard" style="max-width:540px;">
+      <div class="m-head"><h2>Save a Flat from Housing.com or 99acres</h2><button class="btn icon" id="closeClip">✕</button></div>
+      <p class="help-txt" style="margin-top:8px;">Housing.com and 99acres block free cloud servers, so use this to pull any flat you find there straight into your Saved & Compare board:</p>
       <div style="display:flex;flex-direction:column;gap:14px;margin-top:12px;">
         <div class="card-box">
-          <h3>1-Click Browser Bookmarklet (Desktop)</h3>
-          <p class="help-txt">Drag this button to your bookmarks bar. Whenever you view a flat on Housing.com or 99acres, click it to save and compare it here instantly:</p>
-          <div style="margin-top:10px;"><a id="bookmarkletLink" class="btn pri" href="#">+ Clip to Mumbai Homes</a></div>
-        </div>
-        <div class="card-box">
-          <h3>Quick Add Listing (Phone or PC)</h3>
+          <h3>Quick Paste (Phone or PC)</h3>
           <div class="f-sec" style="margin-bottom:8px;"><label>Society / Flat Name</label><input id="cName" type="text" placeholder="e.g. Oberoi Springs 2 BHK" /></div>
           <div class="g2" style="margin-bottom:8px;">
             <div class="f-sec"><label>Locality</label><input id="cLoc" type="text" placeholder="e.g. Andheri West" /></div>
-            <div class="f-sec"><label>Monthly Rent or Buy (₹)</label><input id="cPrice" type="number" placeholder="e.g. 85000" /></div>
+            <div class="f-sec"><label>Rent or Buy Price (₹)</label><input id="cPrice" type="number" placeholder="e.g. 85000" /></div>
           </div>
           <div class="g2" style="margin-bottom:8px;">
-            <div class="f-sec"><label>Portal</label><select id="cPortal"><option value="housing">Housing.com</option><option value="99acres">99acres</option><option value="other">Direct / Other</option></select></div>
+            <div class="f-sec"><label>Portal</label><select id="cPortal"><option value="housing">Housing.com</option><option value="99acres">99acres</option><option value="other">Facebook / Direct</option></select></div>
             <div class="f-sec"><label>Carpet Area (sq ft)</label><input id="cSqft" type="number" placeholder="e.g. 750" /></div>
           </div>
-          <div class="f-sec" style="margin-bottom:10px;"><label>Listing Link (paste URL)</label><input id="cUrl" type="text" placeholder="Paste Housing.com or 99acres URL..." /></div>
+          <div class="f-sec" style="margin-bottom:10px;"><label>Listing URL</label><input id="cUrl" type="text" placeholder="Paste listing link..." /></div>
           <button id="saveClipBtn" class="btn pri" style="width:100%;">Save to Shortlist & Compare</button>
+        </div>
+        <div class="card-box">
+          <h3>1-Click Desktop Bookmarklet</h3>
+          <p class="help-txt">Drag this button to your Chrome/Brave bookmarks bar, then click it on any Housing.com or 99acres listing page:</p>
+          <div style="margin-top:10px;"><a id="bookmarkletLink" class="btn" href="#">+ Clip to Mumbai Homes</a></div>
         </div>
       </div>
     </div>

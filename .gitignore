@@ -41,3 +41,7 @@ fix_compile_hang.py
 v7_backend.py
 v7_html_css.py
 v7_app_js.py
+
+v8_sources.py
+v8_html_css.py
+v8_app_js.py
