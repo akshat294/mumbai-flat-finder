@@ -282,6 +282,7 @@ class NinetyNineAcresConnector(BaseConnector):
         except ImportError:
             print("[99acres] curl_cffi not installed - skipping.", flush=True)
             return 0
+
         PROTO = "https" + "://"
         zmap = {
             "South Mumbai":"south-mumbai","Bandra-Santacruz":"mumbai-south-west",
@@ -289,12 +290,12 @@ class NinetyNineAcresConnector(BaseConnector):
             "Powai-Central":"central-mumbai-suburbs","Chembur-Wadala":"mumbai-harbour",
             "Thane":"thane","Navi Mumbai":"navi-mumbai",
         }
-        deadline = time.monotonic() + 100.0
+        deadline = time.monotonic() + 95.0
 
         def _fetch_one(info):
             if time.monotonic() > deadline: return info, []
             loc = info["locality"]
-            cached = self.read_cache(f"99c3:{loc}", max_age_hours=fresh_hours)
+            cached = self.read_cache(f"99c4:{loc}", max_age_hours=fresh_hours)
             if cached: return info, cached
             slug = re.sub(r"[^a-z0-9]+", "-", loc.lower()).strip("-")
             reg = zmap.get(info.get("zone", ""), info["city"].lower().replace(" ", "-"))
@@ -304,15 +305,15 @@ class NinetyNineAcresConnector(BaseConnector):
                 u = f"{PROTO}www.99acres.com/{prefix}-{slug}-{reg}-ffid"
                 try:
                     resp = c_req.get(u, impersonate="chrome", timeout=8, allow_redirects=True)
-                    if resp.status_code == 200 and len(resp.text) > 80000:
+                    if resp.status_code == 200 and len(resp.text) > 60000:
                         out.extend(self._parse_html(resp.text, loc, str(resp.url), mode, limit_per_locality // 2))
                 except Exception:
                     continue
-            if out: self.write_cache(f"99c3:{loc}", out)
+            if out: self.write_cache(f"99c4:{loc}", out)
             return info, out
 
         saved = 0
-        with ThreadPoolExecutor(max_workers=5) as ex:
+        with ThreadPoolExecutor(max_workers=6) as ex:
             for fut in as_completed([ex.submit(_fetch_one, m) for m in loc_meta]):
                 info, items = fut.result()
                 for it in items:
@@ -320,11 +321,49 @@ class NinetyNineAcresConnector(BaseConnector):
                     saved += 1
         return saved
 
+    def _extract_soc_name(self, raw_title: str, locality: str) -> str:
+        t = (raw_title or "").strip()
+        m = re.search(r"\bin\s+([^,|]+)", t, re.I)
+        if m:
+            cand = m.group(1).strip()
+            if len(cand) >= 3 and cand.lower() != locality.lower(): t = cand
+        return clean_name(t, locality)
+
     def _parse_html(self, html: str, locality: str, url: str, mode: str, limit: int) -> List[Dict[str, Any]]:
         import json as _json
         PROTO = "https" + "://"
         soup = BeautifulSoup(html, "html.parser")
         items, seen = [], set()
+
+        cards = soup.select("[data-label='SRP_TUPLE'], .tupleNew__tupleWrap, .projectTuple__cardWrap, section[data-propid], div[class*='tupleWrap']")
+        for idx, card in enumerate(cards):
+            txt = card.get_text(" ", strip=True)
+            if "₹" not in txt or len(txt) < 35 or len(txt) > 3000: continue
+            soc_el = card.select_one(".tupleNew__locationName, .projectTuple__projectName, a[class*='propertyHeading'], h2 a, h2, h3, a[title]")
+            if not soc_el: continue
+            name = self._extract_soc_name(soc_el.get("title") or soc_el.get_text(" ", strip=True), locality)
+            if len(name) < 3 or name.lower() in seen or name.lower() == locality.lower() or COMM_RE.search(name) or JUNK_NAME.search(name): continue
+            prices = [parse_inr(m) for m in re.findall(r"₹\s*[0-9,.]+\s*(?:Cr|Crore|Lac|Lakh|L|K)?", txt, re.I)]
+            buys = [p for p in prices if p and 2_500_000 <= p <= 600_000_000]
+            rents = [p for p in prices if p and 7_000 <= p <= 550_000]
+            if mode == "rent" and not rents: continue
+            if mode == "buy" and not buys: continue
+            a_el = card.select_one("a[href*='-spid-'], a[href*='-npxid-'], a[href]")
+            href = (a_el.get("href") if a_el else "") or ""
+            full_url = href if href.startswith("http") else (f"{PROTO}www.99acres.com{href}" if href.startswith("/") else None)
+            img_el = card.select_one("img[src^='http']")
+            rm = RERA_RE.search(txt)
+            seen.add(name.lower())
+            items.append({
+                "id": f"99a-{mode[0]}-{re.sub(r'[^a-z0-9]','',locality.lower())[:9]}-{idx}-{re.sub(r'[^a-z0-9]','',name.lower())[:14]}",
+                "name": name, "locality": locality, "bhk": parse_bhk(txt),
+                "buy_inr": buys[0] if mode == "buy" and buys else None,
+                "rent_inr": rents[0] if mode == "rent" and rents else None,
+                "carpet_sqft": parse_sqft(txt), "furnishing": parse_furnishing(txt), "tenant": parse_tenant(txt),
+                "rera_id": rm.group(0) if rm else None, "image": img_el.get("src") if img_el else None, "url": full_url,
+            })
+            if len(items) >= limit: return items
+
         for sc in soup.find_all("script", type="application/ld+json"):
             raw = sc.string or sc.get_text() or ""
             if not raw.strip(): continue
@@ -341,10 +380,10 @@ class NinetyNineAcresConnector(BaseConnector):
                 else: flat.append(nd)
             for obj in flat:
                 if not isinstance(obj, dict): continue
-                t, desc = str(obj.get("name") or "").strip(), str(obj.get("description") or "")
-                full = f"{t} {desc}"
-                if len(t) < 4: continue
-                name = clean_name(t, locality)
+                addr = obj.get("address") or {}
+                street = addr.get("streetAddress") if isinstance(addr, dict) else ""
+                full = f"{obj.get('name') or ''} {street} {obj.get('description') or ''}"
+                name = self._extract_soc_name(str(street or obj.get("name") or ""), locality)
                 if len(name) < 3 or name.lower() in seen or name.lower() == locality.lower() or COMM_RE.search(name) or JUNK_NAME.search(name): continue
                 offers = obj.get("offers") or {}
                 if isinstance(offers, list): offers = offers[0] if offers else {}
@@ -354,10 +393,9 @@ class NinetyNineAcresConnector(BaseConnector):
                     try: prices.insert(0, int(float(str(p_offer).replace(",", ""))))
                     except Exception: pass
                 buys = [p for p in prices if p and 2_500_000 <= p <= 600_000_000]
-                rents = [p for p in prices if p and 7_000 <= p <= 850_000]
+                rents = [p for p in prices if p and 7_000 <= p <= 550_000]
                 if mode == "rent" and not rents: continue
                 if mode == "buy" and not buys: continue
-                if not buys and not rents: continue
                 geo = obj.get("geo") or {}
                 try:
                     lat = float(geo["latitude"]) if geo.get("latitude") is not None else None
@@ -371,14 +409,13 @@ class NinetyNineAcresConnector(BaseConnector):
                 rm = RERA_RE.search(full)
                 seen.add(name.lower())
                 items.append({
-                    "id": f"99a-{mode[0]}-{re.sub(r'[^a-z0-9]','',locality.lower())[:9]}-{len(items)}-{re.sub(r'[^a-z0-9]','',name.lower())[:14]}",
+                    "id": f"99a-{mode[0]}-{re.sub(r'[^a-z0-9]','',locality.lower())[:9]}-ld{len(items)}-{re.sub(r'[^a-z0-9]','',name.lower())[:14]}",
                     "name": name, "locality": locality, "bhk": parse_bhk(full),
                     "buy_inr": buys[0] if mode == "buy" and buys else None,
                     "rent_inr": rents[0] if mode == "rent" and rents else None,
                     "carpet_sqft": parse_sqft(full), "furnishing": parse_furnishing(full), "tenant": parse_tenant(full),
                     "rera_id": rm.group(0) if rm else None, "lat": lat, "lng": lng,
-                    "image": img if isinstance(img, str) and img.startswith("http") else None,
-                    "url": full_url,
+                    "image": img if isinstance(img, str) and img.startswith("http") else None, "url": full_url,
                 })
                 if len(items) >= limit: return items
         return items

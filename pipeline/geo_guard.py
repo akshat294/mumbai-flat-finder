@@ -171,8 +171,21 @@ def nearest_locality(lat: float, lng: float) -> Tuple[str, float]:
             best_km, best_loc = d, loc
     return best_loc, best_km
 
+PRIORITY_OVERRIDES: Dict[str, str] = {
+    "new cuffe parade": "Wadala", "lodha new cuffe parade": "Wadala",
+    "upper worli": "Lower Parel", "new worli": "Lower Parel",
+    "bkc annex": "Kurla West", "bkc east": "Kurla West",
+    "bandra kurla complex": "Bandra East",
+    "hiranandani estate": "Ghodbunder Road", "hiranandani meadows": "Pokhran Road",
+    "hiranandani gardens": "Powai", "palava": "Thane West",
+    "lodha amara": "Kolshet Road", "runwal forests": "Kanjurmarg", "runwal greens": "Mulund West",
+}
+
 def infer_true_locality(text: str, current_loc: str) -> str:
     low = (text or "").lower().replace("-", " ")
+    for phrase, target in sorted(PRIORITY_OVERRIDES.items(), key=lambda kv: -len(kv[0])):
+        if phrase in low:
+            return target
     for loc in sorted(SAFE_CENTROIDS.keys(), key=lambda x: -len(x)):
         if re.search(r"\b" + re.escape(loc.lower()) + r"\b", low):
             return loc

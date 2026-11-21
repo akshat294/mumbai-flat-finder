@@ -52,13 +52,13 @@
   }
   function getP(s) {
     const us = matchingUnits(s);
-    if (us.length) return us[0].p;
+    if (us.length) return Math.min(...us.map(u => u.p));
     return st.mode === "rent" ? (s.pricing?.rent_monthly_inr?.median || 0) : (s.pricing?.buy_inr?.median || 0);
   }
   function getPriceLabel(s) {
     const us = matchingUnits(s);
     if (us.length >= 2) {
-      const lo = us[0].p, hi = us[us.length - 1].p;
+      const ps = us.map(u => u.p); const lo = Math.min(...ps), hi = Math.max(...ps);
       if (hi > lo * 1.12) return `${fmtPill(lo, st.mode === "buy")} – ${fmtPill(hi, st.mode === "buy")}${st.mode === "rent" ? "/mo" : ""}`;
     }
     return fmt(getP(s), st.mode === "buy");
@@ -81,7 +81,7 @@
     clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove("show"), 2500);
   }
 
-  const map = L.map("map", { preferCanvas: true, zoomControl: true, maxZoom: 20 }).setView([19.085, 72.905], 11);
+  const map = L.map("map", { preferCanvas: true, zoomControl: true, minZoom: 10, maxZoom: 20 }).setView([19.088, 72.885], 11);
   const osmStreet = L.tileLayer(H + "tile.openstreetmap.org/{z}/{x}/{y}.png", { maxNativeZoom: 19, maxZoom: 20, attribution: "OpenStreetMap" });
   const esriSat = L.layerGroup([
     L.tileLayer(H + "server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { maxNativeZoom: 18, maxZoom: 20, attribution: "Esri" }),
@@ -191,8 +191,11 @@
     if (!inView.length) return;
 
     const exact = inView.filter(s => !s.coords_approx), approx = inView.filter(s => s.coords_approx);
-    const cellW = z >= 17 ? 62 : (z >= 15 ? 74 : 86), cellH = z >= 17 ? 32 : (z >= 15 ? 36 : 42);
+    const cellW = z <= 11 ? 118 : (z <= 13 ? 98 : (z >= 17 ? 64 : 80));
+    const cellH = z <= 11 ? 52 : (z <= 13 ? 46 : (z >= 17 ? 32 : 38));
     const buckets = new Map();
+    const occupied = [];
+
     for (const s of exact) {
       const pt = map.latLngToContainerPoint([s.lat, s.lng]);
       const key = `${Math.floor(pt.x / cellW)}:${Math.floor(pt.y / cellH)}`;
@@ -201,10 +204,12 @@
       b.items.push(s); b.lat += s.lat; b.lng += s.lng;
       const pv = getP(s); if (pv > 0 && pv < b.minP) b.minP = pv;
     }
+
     for (const b of buckets.values()) {
+      const cla = b.lat / b.items.length, cln = b.lng / b.items.length;
+      occupied.push(map.latLngToContainerPoint([cla, cln]));
       if (b.items.length === 1) { addPricePill(b.items[0]); }
       else {
-        const cla = b.lat / b.items.length, cln = b.lng / b.items.length;
         const label = b.minP < Infinity ? `${fmtPill(b.minP, st.mode === "buy")}+` : "Homes";
         const ic = L.divIcon({ className: "cluster-wrap", html: `<div class="cluster-pill"><span>${label}</span><span class="cluster-cnt">· ${b.items.length}</span></div>`, iconSize: [0, 0] });
         L.marker([cla, cln], { icon: ic }).on("click", () => {
@@ -216,7 +221,7 @@
       }
     }
 
-    if (!st.exactOnly && approx.length) {
+    if (!st.exactOnly && z >= 14 && approx.length) {
       const byLoc = new Map();
       for (const s of approx) {
         let g = byLoc.get(s.locality);
@@ -224,9 +229,13 @@
         g.items.push(s); g.lat += s.lat; g.lng += s.lng;
       }
       for (const g of byLoc.values()) {
-        const ic = L.divIcon({ className: "cluster-wrap", html: `<div class="area-pill">${esc(g.loc)} · ${g.items.length} area</div>`, iconSize: [0, 0] });
-        L.marker([g.lat / g.items.length, g.lng / g.items.length], { icon: ic, zIndexOffset: -100 })
-          .on("click", () => openClusterSheet(`${g.loc} — Area Listings`, `${g.items.length} homes without exact building pin`, g.items))
+        const cla = g.lat / g.items.length, cln = g.lng / g.items.length;
+        const pt = map.latLngToContainerPoint([cla, cln]);
+        if (occupied.some(o => Math.abs(o.x - pt.x) < 92 && Math.abs(o.y - pt.y) < 36)) continue;
+        occupied.push(pt);
+        const ic = L.divIcon({ className: "cluster-wrap", html: `<div class="area-pill">${esc(g.loc)} · +${g.items.length}</div>`, iconSize: [0, 0] });
+        L.marker([cla, cln], { icon: ic, zIndexOffset: -100 })
+          .on("click", () => openClusterSheet(`${g.loc} — Area Listings`, `${g.items.length} homes in ${g.loc}`, g.items))
           .addTo(mLayer);
       }
     }

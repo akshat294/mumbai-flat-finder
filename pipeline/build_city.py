@@ -14,7 +14,7 @@ from pipeline.pricing_engine import summarize_portal_prices
 
 IST = timezone(timedelta(hours=5, minutes=30))
 RK_RE = re.compile(r"\b1[\s\-]*rk\b|\bstudio\b", re.I)
-JUNK_NAME = re.compile(r"(flats?,?\s*apartments?|houses?\s+for\s+(rent|sale)|properties\s+for\s+(rent|sale)|\bnear\s+me\b|^\d+\s*(bhk|rk)\s*(flat|apartment|house)?$)", re.I)
+JUNK_NAME = re.compile(r"(^s\s+for\s+(rent|sale)|\bfor\s+(rent|sale)\s+in\b|flats?,?\s*apartments?|houses?\s+for\s+(rent|sale)|properties\s+for\s+(rent|sale)|\bnear\s+me\b|^\d+\s*(bhk|rk)\s*(flat|apartment|house)?$|^property\s+in\b|^residential\s+)", re.I)
 COMM_DROP = re.compile(r"\b(office|commercial|shop|showroom|warehouse|business\s*park|corporate|chambers|trade\s*star|trade\s*center|town\s*center|it\s*park|coworking|the\s*summit|industrial\s*estate|mindspace|tech\s*park|infotech|cyber\s*park|knowledge\s*park|business\s*bay|corporate\s*park|sez)\b", re.I)
 
 def _valid_src_url(k: str, u: Any) -> bool:
@@ -32,8 +32,7 @@ def _build_units(raw_by_source: Dict[str, List[Dict[str, Any]]]):
         for r in grp:
             u = r.get("url")
             valid_u = u if _valid_src_url(src_k, u) else None
-            if not thumb and isinstance(r.get("image"), str) and r["image"].startswith("http"):
-                thumb = r["image"]
+            if not thumb and isinstance(r.get("image"), str) and r["image"].startswith("http"): thumb = r["image"]
             low_u = (valid_u or "").lower()
             bhk = r.get("bhk")
             if RK_RE.search(str(r.get("url") or "") + " " + str(r.get("name") or "")): bhk = 0
@@ -48,8 +47,9 @@ def _build_units(raw_by_source: Dict[str, List[Dict[str, Any]]]):
             furn = r.get("furnishing")
 
             rv = r.get("rent_inr")
-            if rv and 6_000 <= int(rv) <= 850_000:
+            if rv and 6_000 <= int(rv) <= 550_000:
                 pv = int(rv)
+                if (bhk == 0 and pv > 85_000) or (bhk == 1 and pv > 165_000) or (bhk == 2 and pv > 320_000): continue
                 ur = valid_u if ("for-sale" not in low_u) else None
                 if ur: sources_rent.setdefault(src_k, ur); clean_sources.setdefault(src_k, ur)
                 ded = (src_k, bhk, pv, (sqft // 50) if sqft else 0)
@@ -67,26 +67,73 @@ def _build_units(raw_by_source: Dict[str, List[Dict[str, Any]]]):
                     seen_b.add(ded)
                     units_b.append({"p": pv, "b": bhk, "sq": sqft, "s": src_k, "u": ub, "zb": zb, "f": furn})
 
-    units_r.sort(key=lambda x: (0 if x["u"] else 1, 0 if x["zb"] else 1, x["p"]))
-    units_b.sort(key=lambda x: (0 if x["u"] else 1, x["p"]))
+    if len(units_r) >= 2:
+        med_r = sorted(x["p"] for x in units_r)[len(units_r) // 2]
+        units_r = [x for x in units_r if x["p"] <= max(med_r * 2.4, med_r + 120_000)]
+
+    units_r.sort(key=lambda x: (x["p"], 0 if x["u"] else 1, 0 if x["zb"] else 1))
+    units_b.sort(key=lambda x: (x["p"], 0 if x["u"] else 1))
     return units_r[:8], units_b[:8], sources_rent, sources_buy, clean_sources, thumb
+
+def _ensure_pricing(pricing: Dict[str, Any], units_r: List[Dict], units_b: List[Dict]) -> Dict[str, Any]:
+    if units_r:
+        ps = sorted(x["p"] for x in units_r); med = ps[len(ps) // 2]
+        if not pricing["rent_monthly_inr"].get("median") or pricing["rent_monthly_inr"].get("is_estimate"):
+            pricing["rent_monthly_inr"] = {"min": ps[0], "median": med, "max": ps[-1], "is_estimate": False}
+        elif pricing["rent_monthly_inr"]["median"] > med * 2.2:
+            pricing["rent_monthly_inr"]["median"] = med
+        if any(x.get("zb") for x in units_r): pricing["has_zero_brokerage"] = True
+    if units_b:
+        ps = sorted(x["p"] for x in units_b); med = ps[len(ps) // 2]
+        if not pricing["buy_inr"].get("median") or pricing["buy_inr"].get("is_estimate"):
+            pricing["buy_inr"] = {"min": ps[0], "median": med, "max": ps[-1], "is_estimate": False}
+    by_p = pricing.setdefault("by_portal", {})
+    for u in units_r:
+        ent = by_p.setdefault(u["s"], {"count": 0, "rent_median": u["p"], "buy_median": None})
+        ent["count"] = max(ent.get("count", 0), 1)
+        if not ent.get("rent_median"): ent["rent_median"] = u["p"]
+    for u in units_b:
+        ent = by_p.setdefault(u["s"], {"count": 0, "rent_median": None, "buy_median": u["p"]})
+        ent["count"] = max(ent.get("count", 0), 1)
+        if not ent.get("buy_median"): ent["buy_median"] = u["p"]
+    return pricing
+
+def _merge_duplicates(compiled: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    by_key: Dict[tuple, Dict[str, Any]] = {}
+    for s in compiled:
+        key = (re.sub(r"[^a-z0-9]+", "", s["name"].lower()), s["locality"].lower())
+        if key not in by_key: by_key[key] = s; continue
+        cur = by_key[key]
+        if cur["coords_approx"] and not s["coords_approx"]:
+            cur["lat"], cur["lng"], cur["coords_approx"] = s["lat"], s["lng"], False
+        for lf in ("bhks","furnishing","tenant","rera_ids"): cur[lf] = sorted(set(cur[lf]) | set(s[lf]))
+        for ff in ("thumb","google","rera_carpet_sqft"):
+            if not cur.get(ff) and s.get(ff): cur[ff] = s[ff]
+        for uf in ("units_rent","units_buy"):
+            seen_u = {(x["s"], x["b"], x["p"]) for x in cur[uf]}
+            for u in s[uf]:
+                if (u["s"], u["b"], u["p"]) not in seen_u:
+                    seen_u.add((u["s"], u["b"], u["p"])); cur[uf].append(u)
+            cur[uf].sort(key=lambda x: (x["p"], 0 if x["u"] else 1)); cur[uf] = cur[uf][:8]
+        for sf in ("sources","sources_rent","sources_buy"): cur[sf].update(s[sf])
+        cur["pricing"] = _ensure_pricing(cur["pricing"], cur["units_rent"], cur["units_buy"])
+    return list(by_key.values())
 
 def _attach_deals(compiled: List[Dict[str, Any]]) -> int:
     by_r, by_b = {}, {}
     for s in compiled:
         loc = s["locality"]
-        rm, bm = s["pricing"]["rent_monthly_inr"], s["pricing"]["buy_inr"]
-        if rm.get("median") and not rm.get("is_estimate"): by_r.setdefault(loc, []).append(float(rm["median"]))
-        if bm.get("median") and not bm.get("is_estimate"): by_b.setdefault(loc, []).append(float(bm["median"]))
+        if s["units_rent"]: by_r.setdefault(loc, []).append(float(s["units_rent"][0]["p"]))
+        if s["units_buy"]: by_b.setdefault(loc, []).append(float(s["units_buy"][0]["p"]))
     med = lambda a: sorted(a)[len(a)//2] if len(a) >= 4 else None
     rmeds, bmeds = {k: med(v) for k, v in by_r.items()}, {k: med(v) for k, v in by_b.items()}
     great = 0
     for s in compiled:
         loc, deal = s["locality"], {}
-        for key, fld, meds in (("rent","rent_monthly_inr",rmeds),("buy","buy_inr",bmeds)):
-            mv, pi = meds.get(loc), s["pricing"][fld]
-            if mv and pi.get("median") and not pi.get("is_estimate"):
-                pct = round(((float(pi["median"]) - mv) / mv) * 100)
+        for key, units, meds in (("rent", s["units_rent"], rmeds), ("buy", s["units_buy"], bmeds)):
+            mv = meds.get(loc)
+            if mv and units:
+                pct = round(((float(units[0]["p"]) - mv) / mv) * 100)
                 if -65 <= pct <= 180:
                     lbl = "Great Value" if pct <= -12 else ("Premium" if pct >= 20 else "Fair Price")
                     if lbl == "Great Value": great += 1
@@ -119,12 +166,13 @@ def build_mumbai(db_path: str | Path = "pipeline/staging/mumbai_raw.db", max_goo
             gcache[row["canonical_id"]] = json.loads(row["payload_json"])
 
     now_ist = datetime.now(IST).strftime("%d %b %Y, %I:%M %p IST")
-    compiled, exact_hits = [], 0
+    compiled = []
 
     for can in canonicals:
         src_keys = set(can["raw_by_source"].keys())
-        is_alt = bool(src_keys & {"community","reddit","squareyards","makaan","commonfloor","99acres","nobrokerage"})
-        if COMM_DROP.search(can["name"]) or (not is_alt and JUNK_NAME.search(can["name"])): continue
+        is_comm = bool(src_keys & {"community", "reddit"})
+        if COMM_DROP.search(can["name"]): continue
+        if not is_comm and (len(can["name"].strip()) < 4 or JUNK_NAME.search(can["name"])): continue
 
         recs = [r for grp in can["raw_by_source"].values() for r in grp]
         hint_text = can["name"] + " " + " ".join(str(r.get("url") or "") for r in recs[:4])
@@ -150,7 +198,6 @@ def build_mumbai(db_path: str | Path = "pipeline/staging/mumbai_raw.db", max_goo
                     break
         if lat is None:
             lat, lng = safe_approx_coords(can["id"], loc); coords_approx = True
-        else: exact_hits += 1
 
         bhk_set = set()
         for r in recs:
@@ -159,10 +206,12 @@ def build_mumbai(db_path: str | Path = "pipeline/staging/mumbai_raw.db", max_goo
             elif r.get("bhk") is not None and 0 <= int(r["bhk"]) <= 6: bhk_set.add(int(r["bhk"]))
         carpets = [float(r["carpet_sqft"]) for r in recs if r.get("carpet_sqft") and 140 <= float(r["carpet_sqft"]) <= 8000]
         med_c = round(sorted(carpets)[len(carpets)//2], 0) if carpets else None
-        pricing = summarize_portal_prices(can["raw_by_source"], carpet_sqft=med_c)
-        if not pricing["rent_monthly_inr"]["median"] and not pricing["buy_inr"]["median"]: continue
 
         ur, ub, sr, sb, cs, thumb = _build_units(can["raw_by_source"])
+        pricing = _ensure_pricing(summarize_portal_prices(can["raw_by_source"], carpet_sqft=med_c), ur, ub)
+        if not ur and not ub and not pricing["rent_monthly_inr"].get("median") and not pricing["buy_inr"].get("median"):
+            continue
+
         gblock = None
         if gplace:
             gblock = {"rating": gplace.get("rating"), "review_count": gplace.get("userRatingCount"), "url": gplace.get("googleMapsUri"), "reviews": [{"rating": r.get("rating"), "text": (r.get("text") or {}).get("text","")[:220]} for r in (gplace.get("reviews") or [])[:3] if (r.get("text") or {}).get("text")]}
@@ -179,12 +228,15 @@ def build_mumbai(db_path: str | Path = "pipeline/staging/mumbai_raw.db", max_goo
             "google": gblock, "sources": cs, "sources_rent": sr, "sources_buy": sb,
         })
 
+    compiled = _merge_duplicates(compiled)
+    exact_hits = sum(1 for s in compiled if not s["coords_approx"])
     great = _attach_deals(compiled)
+
     out = Path("web/public/data"); out.mkdir(parents=True, exist_ok=True)
     (out / "mumbai-index.json").write_text(json.dumps({"city":"Mumbai MMR","generated_at":now_ist,"count":len(compiled),"societies":compiled}, ensure_ascii=False, separators=(",",":")), encoding="utf-8")
     with (out / "mumbai-societies.csv").open("w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
         w.writerow(["id","name","zone","locality","bhks","carpet_sqft","rent_inr","buy_inr","exact_pin","zero_brok","google","metro","walk_min","flood","sources"])
         for s in compiled:
-            w.writerow([s["id"],s["name"],s["zone"],s["locality"],"/".join("1 RK" if b==0 else f"{b} BHK" for b in s["bhks"]),s["rera_carpet_sqft"] or "",s["pricing"]["rent_monthly_inr"]["median"] or "",s["pricing"]["buy_inr"]["median"] or "",not s["coords_approx"],s["pricing"]["has_zero_brokerage"],(s["google"] or {}).get("rating",""),(s["mumbai_context"]["nearest_metro"] or {}).get("name",""),(s["mumbai_context"]["nearest_metro"] or {}).get("walk_min",""),s["mumbai_context"]["monsoon_flood_risk"],",".join(sorted(s["sources"].keys()))])
+            w.writerow([s["id"],s["name"],s["zone"],s["locality"],"/".join("1 RK" if b==0 else f"{b} BHK" for b in s["bhks"]),s["rera_carpet_sqft"] or "",(s["units_rent"][0]["p"] if s["units_rent"] else s["pricing"]["rent_monthly_inr"].get("median") or ""),(s["units_buy"][0]["p"] if s["units_buy"] else s["pricing"]["buy_inr"].get("median") or ""),not s["coords_approx"],s["pricing"]["has_zero_brokerage"],(s["google"] or {}).get("rating",""),(s["mumbai_context"]["nearest_metro"] or {}).get("name",""),(s["mumbai_context"]["nearest_metro"] or {}).get("walk_min",""),s["mumbai_context"]["monsoon_flood_risk"],",".join(sorted(s["sources"].keys()))])
     return {"compiled": len(compiled), "exact_pins": exact_hits, "great_value_deals": great, "updated_at": now_ist}
