@@ -63,25 +63,27 @@
     clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove("show"), 2600);
   }
 
-  const map = L.map("map", { preferCanvas: true, zoomControl: true, maxZoom: 19 }).setView([19.085, 72.905], 11);
-  const cartoLight = L.tileLayer(H + "{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", { subdomains: "abcd", maxNativeZoom: 19, maxZoom: 20, attribution: "CARTO / OSM" });
-  const cartoDark = L.tileLayer(H + "{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", { subdomains: "abcd", maxNativeZoom: 19, maxZoom: 20, attribution: "CARTO / OSM" });
+  const map = L.map("map", { preferCanvas: true, zoomControl: true, maxZoom: 20 }).setView([19.085, 72.905], 11);
+  const osmStreet = L.tileLayer(H + "tile.openstreetmap.org/{z}/{x}/{y}.png", { maxNativeZoom: 19, maxZoom: 20, attribution: "OpenStreetMap" });
+  const esriFallback = L.tileLayer(H + "server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}", { maxNativeZoom: 16, maxZoom: 20, attribution: "Esri" });
   const esriSat = L.layerGroup([
     L.tileLayer(H + "server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { maxNativeZoom: 18, maxZoom: 20, attribution: "Esri" }),
     L.tileLayer(H + "server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}", { maxNativeZoom: 18, maxZoom: 20 })
   ]);
-  const osmFallback = L.tileLayer(H + "tile.openstreetmap.org/{z}/{x}/{y}.png", { maxNativeZoom: 19, maxZoom: 20, attribution: "OSM" });
   let activeBase = null;
 
   function setMapStyle(style) {
     st.mapStyle = style;
     if (activeBase) map.removeLayer(activeBase);
-    activeBase = style === "dark" ? cartoDark : (style === "sat" ? esriSat : cartoLight);
+    activeBase = style === "sat" ? esriSat : osmStreet;
     activeBase.addTo(map);
+    const mapEl = $("map");
+    mapEl.classList.remove("map-street", "map-dark", "map-sat");
+    mapEl.classList.add(style === "dark" ? "map-dark" : (style === "sat" ? "map-sat" : "map-street"));
     ["msStreet", "msDark", "msSat"].forEach(id => $(id).classList.remove("active"));
     $(style === "dark" ? "msDark" : (style === "sat" ? "msSat" : "msStreet")).classList.add("active");
   }
-  cartoLight.on("tileerror", () => { if (activeBase === cartoLight) { map.removeLayer(cartoLight); activeBase = osmFallback.addTo(map); } });
+  osmStreet.on("tileerror", () => { if (activeBase === osmStreet) { map.removeLayer(osmStreet); activeBase = esriFallback.addTo(map); } });
 
   const cv = L.canvas({ padding: 0.5 });
   const mLayer = L.layerGroup().addTo(map);
@@ -164,8 +166,8 @@
     const inView = filtered.filter(s => s.lat && s.lng && bounds.contains([s.lat, s.lng]));
     if (!inView.length) return;
 
-    const cellW = z >= 17 ? 56 : (z >= 15 ? 68 : 76);
-    const cellH = z >= 17 ? 28 : (z >= 15 ? 32 : 38);
+    const cellW = z >= 17 ? 64 : (z >= 15 ? 76 : 88);
+    const cellH = z >= 17 ? 34 : (z >= 15 ? 38 : 44);
     const buckets = new Map();
 
     for (const s of inView) {

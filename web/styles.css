@@ -231,3 +231,7 @@ table.ctbl th { background:var(--bg); color:var(--mut); font-weight:600; }
 @media (max-width: 560px) {
   #cardList { grid-template-columns:1fr; }
 }
+
+#map.map-street .leaflet-tile-pane { filter: saturate(0.68) contrast(0.95) brightness(1.03); }
+#map.map-dark .leaflet-tile-pane { filter: invert(100%) hue-rotate(180deg) brightness(0.90) contrast(0.92) saturate(0.48); }
+#map.map-sat .leaflet-tile-pane { filter: none; }
