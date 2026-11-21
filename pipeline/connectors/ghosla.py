@@ -100,7 +100,7 @@ class GhoslaConnector(BaseConnector):
     source_name = "community"
 
     def run_localities(self, loc_meta: List[Dict[str, str]], limit_per_locality: int = 40, fresh_hours: float = 18.0) -> int:
-        deadline, saved = time.monotonic() + 70.0, 0
+        deadline, saved = time.monotonic() + 140.0, 0
         zone_map = {m["locality"]: m["zone"] for m in loc_meta}
 
         def _get(url: str) -> Optional[str]:
@@ -115,7 +115,7 @@ class GhoslaConnector(BaseConnector):
         fm = self.read_cache("gh:flatmates_v1", max_age_hours=fresh_hours)
         if not fm:
             fm = []
-            for pg in (1, 2, 3, 4):
+            for pg in range(1, 17):
                 if time.monotonic() > deadline: break
                 u = f"{ORIGIN}/flatmates-in-mumbai" + (f"?page={pg}" if pg > 1 else "")
                 html = _get(u)
@@ -141,8 +141,8 @@ class GhoslaConnector(BaseConnector):
             if parsed: self.write_cache(ck, parsed)
             return info, parsed
 
-        with ThreadPoolExecutor(max_workers=5) as ex:
-            for fut in as_completed([ex.submit(_fetch_loc, m) for m in loc_meta[:30]]):
+        with ThreadPoolExecutor(max_workers=6) as ex:
+            for fut in as_completed([ex.submit(_fetch_loc, m) for m in loc_meta]):
                 info, items = fut.result()
                 for it in items:
                     self.db.upsert_raw_record(it.get("_detected_source") or "community", it["id"], it["name"], it, locality=info["locality"], zone=info["zone"], source_url=it.get("url"))

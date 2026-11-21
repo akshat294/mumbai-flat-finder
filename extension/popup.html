@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    body { width: 310px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #fbf9f4; color: #162421; margin: 0; padding: 14px; }
+    h3 { margin: 0 0 10px; font-size: 15px; color: #162a27; }
+    label { display: block; font-size: 11px; color: #6d6a61; margin: 8px 0 3px; font-weight: 600; }
+    input, select { width: 100%; box-sizing: border-box; padding: 7px 9px; border: 1px solid #e1d8c7; border-radius: 8px; font-size: 13px; background: #fff; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    button { width: 100%; margin-top: 12px; padding: 9px; border: none; border-radius: 999px; background: #162a27; color: #f6f1e7; font-weight: 600; cursor: pointer; font-size: 13px; }
+    button:hover { background: #c25238; }
+    #st { font-size: 12px; margin-top: 8px; color: #1f6b5c; text-align: center; }
+  </style>
+</head>
+<body>
+  <h3>Clip to Bombay Homes</h3>
+  <label>Society / Flat Name</label><input id="name" />
+  <div class="row">
+    <div><label>Locality</label><input id="loc" placeholder="e.g. Bandra West" /></div>
+    <div><label>Price (₹)</label><input id="price" type="number" /></div>
+  </div>
+  <div class="row">
+    <div><label>Mode</label><select id="mode"><option value="rent">Rent</option><option value="buy">Buy</option></select></div>
+    <div><label>Carpet (sq ft)</label><input id="sqft" type="number" /></div>
+  </div>
+  <button id="saveBtn">Save to Bombay Homes</button>
+  <div id="st"></div>
+  <script src="popup.js"></script>
+</body>
+</html>

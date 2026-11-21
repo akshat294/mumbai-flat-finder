@@ -39,6 +39,7 @@
         <span class="lbl">Filters</span>
         <span class="badge" id="filterCount" style="display:none;">0</span>
       </button>
+      <button id="listFlatBtn" class="btn" aria-label="List a flat">+ <span class="lbl">List Flat</span></button>
       <button id="savedBtn" class="btn" aria-label="Saved shortlist">
         <svg class="ic" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
         <span class="lbl">Saved</span>
@@ -239,6 +240,30 @@
         </div>
         <div class="f-sec"><label>Listing URL</label><input id="cUrl" type="text" placeholder="Paste link..." /></div>
         <button id="saveClipBtn" class="btn pri" style="width:100%;margin-top:4px;">Save to Shortlist</button>
+      </div>
+    </div>
+  </div>
+
+  
+  <div id="postModal" class="modal-bg">
+    <div class="mcard" style="max-width:480px;">
+      <div class="m-head"><h2>List a Flat or Flatmate</h2><button class="btn icon" id="closePost">✕</button></div>
+      <p class="help-txt" style="margin:8px 0 14px;">Direct owner & flatmate posts go live immediately and auto-expire after 14 days.</p>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div class="f-sec"><label>Society / Building Name</label><input id="pName" type="text" placeholder="e.g. Pali Hill Terrace" /></div>
+        <div class="g2">
+          <div class="f-sec"><label>Locality</label><input id="pLoc" type="text" placeholder="e.g. Bandra West" /></div>
+          <div class="f-sec"><label>Type</label><select id="pMode"><option value="rent">For Rent</option><option value="buy">For Sale</option></select></div>
+        </div>
+        <div class="g2">
+          <div class="f-sec"><label>Price (₹)</label><input id="pPrice" type="number" placeholder="e.g. 65000" /></div>
+          <div class="f-sec"><label>BHK</label><select id="pBhk"><option value="0">1 RK</option><option value="1">1 BHK</option><option value="2" selected>2 BHK</option><option value="3">3 BHK</option><option value="4">4+ BHK</option></select></div>
+        </div>
+        <div class="g2">
+          <div class="f-sec"><label>Carpet (sq ft)</label><input id="pSqft" type="number" placeholder="e.g. 750" /></div>
+          <div class="f-sec"><label>WhatsApp / Contact</label><input id="pContact" type="text" placeholder="Phone or handle" /></div>
+        </div>
+        <button id="submitPostBtn" class="btn pri" style="width:100%;margin-top:4px;">Publish Listing</button>
       </div>
     </div>
   </div>

@@ -19,8 +19,9 @@ COMM_DROP = re.compile(r"\b(office|commercial|shop|showroom|warehouse|business\s
 
 def _valid_src_url(k: str, u: Any) -> bool:
     if not u or not isinstance(u, str) or not u.startswith("http"): return False
+    if "findghosla.com/" in u: return True
     if k == "magicbricks": return ("propertyDetails" in u or "-pdpid-" in u or "project-" in u)
-    if k == "nobroker": return "/property/" in u
+    if k == "nobroker": return ("/property/" in u or "nobroker.in/" in u)
     if k == "99acres": return ("99acres.com/" in u or "findghosla.com/" in u)
     return k in ("reddit","community","squareyards","commonfloor","makaan","nobrokerage","housing")
 

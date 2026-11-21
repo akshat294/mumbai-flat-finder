@@ -9,7 +9,7 @@
   const BUY_STOPS  = [0,4000000,6000000,8000000,10000000,12500000,15000000,17500000,20000000,25000000,30000000,35000000,40000000,50000000,60000000,75000000,100000000,125000000,150000000];
   const SQFT_MAX = 4000;
   const HUB_LABELS = { bkc:"BKC", lower_parel:"Lower Parel", andheri_seepz:"Andheri", powai:"Powai", goregaon_nesco:"Goregaon", nariman_point:"Nariman Pt" };
-  const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyards:"Square Yards", commonfloor:"CommonFloor", makaan:"Makaan", nobrokerage:"NoBrokerage", community:"Flatmates", reddit:"Reddit", "99acres":"99acres", housing:"Housing.com", other:"Direct" };
+  const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyards:"Square Yards", commonfloor:"CommonFloor", makaan:"Makaan", nobrokerage:"NoBrokerage", community:"Flatmates", reddit:"Reddit", "99acres":"99acres", housing:"Housing.com", owner:"Direct Owner", other:"Direct" };
 
   function readJSON(k, fb) { try { return JSON.parse(localStorage.getItem(k) || "null") || fb; } catch { return fb; } }
   const savedInit = readJSON("mhf_s3", { ids:[], notes:{} });
@@ -81,7 +81,8 @@
     clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove("show"), 2500);
   }
 
-  const map = L.map("map", { preferCanvas: true, zoomControl: true, minZoom: 10, maxZoom: 20 }).setView([19.088, 72.885], 11);
+  const MMR_BOUNDS = L.latLngBounds([18.84, 72.72], [19.36, 73.22]);
+  const map = L.map("map", { preferCanvas: true, zoomControl: true, minZoom: 11, maxZoom: 20, maxBounds: MMR_BOUNDS, maxBoundsViscosity: 0.92 }).setView([19.088, 72.885], 11);
   const osmStreet = L.tileLayer(H + "tile.openstreetmap.org/{z}/{x}/{y}.png", { maxNativeZoom: 19, maxZoom: 20, attribution: "OpenStreetMap" });
   const esriSat = L.layerGroup([
     L.tileLayer(H + "server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { maxNativeZoom: 18, maxZoom: 20, attribution: "Esri" }),
@@ -159,7 +160,7 @@
     $("savedCount").textContent = sc; $("savedCount").style.display = sc ? "inline-block" : "none";
   }
 
-  function rebuildSocietyList() { societies = [...st.clipped, ...baseSocieties]; }
+  function rebuildSocietyList() { societies = [...directSocieties, ...st.clipped, ...baseSocieties]; }
 
   function populateLocalities() {
     const z = $("fZone").value, prev = $("fLoc").value;
@@ -451,7 +452,10 @@
         const specs = [u.b !== null && u.b !== undefined ? fmtBhk(u.b) : null, u.sq ? `${u.sq} sq ft` : null, u.f || null].filter(Boolean).join(" · ");
         const portal = PORTAL_NAMES[u.s] || u.s;
         const inner = `<div class="u-left"><div class="u-price">${fmt(u.p, isBuy)}</div><div class="u-meta">${esc(specs || "Verified listing")}</div></div><div class="u-right">${u.zb ? '<span class="zb-dot" title="Zero Brokerage"></span>' : ""}${esc(portal)}${u.u ? " ↗" : ""}</div>`;
-        return u.u ? `<a class="unit-row" target="_blank" href="${esc(u.u)}">${inner}</a>` : `<div class="unit-row">${inner}</div>`;
+        const fbU = (isBuy ? (s.sources_buy || {}) : (s.sources_rent || {}))[u.s] || (s.sources || {})[u.s] || (H + "www.google.com/search?q=" + encodeURIComponent(`${s.name} ${s.locality} Mumbai ${portal} ${isBuy ? "sale" : "rent"}`));
+        const href = u.u || fbU;
+        const innerLink = `<div class="u-left"><div class="u-price">${fmt(u.p, isBuy)}</div><div class="u-meta">${esc(specs || "Verified listing")}</div></div><div class="u-right">${u.zb ? '<span class="zb-dot" title="Zero Brokerage"></span>' : ""}${esc(portal)} ↗</div>`;
+        return `<a class="unit-row" target="_blank" href="${esc(href)}">${innerLink}</a>`;
       }).join("")}</div>`;
     } else {
       const modeSrc = isBuy ? (s.sources_buy || {}) : (s.sources_rent || {});
@@ -470,7 +474,6 @@
     }
 
     const igrSearch = H + "www.google.com/search?q=" + encodeURIComponent(`site:zapkey.com OR site:indextap.com "${s.name}" "${s.locality}" Mumbai`);
-    const crossSearch = H + "www.google.com/search?q=" + encodeURIComponent(`"${s.name}" "${s.locality}" Mumbai flat ${st.mode}`);
 
     $("dName").textContent = s.name;
     $("dSub").textContent = `${s.locality} · ${s.coords_approx ? "Locality Area Pin" : "Verified Building Pin"}${g.rating ? ` · ★ ${g.rating}` : ""}`;
@@ -496,7 +499,6 @@
       <div class="quiet-links">
         ${s.rera_ids?.length ? `<a target="_blank" href="${H}maharera.maharashtra.gov.in/projects-search-result?project_name=${encodeURIComponent(s.rera_ids[0])}"><span>MahaRERA ${esc(s.rera_ids[0])}</span><span>↗</span></a>` : ""}
         <a target="_blank" href="${igrSearch}"><span>Check Registered Sale Prices (Zapkey / IndexTap)</span><span>↗</span></a>
-        <a target="_blank" href="${crossSearch}"><span>Search on Housing.com / 99acres</span><span>↗</span></a>
       </div>`;
 
     $("detailBackdrop").style.display = "block"; $("detailSheet").style.display = "flex";
@@ -671,6 +673,63 @@
   applyTheme(st.theme); resetPriceScale(); syncSqftSlider(); syncCounts();
   if (window.innerWidth <= 1024) setMobView("list");
 
+
+  let directSocieties = [];
+  function mapDirectRow(r) {
+    const isBuy = r.mode === "buy";
+    const unit = [{ p: r.price_inr, b: r.bhk, sq: r.carpet_sqft || null, s: r.source || "owner", u: r.url || null, zb: !!r.zero_brokerage, f: r.furnishing || null }];
+    return {
+      id: r.id, name: r.name, locality: r.locality || "Mumbai", zone: r.zone || "Mumbai",
+      lat: r.lat || 19.076, lng: r.lng || 72.8777, coords_approx: !(r.lat && r.lng),
+      bhks: r.bhk !== null && r.bhk !== undefined ? [r.bhk] : [],
+      furnishing: r.furnishing ? [r.furnishing] : [], tenant: [], rera_ids: [],
+      rera_carpet_sqft: r.carpet_sqft || null,
+      pricing: {
+        rent_monthly_inr: { median: isBuy ? null : r.price_inr, is_estimate: false },
+        buy_inr: { median: isBuy ? r.price_inr : null, is_estimate: false },
+        has_zero_brokerage: !!r.zero_brokerage, by_portal: {}
+      },
+      units_rent: isBuy ? [] : unit, units_buy: isBuy ? unit : [],
+      mumbai_context: { monsoon_flood_risk: "low" },
+      sources: r.url ? { [r.source || "owner"]: r.url } : {},
+      _direct: true, _contact: r.contact || null
+    };
+  }
+  function loadDirectListings() {
+    fetch("./api/listings", { cache: "no-store" })
+      .then(r => r.ok ? r.json() : { listings: [] })
+      .then(d => {
+        directSocieties = (d.listings || []).map(mapDirectRow);
+        if (directSocieties.length) { rebuildSocietyList(); populateLocalities(); populateSources(); renderAll(); }
+      })
+      .catch(() => {});
+  }
+  if ($("listFlatBtn")) $("listFlatBtn").onclick = () => { $("postModal").style.display = "grid"; };
+  if ($("closePost")) $("closePost").onclick = () => { $("postModal").style.display = "none"; };
+  if ($("submitPostBtn")) $("submitPostBtn").onclick = () => {
+    const name = $("pName").value.trim(), price = Number($("pPrice").value || 0);
+    if (!name || price < 5000) return toast("Enter society name and valid price");
+    const payload = {
+      name, locality: $("pLoc").value.trim() || "Mumbai", mode: $("pMode").value,
+      price_inr: price, bhk: Number($("pBhk").value), carpet_sqft: Number($("pSqft").value || 0) || null,
+      contact: $("pContact").value.trim() || null, zero_brokerage: true, source: "owner"
+    };
+    fetch("./api/listings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) })
+      .then(r => r.json())
+      .then(res => {
+        if (res.ok) {
+          toast("Listing published live!");
+          ["pName","pLoc","pPrice","pSqft","pContact"].forEach(id => $(id).value = "");
+          $("postModal").style.display = "none";
+          loadDirectListings();
+        } else {
+          toast(res.error || "Bind D1 database in Cloudflare first");
+        }
+      })
+      .catch(() => toast("Could not reach /api/listings"));
+  };
+
+  loadDirectListings();
   fetch("./public/data/mumbai-index.json", { cache: "no-store" })
     .then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
     .then(d => {

@@ -68,3 +68,6 @@ v10_bombayhomes.py
 .wrangler/
 v11_sources.py
 v11_ui.py
+v12_1_fix.py
+v12_scale.py
+v12_d1_ext.py

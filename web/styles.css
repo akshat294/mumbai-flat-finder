@@ -287,3 +287,8 @@ table.ctbl th { background:var(--bg); color:var(--mut); font-weight:600; }
 .area-pill { background:rgba(251,249,244,.92); border:1px dashed var(--brass); color:var(--txt); }
 [data-theme="dark"] .area-pill { background:rgba(21,27,25,.92); color:#f2ede2; }
 .mob-float { background:var(--pine); color:#f6f1e7; border:1px solid rgba(196,158,92,.45); }
+
+/* v12.1 Fix: Prevent flex-column compression on cards inside #cardList and sheets */
+.hc { flex-shrink:0 !important; min-height:max-content; overflow:visible !important; }
+.hc-main { min-width:0; }
+.hc::before { top:12px; bottom:12px; }

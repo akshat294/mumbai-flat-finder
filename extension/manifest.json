@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "Clip to Bombay Homes",
+  "version": "1.0",
+  "description": "Manually clip the currently viewed flat into your Bombay Homes shortlist.",
+  "permissions": ["activeTab", "scripting"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Clip to Bombay Homes"
+  }
+}
