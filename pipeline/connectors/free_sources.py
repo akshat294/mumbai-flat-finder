@@ -160,7 +160,7 @@ class SquareYardsConnector(BaseConnector):
     source_name = "squareyards"
     def run_localities(self, loc_meta: List[Dict[str, str]], limit_per_locality: int = 35, fresh_hours: float = 20.0) -> int:
         origin = PROTO + "www.squareyards.com"
-        deadline, saved, consec_fail = time.monotonic() + 75.0, 0, 0
+        deadline, saved, consec_fail = time.monotonic() + 120.0, 0, 0
         for info in loc_meta:
             if time.monotonic() > deadline or consec_fail >= 6: break
             loc, city_slug = info["locality"], _slug(info["city"])
@@ -277,8 +277,8 @@ class CommunityFlatmatesConnector(BaseConnector):
         wanted_sig = re.compile(r"\b(looking\s+for|need\s+a\s+flat|searching\s+for|want\s+to\s+rent|any\s+leads|required\s+1|budget\s+is)\b", re.I)
         price_re = re.compile(r"(?:₹|rs\.?|inr)\s*([0-9][0-9,\.]*)\s*(k|lac|lakh|l\b)?|\b([1-9]\d)\s*k\b", re.I)
         items, seen = [], set()
-        for sub in ("mumbairentals", "mumbai"):
-            xml_txt = _fast_get(f"{PROTO}www.reddit.com/r/{sub}/new/.rss?limit=50", timeout=8.0)
+        for rss_u in (f"{PROTO}www.reddit.com/r/mumbai/search.rss?q=rent+OR+flatmate&restrict_sr=1&sort=new&limit=40", f"{PROTO}www.reddit.com/r/MumbaiRealEstate/new/.rss?limit=30"):
+            xml_txt = _fast_get(rss_u, timeout=8.0)
             if not xml_txt or "<entry>" not in xml_txt: continue
             try: root = ET.fromstring(xml_txt)
             except Exception: continue

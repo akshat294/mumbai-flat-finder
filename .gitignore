@@ -55,3 +55,10 @@ probe_sources.py
 audit_gps.py
 fix_loc_and_gps.py
 diag_sources.py
+
+v8_2_rooftops_and_99.py
+report.txt
+run_and_report.py
+v9_backend.py
+v9_html_css.py
+v9_app_js.py

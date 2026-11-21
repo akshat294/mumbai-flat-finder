@@ -274,96 +274,111 @@ class NoBrokerConnector(BaseConnector):
 class NinetyNineAcresConnector(BaseConnector):
     source_name = "99acres"
 
-    def run_localities(self, loc_meta: List[Dict[str, str]], limit_per_locality: int = 30, fresh_hours: float = 20.0) -> int:
+    def run_localities(self, loc_meta: List[Dict[str, str]], limit_per_locality: int = 40, fresh_hours: float = 20.0) -> int:
         import time
+        from concurrent.futures import ThreadPoolExecutor, as_completed
         try:
             from curl_cffi import requests as c_req
         except ImportError:
             print("[99acres] curl_cffi not installed - skipping.", flush=True)
             return 0
-        meta_map = {m["locality"]: m for m in loc_meta}
-        self.db.register_jobs(self.source_name, list(meta_map.keys()))
-        pending = [j for j in self.db.next_pending_jobs(self.source_name) if j["locality"] in meta_map]
-        if not pending:
-            return 0
-
         PROTO = "https" + "://"
-        saved, consec_fail = 0, 0
-        deadline = time.monotonic() + 90.0
+        zmap = {
+            "South Mumbai":"south-mumbai","Bandra-Santacruz":"mumbai-south-west",
+            "Andheri-Juhu":"mumbai-andheri-dahisar","Western Suburbs North":"mumbai-andheri-dahisar",
+            "Powai-Central":"central-mumbai-suburbs","Chembur-Wadala":"mumbai-harbour",
+            "Thane":"thane","Navi Mumbai":"navi-mumbai",
+        }
+        deadline = time.monotonic() + 100.0
 
-        for job in pending:
-            if time.monotonic() > deadline:
-                print(f"[99acres] Reached 90s cap after {saved} records - moving on.", flush=True)
-                break
-            if consec_fail >= 5:
-                print("[99acres] 5 consecutive blocks on cloud IP - skipping rest so deploy finishes fast.", flush=True)
-                break
-            loc, info = job["locality"], meta_map[job["locality"]]
-            self.db.mark_job(job["job_key"], "in_progress")
-            try:
-                cached = self.read_cache(f"99c:{loc}", max_age_hours=fresh_hours)
-                if not cached:
-                    slug = re.sub(r"[^a-z0-9]+", "-", loc.lower()).strip("-")
-                    city_slug = info["city"].lower().replace(" ", "-")
-                    zmap = {
-                        "South Mumbai": "south-mumbai",
-                        "Bandra-Santacruz": "mumbai-south-west",
-                        "Andheri-Juhu": "mumbai-andheri-dahisar",
-                        "Western Suburbs North": "mumbai-andheri-dahisar",
-                        "Powai-Central": "central-mumbai-suburbs",
-                        "Chembur-Wadala": "mumbai-harbour",
-                        "Thane": "thane",
-                        "Navi Mumbai": "navi-mumbai",
-                    }
-                    reg = zmap.get(info.get("zone", ""), city_slug)
-                    u = f"{PROTO}www.99acres.com/property-in-{slug}-{reg}-ffid"
-                    resp = c_req.get(u, impersonate="chrome", timeout=7, allow_redirects=True)
-                    cached = self._parse_html(resp.text, loc, str(resp.url), limit_per_locality) if (resp.status_code == 200 and len(resp.text) > 80000) else []
-                    if cached:
-                        self.write_cache(f"99c:{loc}", cached)
-                if cached:
-                    consec_fail = 0
-                    for it in cached:
-                        self.db.upsert_raw_record(
-                            self.source_name, it["id"], it["name"], it,
-                            locality=loc, zone=info["zone"], rera_id=it.get("rera_id"), source_url=it.get("url"),
-                        )
-                        saved += 1
-                    self.db.mark_job(job["job_key"], "done", None)
-                else:
-                    consec_fail += 1
-                    self.db.mark_job(job["job_key"], "failed", "0 records or blocked")
-            except Exception as exc:
-                consec_fail += 1
-                self.db.mark_job(job["job_key"], "failed", str(exc)[:200])
+        def _fetch_one(info):
+            if time.monotonic() > deadline: return info, []
+            loc = info["locality"]
+            cached = self.read_cache(f"99c3:{loc}", max_age_hours=fresh_hours)
+            if cached: return info, cached
+            slug = re.sub(r"[^a-z0-9]+", "-", loc.lower()).strip("-")
+            reg = zmap.get(info.get("zone", ""), info["city"].lower().replace(" ", "-"))
+            out = []
+            for mode, prefix in (("rent", "property-for-rent-in"), ("buy", "property-in")):
+                if time.monotonic() > deadline: break
+                u = f"{PROTO}www.99acres.com/{prefix}-{slug}-{reg}-ffid"
+                try:
+                    resp = c_req.get(u, impersonate="chrome", timeout=8, allow_redirects=True)
+                    if resp.status_code == 200 and len(resp.text) > 80000:
+                        out.extend(self._parse_html(resp.text, loc, str(resp.url), mode, limit_per_locality // 2))
+                except Exception:
+                    continue
+            if out: self.write_cache(f"99c3:{loc}", out)
+            return info, out
+
+        saved = 0
+        with ThreadPoolExecutor(max_workers=5) as ex:
+            for fut in as_completed([ex.submit(_fetch_one, m) for m in loc_meta]):
+                info, items = fut.result()
+                for it in items:
+                    self.db.upsert_raw_record(self.source_name, it["id"], it["name"], it, locality=info["locality"], zone=info["zone"], rera_id=it.get("rera_id"), source_url=it.get("url"))
+                    saved += 1
         return saved
 
-    def _parse_html(self, html: str, locality: str, url: str, limit: int) -> List[Dict[str, Any]]:
+    def _parse_html(self, html: str, locality: str, url: str, mode: str, limit: int) -> List[Dict[str, Any]]:
+        import json as _json
         PROTO = "https" + "://"
         soup = BeautifulSoup(html, "html.parser")
-        cards = soup.select("[data-label='SRP_TUPLE'], .tupleNew__tupleWrap, .projectTuple__cardWrap, section[data-propid]")
         items, seen = [], set()
-        for idx, card in enumerate(cards):
-            txt = card.get_text(" ", strip=True)
-            if "₹" not in txt or len(txt) < 40 or len(txt) > 2500: continue
-            h = card.select_one("a[title], h2, h3, .tupleNew__propertyHeading, .projectTuple__projectName")
-            if not h: continue
-            name = clean_name(h.get_text(" ", strip=True), locality)
-            if len(name) < 3 or name.lower() in seen or name.lower() == locality.lower() or COMM_RE.search(name) or JUNK_NAME.search(name): continue
-            seen.add(name.lower())
-            prices = [parse_inr(m) for m in re.findall(r"₹\s*[0-9,.]+\s*(?:Cr|Crore|Lac|Lakh|L)?", txt, re.I)]
-            buys = [p for p in prices if p and p >= 3_000_000]
-            rents = [p for p in prices if p and 8_000 <= p < 850_000]
-            if not buys and not rents: continue
-            rm = RERA_RE.search(txt)
-            href = h.get("href") or ""
-            full_url = href if href.startswith("http") else (f"{PROTO}www.99acres.com{href}" if href.startswith("/") else None)
-            items.append({
-                "id": f"99a-{re.sub(r'[^a-z0-9]','',locality.lower())[:10]}-{idx}-{re.sub(r'[^a-z0-9]','',name.lower())[:14]}",
-                "name": name, "locality": locality, "bhk": parse_bhk(txt),
-                "buy_inr": buys[0] if buys else None, "rent_inr": rents[0] if rents else None,
-                "carpet_sqft": parse_sqft(txt), "furnishing": parse_furnishing(txt), "tenant": parse_tenant(txt),
-                "rera_id": rm.group(0) if rm else None, "url": full_url,
-            })
-            if len(items) >= limit: break
+        for sc in soup.find_all("script", type="application/ld+json"):
+            raw = sc.string or sc.get_text() or ""
+            if not raw.strip(): continue
+            try: data = _json.loads(raw)
+            except Exception: continue
+            nodes = data if isinstance(data, list) else [data]
+            flat = []
+            for nd in nodes:
+                if not isinstance(nd, dict): continue
+                if "@graph" in nd and isinstance(nd["@graph"], list): flat.extend(nd["@graph"])
+                elif "itemListElement" in nd and isinstance(nd["itemListElement"], list):
+                    for el in nd["itemListElement"]:
+                        flat.append(el.get("item") if isinstance(el, dict) and isinstance(el.get("item"), dict) else el)
+                else: flat.append(nd)
+            for obj in flat:
+                if not isinstance(obj, dict): continue
+                t, desc = str(obj.get("name") or "").strip(), str(obj.get("description") or "")
+                full = f"{t} {desc}"
+                if len(t) < 4: continue
+                name = clean_name(t, locality)
+                if len(name) < 3 or name.lower() in seen or name.lower() == locality.lower() or COMM_RE.search(name) or JUNK_NAME.search(name): continue
+                offers = obj.get("offers") or {}
+                if isinstance(offers, list): offers = offers[0] if offers else {}
+                prices = [parse_inr(m) for m in re.findall(r"(?:₹|Rs\.?)\s*[0-9,.]+\s*(?:Cr|Crore|Lac|Lakh|L|K)?", full, re.I)]
+                p_offer = offers.get("price") or offers.get("lowPrice")
+                if p_offer is not None:
+                    try: prices.insert(0, int(float(str(p_offer).replace(",", ""))))
+                    except Exception: pass
+                buys = [p for p in prices if p and 2_500_000 <= p <= 600_000_000]
+                rents = [p for p in prices if p and 7_000 <= p <= 850_000]
+                if mode == "rent" and not rents: continue
+                if mode == "buy" and not buys: continue
+                if not buys and not rents: continue
+                geo = obj.get("geo") or {}
+                try:
+                    lat = float(geo["latitude"]) if geo.get("latitude") is not None else None
+                    lng = float(geo["longitude"]) if geo.get("longitude") is not None else None
+                except Exception: lat = lng = None
+                img = obj.get("image")
+                if isinstance(img, list): img = img[0] if img else None
+                if isinstance(img, dict): img = img.get("url")
+                u = obj.get("url") or ""
+                full_url = u if isinstance(u, str) and u.startswith("http") else (f"{PROTO}www.99acres.com{u}" if isinstance(u, str) and u.startswith("/") else None)
+                rm = RERA_RE.search(full)
+                seen.add(name.lower())
+                items.append({
+                    "id": f"99a-{mode[0]}-{re.sub(r'[^a-z0-9]','',locality.lower())[:9]}-{len(items)}-{re.sub(r'[^a-z0-9]','',name.lower())[:14]}",
+                    "name": name, "locality": locality, "bhk": parse_bhk(full),
+                    "buy_inr": buys[0] if mode == "buy" and buys else None,
+                    "rent_inr": rents[0] if mode == "rent" and rents else None,
+                    "carpet_sqft": parse_sqft(full), "furnishing": parse_furnishing(full), "tenant": parse_tenant(full),
+                    "rera_id": rm.group(0) if rm else None, "lat": lat, "lng": lng,
+                    "image": img if isinstance(img, str) and img.startswith("http") else None,
+                    "url": full_url,
+                })
+                if len(items) >= limit: return items
         return items
