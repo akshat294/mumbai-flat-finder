@@ -81,3 +81,7 @@ v14_cloud_vision.py
 v14_2_cloud_fix.py
 v15_backend.py
 v15_ui_fix.py
+v15_1_fix.py
+v15_1_smoke.py
+v15_2_fix.py
+v15_3_deploy.py

@@ -41,25 +41,61 @@
   const fmtBhk = b => b === 0 ? "1 RK" : `${b} BHK`;
 
   function matchingUnits(s) {
-    const raw = st.mode === "rent" ? (s.units_rent || []) : (s.units_buy || []);
+    const isBuy = st.mode === "buy";
+    const raw = (isBuy ? s.units_buy : s.units_rent) || [];
+    const ceil = (typeof priceMax === "function") ? priceMax() : Infinity;
+    const pLo = Number(st.pLo || 0);
+    const pHi = (st.pHi !== undefined && st.pHi < ceil) ? Number(st.pHi) : Infinity;
+    const sLo = Number(st.sLo || 0);
+    const sHi = (st.sHi !== undefined && typeof SQFT_MAX !== "undefined" && st.sHi < SQFT_MAX) ? Number(st.sHi) : Infinity;
+    const wantFurn = ($("fFurn")?.value || st.furn || "ALL");
+    const wantSrc = ($("fSource")?.value || st.source || "ALL");
+    const wantLister = st.lister || "ALL";
+
     return raw.filter(u => {
-      if (st.zero && !u.zb) return false;
-      if (st.bhks.size && u.b !== null && u.b !== undefined) {
-        if (![...st.bhks].some(b => b === 4 ? u.b >= 4 : u.b === b)) return false;
+      if (!u || !u.p) return false;
+      if (pLo > 0 && u.p < pLo) return false;
+      if (pHi < Infinity && u.p > pHi) return false;
+      if (u.sq) {
+        if (sLo > 0 && u.sq < sLo) return false;
+        if (sHi < Infinity && u.sq > sHi) return false;
       }
-      if (!matchingUnits(s).length) return false;
-      const ftags = s.features?.tags || [];
-      if (st.seaview && !ftags.includes("sea_view")) return false;
-      if (st.balcony && !ftags.includes("balcony")) return false;
-      if (st.terrace && !(ftags.includes("terrace") || ftags.includes("garden"))) return false;
-      if (st.drop && !(s.price_drop && s.price_drop[st.mode])) return false;
-      if (st.hub !== "ALL") {
-        const cm = s.commutes?.[st.hub];
-        if (!cm || cm > st.hubMin) return false;
+
+      if (st.bhks instanceof Set && st.bhks.size > 0) {
+        if (u.b === null || u.b === undefined) return false;
+        const ub = Number(u.b);
+        let ok = false;
+        for (const w of st.bhks) {
+          if ((w === "4+" || Number(w) === 4) ? ub >= 4 : Math.abs(ub - Number(w)) <= 0.05) { ok = true; break; }
+        }
+        if (!ok) return false;
       }
+
+      if (wantFurn && wantFurn !== "ALL" && u.f && String(u.f).toLowerCase() !== String(wantFurn).toLowerCase()) return false;
+      if (wantSrc && wantSrc !== "ALL" && u.s !== wantSrc) return false;
+
+      const uLt = u.lt || ((u.s === "community" || u.s === "reddit") ? "shared" : ((u.zb || u.s === "nobroker" || u.s === "owner") ? "owner" : "broker"));
+      if (st.zero && uLt !== "owner" && !u.zb) return false;
+      if (st.community && uLt !== "shared") return false;
+      if (wantLister !== "ALL" && uLt !== wantLister) return false;
       return true;
     });
   }
+
+  function passesV15SocietyFilter(s) {
+    if (!matchingUnits(s).length) return false;
+    const ftags = s.features?.tags || [];
+    if (st.seaview && !ftags.includes("sea_view")) return false;
+    if (st.balcony && !ftags.includes("balcony")) return false;
+    if (st.terrace && !(ftags.includes("terrace") || ftags.includes("garden"))) return false;
+    if (st.drop && !(s.price_drop && s.price_drop[st.mode])) return false;
+    if (st.hub && st.hub !== "ALL" && HUB_META[st.hub]) {
+      const cm = s.commutes?.[st.hub];
+      if (!cm || cm > st.hubMin) return false;
+    }
+    return true;
+  }
+
   function getP(s) {
     const us = matchingUnits(s);
     if (us.length) return Math.min(...us.map(u => u.p));
@@ -293,7 +329,8 @@
   const closeCluster = () => { $("clusterBackdrop").style.display = "none"; $("clusterSheet").style.display = "none"; };
 
   function onPinClick(s) {
-    st.sel = s.id; renderMap();
+    st.sel = s.id; filtered = filtered.filter(passesV15SocietyFilter); /* v15_filter_hook */
+    renderMap();
     if (window.innerWidth <= 1024) showMapPreview(s); else openDetail(s);
   }
 
@@ -313,13 +350,13 @@
     if (z !== "ALL") tags.push(z);
     if (loc !== "ALL") tags.push(loc);
     if (srcF !== "ALL") tags.push(PORTAL_NAMES[srcF] || srcF);
-    if (st.bhks.size) tags.push([...st.bhks].sort((a, b) => a - b).map(x => x === 4 ? "4+ BHK" : fmtBhk(x)).join(", "));
+    if (st.bhks.size) tags.push([...st.bhks].sort((a, b) => a - b).map(x => Number(x) === 4 ? "4+ BHK" : (Number(x) === 0 ? "1 RK" : `${x} BHK`)).join(", "));
     if (st.pLo > 0 || st.pHi < ceil) tags.push(`${fmtS(st.pLo, st.mode === "buy", ceil)}–${fmtS(st.pHi, st.mode === "buy", ceil)}`);
     if (st.sLo > 0 || st.sHi < SQFT_MAX) tags.push(`${st.sLo}–${st.sHi} sq ft`);
     if (Number($("fMetro").value)) tags.push(`Metro ≤${$("fMetro").value}m`);
-    if ($("fHub").value) tags.push(HUB_LABELS[$("fHub").value] + (Number($("fHubMin").value) ? ` ≤${$("fHubMin").value}m` : ""));
-    if ($("fFurn").value !== "ALL") tags.push($("fFurn").selectedOptions[0].text);
-    if ($("fTen").value !== "ALL") tags.push($("fTen").selectedOptions[0].text);
+    if ($("fHub") && $("fHub").value && $("fHub").value !== "ALL") tags.push((HUB_LABELS[$("fHub").value] || $("fHub").value) + (Number($("fHubMin").value) ? ` ≤${$("fHubMin").value}m` : ""));
+    if ($("fFurn") && $("fFurn").value && $("fFurn").value !== "ALL") tags.push($("fFurn").selectedOptions?.[0]?.text || $("fFurn").value);
+    if ($("fTen") && $("fTen").value && $("fTen").value !== "ALL") tags.push($("fTen").selectedOptions?.[0]?.text || $("fTen").value);
     if (Number($("fRate").value)) tags.push(`${$("fRate").value}★+`);
     if (st.exactOnly) tags.push("Exact Pins");
     if (st.mapBounds) tags.push("Map Area");
@@ -387,7 +424,8 @@
     const exactCnt = filtered.filter(s => !s.coords_approx).length;
     $("resSum").textContent = `${filtered.length.toLocaleString("en-IN")} homes · ${exactCnt.toLocaleString("en-IN")} exact pins`;
     $("applyFiltersBtn").textContent = `Show ${filtered.length.toLocaleString("en-IN")} Homes`;
-    renderActiveBar(); renderMap(); renderList();
+    renderActiveBar(); filtered = filtered.filter(passesV15SocietyFilter); /* v15_filter_hook */
+ renderMap(); renderList();
   }
 
   function renderCardHtml(s, hub) {
@@ -494,13 +532,18 @@
       const metroMin = s.mumbai_context?.nearest_metro?.walk_min;
       const subTxt = [s.locality, metroMin && metroMin <= 25 ? `${metroMin}m Metro` : "", s.google?.rating ? `★ ${s.google.rating}` : ""].filter(Boolean).join(" · ");
       const portal = PORTALS[u.s] || u.s || "Portal";
-      const saved = st.saved && st.saved.has(s.id);
+      const saved = st.saved instanceof Set ? st.saved.has(s.id) : (Array.isArray(st.saved) ? st.saved.includes(s.id) : Boolean(st.saved && st.saved[s.id]));
       const sel = st.selectedId === s.id;
 
       const topPills = [];
       const dr = s.price_drop?.[st.mode];
       if (dr) topPills.push(`<span class="fc-pill dr">↓${dr.pct}% Drop</span>`);
-      else if (u.zb) topPills.push(`<span class="fc-pill zb">Zero Brok</span>`);
+      else {
+        const uLt = u.lt || ((u.s === "community" || u.s === "reddit") ? "shared" : ((u.zb || u.s === "nobroker" || u.s === "owner") ? "owner" : "broker"));
+        if (uLt === "owner") topPills.push(`<span class="fc-pill zb">Owner</span>`);
+        else if (uLt === "shared") topPills.push(`<span class="fc-pill sh">Shared</span>`);
+        else topPills.push(`<span class="fc-pill br">Broker</span>`);
+      }
       const ft = s.features?.tags || [], vt = s.features?.vision_tags || [];
       if (ft.includes("sea_view")) topPills.push(`<span class="fc-pill sea">Sea View</span>`);
 
@@ -861,6 +904,13 @@
           ["pName","pLoc","pPrice","pSqft","pContact"].forEach(id => $(id).value = "");
           $("postModal").style.display = "none";
         
+    document.querySelectorAll("#listerToggle button").forEach(b => {
+    b.onclick = () => {
+      st.lister = b.dataset.lt || "ALL";
+      document.querySelectorAll("#listerToggle button").forEach(x => x.classList.toggle("active", x.dataset.lt === st.lister));
+      st.page = 36; renderAll();
+    };
+  });
   document.querySelectorAll("#viewToggle button").forEach(b => {
     b.onclick = () => {
       st.view = b.dataset.v;
@@ -872,7 +922,7 @@
   });
   if ($("fHub")) {
     const syncHubUI = () => {
-      st.hub = $("fHub").value;
+      st.hub = ($("fHub").value || "ALL");
       st.hubMin = Number($("fHubMin").value || 45);
       if ($("hubVal")) $("hubVal").textContent = st.hub === "ALL" ? "Any" : `≤ ${st.hubMin} min to ${HUB_META[st.hub]?.name || st.hub}`;
       if (st.hub !== "ALL" && HUB_META[st.hub]) map.flyTo(HUB_META[st.hub].ll, 12, { duration: 0.5 });
