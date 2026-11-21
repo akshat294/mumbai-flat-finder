@@ -37,3 +37,7 @@ patch_v6_web.py
 fix_gha_timeout.py
 
 fix_compile_hang.py
+
+v7_backend.py
+v7_html_css.py
+v7_app_js.py

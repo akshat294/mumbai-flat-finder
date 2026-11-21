@@ -1,168 +1,18 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Mumbai Homes — Mumbai, Thane and Navi Mumbai</title>
+  <title>Mumbai Homes — Honest Mumbai, Thane and Navi Mumbai Flat Finder</title>
+  <meta name="description" content="Compare Mumbai, Thane and Navi Mumbai societies with Fair Price deal verdicts, 2026 Metro walk times, monsoon safety, nearby hospitals and parks, and direct verified links." />
   <link rel="stylesheet" href="./vendor/leaflet.min.css" />
+  <link rel="stylesheet" href="./styles.css" />
   <script src="./vendor/leaflet.min.js"></script>
-  <style>
-    :root {
-      --bg:#0a0f1c; --surf:#111827; --card:#151e30; --hover:#1b263d; --line:#233047;
-      --txt:#f1f5f9; --mut:#94a3b8; --pri:#0ea5e9; --pri-s:rgba(14,165,233,.14);
-      --grn:#10b981; --grn-s:rgba(16,185,129,.14); --amb:#f59e0b; --amb-s:rgba(245,158,11,.14);
-      --red:#ef4444; --red-s:rgba(239,68,68,.14); --sh:0 14px 36px rgba(0,0,0,.45);
-    }
-    [data-theme="light"] {
-      --bg:#f8fafc; --surf:#ffffff; --card:#ffffff; --hover:#f1f5f9; --line:#e2e8f0;
-      --txt:#0f172a; --mut:#64748b; --pri:#0284c7; --pri-s:rgba(2,132,199,.10);
-      --grn:#059669; --grn-s:rgba(5,150,105,.10); --amb:#d97706; --amb-s:rgba(217,119,6,.12);
-      --red:#dc2626; --red-s:rgba(220,38,38,.10); --sh:0 10px 30px rgba(15,23,42,.12);
-    }
-    * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,sans-serif; }
-    html, body { height:100%; background:var(--bg); color:var(--txt); overflow:hidden; font-size:15px; }
-    body { display:flex; flex-direction:column; height:100dvh; }
-
-    header { background:var(--surf); border-bottom:1px solid var(--line); padding:8px 16px; display:flex; align-items:center; justify-content:space-between; gap:10px; min-height:56px; z-index:20; flex-shrink:0; }
-    .brand { display:flex; align-items:center; gap:10px; min-width:0; }
-    .logo { width:34px; height:34px; border-radius:10px; background:linear-gradient(135deg,#0ea5e9,#10b981); display:grid; place-items:center; color:#fff; font-weight:800; font-size:16px; flex-shrink:0; }
-    .brand-txt { min-width:0; }
-    .brand h1 { font-size:15.5px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .brand small { display:block; font-size:11.5px; color:var(--mut); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .seg { display:inline-flex; background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:3px; gap:2px; flex-shrink:0; }
-    .seg button { border:none; background:transparent; color:var(--mut); padding:6px 13px; border-radius:7px; font-size:13px; font-weight:600; cursor:pointer; }
-    .seg button.active { background:var(--pri); color:#fff; }
-    .h-right { display:flex; align-items:center; gap:8px; }
-    .btn { background:var(--card); color:var(--txt); border:1px solid var(--line); border-radius:10px; padding:8px 12px; font-size:13px; font-weight:600; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:38px; text-decoration:none; white-space:nowrap; }
-    .btn:hover { background:var(--hover); }
-    .btn.active { background:var(--pri-s); color:var(--pri); border-color:var(--pri); }
-    .btn.pri { background:var(--pri); color:#fff; border-color:var(--pri); }
-    .btn.wa { background:#16a34a; color:#fff; border-color:#16a34a; }
-    .btn.icon { padding:0 11px; min-width:38px; }
-    .badge { background:var(--pri); color:#fff; border-radius:999px; padding:1px 6px; font-size:11px; font-weight:700; }
-
-    .toolbar { background:var(--surf); border-bottom:1px solid var(--line); padding:8px 16px; display:flex; align-items:center; gap:8px; z-index:15; flex-shrink:0; }
-    .search-box { flex:1 1 220px; min-width:0; position:relative; }
-    .search-box input { width:100%; background:var(--bg); color:var(--txt); border:1px solid var(--line); border-radius:10px; padding:9px 12px; font-size:14px; min-height:40px; }
-    .search-box input:focus, select:focus { outline:2px solid var(--pri); border-color:transparent; }
-    select { background:var(--bg); color:var(--txt); border:1px solid var(--line); border-radius:10px; padding:8px 10px; font-size:13.5px; min-height:40px; cursor:pointer; }
-    .desk-only { display:inline-flex; }
-
-    .range-wrap { display:flex; flex-direction:column; gap:5px; }
-    .range-top { display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--mut); }
-    .range-top strong { color:var(--pri); font-weight:700; }
-    .dual { position:relative; height:22px; display:flex; align-items:center; }
-    .d-track { position:absolute; left:0; right:0; height:5px; border-radius:99px; background:var(--line); }
-    .d-fill { position:absolute; height:5px; border-radius:99px; background:var(--pri); }
-    .dual input[type="range"] { position:absolute; left:0; width:100%; margin:0; background:none; pointer-events:none; -webkit-appearance:none; appearance:none; height:22px; }
-    .dual input[type="range"]::-webkit-slider-thumb { pointer-events:auto; -webkit-appearance:none; width:20px; height:20px; border-radius:50%; background:#fff; border:2.5px solid var(--pri); cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.35); }
-    .dual input[type="range"]::-moz-range-thumb { pointer-events:auto; width:20px; height:20px; border-radius:50%; background:#fff; border:2.5px solid var(--pri); cursor:pointer; }
-    .desk-slider { flex:0 0 245px; width:245px; background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:4px 10px 5px; }
-    #openFilterBtn { min-width:112px; justify-content:space-between; }
-    .range-top strong { font-variant-numeric:tabular-nums; white-space:nowrap; }
-
-    #activeBar { display:none; background:var(--bg); border-bottom:1px solid var(--line); padding:6px 16px; gap:6px; align-items:center; overflow-x:auto; flex-shrink:0; scrollbar-width:none; }
-    #activeBar::-webkit-scrollbar { display:none; }
-    .af-pill { background:var(--pri-s); color:var(--pri); border:1px solid transparent; border-radius:999px; padding:4px 10px; font-size:12px; font-weight:600; white-space:nowrap; }
-    .af-clear { background:transparent; color:var(--red); border:1px solid var(--red-s); border-radius:999px; padding:4px 10px; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap; margin-left:auto; }
-
-    .ws { flex:1; display:flex; min-height:0; position:relative; }
-    #listPane { width:430px; max-width:100%; background:var(--bg); border-right:1px solid var(--line); display:flex; flex-direction:column; min-height:0; }
-    .list-meta { padding:9px 16px; display:flex; justify-content:space-between; align-items:center; font-size:12.5px; color:var(--mut); border-bottom:1px solid var(--line); background:var(--surf); }
-    #cardList { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:12px 14px 20px; display:flex; flex-direction:column; gap:10px; }
-    #mapPane { flex:1; position:relative; min-height:0; }
-    #map { width:100%; height:100%; background:#0f172a; }
-    .map-ctl { position:absolute; top:12px; right:12px; z-index:500; display:flex; flex-direction:column; gap:6px; align-items:flex-end; }
-    .map-ctl .seg, .map-ctl .btn { box-shadow:var(--sh); }
-    .map-area-btn { position:absolute; top:12px; left:54px; z-index:500; box-shadow:var(--sh); }
-
-    body.view-map #listPane, body.view-list #mapPane { display:none; }
-    body.view-list #listPane { width:100%; border-right:none; }
-    body.view-list #cardList { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); align-content:start; gap:12px; max-width:1280px; margin:0 auto; width:100%; }
-
-    .hc { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px; cursor:pointer; display:flex; flex-direction:column; gap:8px; transition:border-color .15s; }
-    .hc:hover, .hc.sel { border-color:var(--pri); }
-    .hc-top { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; }
-    .hc-name { font-size:15.5px; font-weight:700; line-height:1.25; }
-    .hc-loc { font-size:12.5px; color:var(--mut); margin-top:2px; }
-    .hc-price { text-align:right; flex-shrink:0; font-variant-numeric:tabular-nums; }
-    .hc-price strong { font-size:16px; color:var(--pri); display:block; }
-    .hc-price span { font-size:11px; color:var(--mut); }
-    .hc-specs { font-size:12.5px; color:var(--mut); display:flex; flex-wrap:wrap; gap:6px; align-items:center; line-height:1.4; }
-    .pill-tag { font-size:11.5px; padding:2px 8px; border-radius:999px; font-weight:600; }
-    .pill-tag.g { background:var(--grn-s); color:var(--grn); }
-    .pill-tag.r { background:var(--red-s); color:var(--red); }
-    .pill-tag.a { background:var(--amb-s); color:var(--amb); }
-    .hc-foot { display:flex; justify-content:space-between; align-items:center; padding-top:8px; border-top:1px solid var(--line); }
-    .hc-transit { font-size:12px; color:var(--mut); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:62%; }
-    .hc-acts { display:flex; gap:6px; }
-    .act-btn { background:transparent; border:1px solid var(--line); color:var(--txt); border-radius:8px; padding:5px 10px; font-size:12px; font-weight:600; cursor:pointer; min-height:32px; }
-    .act-btn.sv { background:var(--red-s); color:var(--red); border-color:var(--red); }
-    .act-btn.cm { background:var(--pri-s); color:var(--pri); border-color:var(--pri); }
-
-    .mob-nav { display:none; background:var(--surf); border-top:1px solid var(--line); padding:6px 8px calc(6px + env(safe-area-inset-bottom)); z-index:25; flex-shrink:0; }
-    .mob-nav button { flex:1; border:none; background:transparent; color:var(--mut); display:flex; flex-direction:column; align-items:center; gap:2px; padding:6px 4px; font-size:11px; font-weight:600; cursor:pointer; border-radius:8px; }
-    .mob-nav button span.ic { font-size:18px; line-height:1; }
-    .mob-nav button.active { color:var(--pri); background:var(--pri-s); }
-
-    .backdrop { position:fixed; inset:0; background:rgba(0,0,0,.55); display:none; z-index:900; backdrop-filter:blur(2px); }
-    .sheet { position:fixed; top:0; right:0; width:460px; max-width:100%; height:100dvh; background:var(--surf); border-left:1px solid var(--line); box-shadow:var(--sh); z-index:950; display:none; flex-direction:column; }
-    .s-head { padding:14px 16px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:center; gap:10px; flex-shrink:0; }
-    .s-body { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:16px; display:flex; flex-direction:column; gap:14px; }
-    .s-foot { padding:12px 16px calc(12px + env(safe-area-inset-bottom)); border-top:1px solid var(--line); display:flex; gap:10px; background:var(--surf); flex-shrink:0; }
-    .s-foot .btn { flex:1; min-height:44px; font-size:14px; }
-
-    .f-sec { display:flex; flex-direction:column; gap:7px; }
-    .f-sec label { font-size:12.5px; font-weight:600; color:var(--mut); }
-    .f-sec select { width:100%; min-height:42px; }
-    .pill-row { display:flex; flex-wrap:wrap; gap:8px; }
-    .p-opt { background:var(--bg); color:var(--txt); border:1px solid var(--line); border-radius:10px; padding:9px 14px; font-size:13px; font-weight:600; cursor:pointer; min-height:40px; }
-    .p-opt.active { background:var(--pri); color:#fff; border-color:var(--pri); }
-
-    .card-box { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:13px; }
-    .card-box h3 { font-size:11.5px; text-transform:uppercase; letter-spacing:.5px; color:var(--mut); margin-bottom:9px; }
-    .g2 { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-    .met { background:var(--bg); border:1px solid var(--line); border-radius:9px; padding:9px; }
-    .met small { display:block; font-size:11px; color:var(--mut); }
-    .met strong { display:block; font-size:14.5px; margin-top:2px; }
-    .rev { background:var(--bg); border-left:3px solid var(--amb); padding:8px 10px; border-radius:6px; font-size:13px; line-height:1.45; margin-top:6px; }
-    textarea { width:100%; background:var(--bg); color:var(--txt); border:1px solid var(--line); border-radius:10px; padding:10px; font-size:14px; }
-    .plinks { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
-    .plinks a { text-align:center; text-decoration:none; padding:11px 8px; border-radius:10px; background:var(--pri-s); color:var(--pri); border:1px solid var(--pri); font-size:13px; font-weight:700; min-height:44px; display:flex; flex-direction:column; justify-content:center; }
-    .plinks a.sub { background:var(--bg); color:var(--mut); border-color:var(--line); font-weight:600; grid-column:1 / -1; }
-    .plinks a span { font-size:10.5px; color:var(--mut); font-weight:400; margin-top:2px; }
-
-    #cmpModal { position:fixed; inset:0; background:rgba(0,0,0,.6); display:none; place-items:center; z-index:1000; padding:12px; }
-    .mcard { background:var(--surf); border:1px solid var(--line); border-radius:14px; width:880px; max-width:100%; max-height:88dvh; overflow:auto; padding:16px; box-shadow:var(--sh); }
-    table.ctbl { width:100%; border-collapse:collapse; margin-top:12px; font-size:13px; }
-    table.ctbl th, table.ctbl td { border:1px solid var(--line); padding:9px; text-align:left; }
-    table.ctbl th { background:var(--card); color:var(--mut); }
-    .empty { text-align:center; padding:42px 16px; color:var(--mut); }
-    .empty p { margin-bottom:14px; }
-
-    @media (max-width: 1024px) {
-      .desk-only { display:none !important; }
-      header { padding:8px 12px; }
-      .toolbar { padding:8px 12px; }
-      #listPane { width:100%; border-right:none; }
-      body.view-split #mapPane { display:none; }
-      body.view-map #listPane { display:none; }
-      body.view-map #mapPane { display:block; }
-      .mob-nav { display:flex; }
-      #cardList { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); align-content:start; padding:10px 12px 18px; }
-      .sheet { width:100%; top:auto; bottom:0; height:90dvh; border-left:none; border-top:1px solid var(--line); border-radius:18px 18px 0 0; }
-    }
-    @media (max-width: 560px) {
-      #cardList { grid-template-columns:1fr; }
-      .brand small { font-size:11px; }
-      .seg button { padding:6px 10px; font-size:12.5px; }
-    }
-  </style>
 </head>
 <body class="view-split">
   <header>
     <div class="brand">
-      <div class="logo">M</div>
+      <div class="logo" aria-hidden="true">M</div>
       <div class="brand-txt">
         <h1>Mumbai Homes</h1>
         <small id="freshBadge">Loading MMR homes...</small>
@@ -175,50 +25,85 @@
     </div>
 
     <div class="h-right">
-      <div class="seg desk-only">
+      <div class="seg desk-only" role="group" aria-label="Layout view">
         <button id="viewSplit" class="active">Split</button>
         <button id="viewList">List</button>
         <button id="viewMap">Map</button>
       </div>
-      <button id="savedBtn" class="btn desk-only">❤️ Saved <span class="badge" id="savedCount">0</span></button>
-      <button id="compareBtn" class="btn desk-only">⚖️ Compare <span class="badge" id="cmpCount">0</span></button>
-      <button id="themeBtn" class="btn icon" title="Switch Day / Night">☀️</button>
+      <button id="savedBtn" class="btn desk-only">
+        <svg class="ic" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+        <span>Saved</span>
+        <span class="badge" id="savedCount">0</span>
+      </button>
+      <button id="compareBtn" class="btn desk-only">
+        <svg class="ic" viewBox="0 0 24 24"><path d="M16 16v3a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h3"/><rect x="9" y="3" width="12" height="12" rx="2"/></svg>
+        <span>Compare</span>
+        <span class="badge" id="cmpCount">0</span>
+      </button>
+      <button id="clipBtn" class="btn desk-only" title="Add from Housing.com or 99acres">
+        <svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+        <span>Clip External</span>
+      </button>
+      <button id="themeBtn" class="btn icon" title="Switch Day / Night" aria-label="Switch theme">
+        <svg class="ic" id="themeIcon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+      </button>
     </div>
   </header>
 
   <section class="toolbar">
     <div class="search-box">
-      <input id="searchBox" type="text" placeholder="Search area or society (Bandra, Powai, Thane...)" />
+      <svg class="ic s-ic" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <input id="searchBox" type="text" placeholder="Search society or locality (Bandra, Powai, Thane...)" />
     </div>
-    <select id="zoneQuick" class="desk-only" aria-label="Area Zone">
-      <option value="ALL">All MMR Zones</option>
-      <option>South Mumbai</option><option>Bandra-Santacruz</option><option>Andheri-Juhu</option>
-      <option>Western Suburbs North</option><option>Powai-Central</option><option>Chembur-Wadala</option>
-      <option>Thane</option><option>Navi Mumbai</option>
+    <select id="commuteQuick" class="desk-only" aria-label="Commuting to">
+      <option value="">Commuting to...</option>
+      <option value="bkc">BKC</option>
+      <option value="lower_parel">Lower Parel</option>
+      <option value="andheri_seepz">Andheri / SEEPZ</option>
+      <option value="powai">Powai</option>
+      <option value="goregaon_nesco">Goregaon</option>
+      <option value="nariman_point">Nariman Point</option>
     </select>
     <div class="desk-only desk-slider range-wrap">
-      <div class="range-top"><span id="dPriceLbl">Rent</span><strong id="dPriceVal">Any</strong></div>
+      <div class="range-top"><span id="dPriceLbl">Rent</span><strong id="dPriceVal">Any Price</strong></div>
       <div class="dual">
         <div class="d-track"></div><div class="d-fill" id="dPriceFill"></div>
-        <input id="dpMin" type="range" min="0" max="500000" step="5000" value="0" />
-        <input id="dpMax" type="range" min="0" max="500000" step="5000" value="500000" />
+        <input id="dpMin" type="range" min="0" max="25" step="1" value="0" />
+        <input id="dpMax" type="range" min="0" max="25" step="1" value="25" />
       </div>
     </div>
-    <select id="sortSelect" class="desk-only" aria-label="Sort">
+    <select id="sortSelect" class="desk-only" aria-label="Sort homes">
       <option value="rec">Best Match</option>
+      <option value="deal">Best Value Deals</option>
       <option value="p_asc">Price: Low to High</option>
       <option value="p_desc">Price: High to Low</option>
       <option value="metro">Closest to Metro</option>
-      <option value="rate">Top Rated</option>
+      <option value="rate">Top Google Rated</option>
     </select>
-    <button id="openFilterBtn" class="btn">🎛️ Filters <span class="badge" id="filterCount" style="visibility:hidden;">0</span></button>
+    <button id="openFilterBtn" class="btn">
+      <svg class="ic" viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="20" y2="12"/><line x1="12" y1="18" x2="20" y2="18"/><circle cx="6" cy="12" r="2"/><circle cx="10" cy="18" r="2"/></svg>
+      <span>Filters</span>
+      <span class="badge" id="filterCount" style="visibility:hidden;">0</span>
+    </button>
+  </section>
+
+  <section class="missions" aria-label="Quick starting views">
+    <button class="m-chip" data-mission="zerobrok60">Zero-Brok under ₹60k</button>
+    <button class="m-chip" data-mission="deals">Great Value Deals</button>
+    <button class="m-chip" data-mission="metro10">Walk to Metro (≤10m)</button>
+    <button class="m-chip" data-mission="family">Monsoon-Safe Family</button>
+    <button class="m-chip" data-mission="reddit">Reddit Direct Owner</button>
+    <button class="m-chip" data-mission="rated">4★+ Google Rated</button>
   </section>
 
   <main class="ws">
     <aside id="listPane">
       <div class="list-meta">
-        <span id="resSum">Showing 0 homes</span>
-        <button id="mobSortBtn" class="btn" style="min-height:28px;padding:3px 9px;font-size:12px;">Sort</button>
+        <span id="resSum">0 homes</span>
+        <div style="display:flex;gap:6px;align-items:center;">
+          <button id="shareShortlistBtn" class="btn xs" style="display:none;">Share Shortlist</button>
+          <button id="mobSortBtn" class="btn xs">Filters / Sort</button>
+        </div>
       </div>
       <div id="activeBar"></div>
       <div id="cardList"></div>
@@ -226,31 +111,44 @@
 
     <section id="mapPane">
       <div id="map"></div>
-      <button id="mapAreaBtn" class="btn map-area-btn">🗺️ Search This Area</button>
+      <button id="mapAreaBtn" class="btn map-area-btn">Search this area</button>
       <div class="map-ctl">
         <div class="seg">
-          <button id="msDark" class="active">Dark</button>
-          <button id="msStreet">Streets</button>
+          <button id="msStreet" class="active">Map</button>
+          <button id="msDark">Dark</button>
           <button id="msSat">Sat</button>
         </div>
-        <button id="togMetro" class="btn active" style="min-height:32px;padding:4px 10px;font-size:12px;">🚇 Metro</button>
-        <button id="togFlood" class="btn" style="min-height:32px;padding:4px 10px;font-size:12px;">☔ Flood</button>
+        <button id="togMetro" class="btn xs active">Metro</button>
+        <button id="togFlood" class="btn xs">Flood</button>
       </div>
+      <div id="mapPreview" class="map-preview" style="display:none;"></div>
     </section>
   </main>
 
   <nav class="mob-nav" aria-label="Mobile Navigation">
-    <button id="mTabList" class="active"><span class="ic">🏠</span><span>Homes</span></button>
-    <button id="mTabMap"><span class="ic">🗺️</span><span>Map</span></button>
-    <button id="mTabSaved"><span class="ic">❤️</span><span id="mSavedLbl">Saved</span></button>
-    <button id="mTabCmp"><span class="ic">⚖️</span><span id="mCmpLbl">Compare</span></button>
+    <button id="mTabList" class="active">
+      <svg class="ic" viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>Homes</span>
+    </button>
+    <button id="mTabMap">
+      <svg class="ic" viewBox="0 0 24 24"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
+      <span>Map</span>
+    </button>
+    <button id="mTabSaved">
+      <svg class="ic" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+      <span id="mSavedLbl">Saved</span>
+    </button>
+    <button id="mTabCmp">
+      <svg class="ic" viewBox="0 0 24 24"><path d="M16 16v3a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h3"/><rect x="9" y="3" width="12" height="12" rx="2"/></svg>
+      <span id="mCmpLbl">Compare</span>
+    </button>
   </nav>
 
   <div id="filterBackdrop" class="backdrop"></div>
   <aside id="filterSheet" class="sheet" aria-label="Filters">
     <div class="s-head">
-      <h2 style="font-size:17px;">Filters</h2>
-      <button class="btn icon" id="closeFilterBtn">✕</button>
+      <h2>Filters</h2>
+      <button class="btn icon" id="closeFilterBtn" aria-label="Close">✕</button>
     </div>
     <div class="s-body">
       <div class="f-sec">
@@ -262,12 +160,9 @@
           <option>Thane</option><option>Navi Mumbai</option>
         </select>
       </div>
+      <div class="f-sec"><label>Locality</label><select id="fLoc"><option value="ALL">All Localities</option></select></div>
       <div class="f-sec">
-        <label>Specific Locality</label>
-        <select id="fLoc"><option value="ALL">All Localities</option></select>
-      </div>
-      <div class="f-sec">
-        <label>Bedrooms (BHK)</label>
+        <label>Home Size</label>
         <div class="pill-row">
           <button class="p-opt bhk-opt" data-bhk="0">1 RK</button>
           <button class="p-opt bhk-opt" data-bhk="1">1 BHK</button>
@@ -280,8 +175,8 @@
         <div class="range-top"><label id="mPriceLbl">Monthly Rent</label><strong id="mPriceVal">Any Price</strong></div>
         <div class="dual">
           <div class="d-track"></div><div class="d-fill" id="mPriceFill"></div>
-          <input id="mpMin" type="range" min="0" max="500000" step="5000" value="0" />
-          <input id="mpMax" type="range" min="0" max="500000" step="5000" value="500000" />
+          <input id="mpMin" type="range" min="0" max="25" step="1" value="0" />
+          <input id="mpMax" type="range" min="0" max="25" step="1" value="25" />
         </div>
       </div>
       <div class="f-sec range-wrap">
@@ -293,11 +188,13 @@
         </div>
       </div>
       <div class="f-sec">
-        <label>Quick Essentials</label>
+        <label>Essentials</label>
         <div class="pill-row">
-          <button class="p-opt" id="fRealOnly">✅ Active Listings Only</button>
-          <button class="p-opt" id="fZero">💸 Zero Brokerage</button>
-          <button class="p-opt" id="fFlood">☔ Monsoon Safe</button>
+          <button class="p-opt" id="fRealOnly">Active Listings Only</button>
+          <button class="p-opt" id="fZero">Zero Brokerage</button>
+          <button class="p-opt" id="fDealOnly">Great Value Deals</button>
+          <button class="p-opt" id="fFlood">Monsoon Safe</button>
+          <button class="p-opt" id="fRedditOnly">Reddit Direct Owner</button>
         </div>
       </div>
       <div class="f-sec">
@@ -312,26 +209,17 @@
         </div>
       </div>
       <div class="g2">
-        <div class="f-sec">
-          <label>Furnishing</label>
-          <select id="fFurn"><option value="ALL">Any</option><option value="furnished">Furnished</option><option value="semi">Semi-Furnished</option><option value="unfurnished">Unfurnished</option></select>
-        </div>
-        <div class="f-sec">
-          <label>Tenant</label>
-          <select id="fTen"><option value="ALL">Any</option><option value="bachelors_ok">Bachelors OK</option><option value="family">Family</option></select>
-        </div>
+        <div class="f-sec"><label>Furnishing</label><select id="fFurn"><option value="ALL">Any</option><option value="furnished">Furnished</option><option value="semi">Semi-Furnished</option><option value="unfurnished">Unfurnished</option></select></div>
+        <div class="f-sec"><label>Tenant</label><select id="fTen"><option value="ALL">Any</option><option value="bachelors_ok">Bachelors OK</option><option value="family">Family</option></select></div>
       </div>
       <div class="g2">
-        <div class="f-sec">
-          <label>Google Rating</label>
-          <select id="fRate"><option value="0">Any</option><option value="3.5">3.5★+</option><option value="4.0">4.0★+</option><option value="4.3">4.3★+</option></select>
-        </div>
-        <div class="f-sec">
-          <label>Sort Results</label>
-          <select id="fSort"><option value="rec">Best Match</option><option value="p_asc">Price: Low to High</option><option value="p_desc">Price: High to Low</option><option value="sqft">Largest Carpet</option><option value="metro">Closest to Metro</option><option value="rate">Top Google Rated</option></select>
-        </div>
+        <div class="f-sec"><label>Google Rating</label><select id="fRate"><option value="0">Any</option><option value="3.5">3.5★+</option><option value="4.0">4.0★+</option><option value="4.3">4.3★+</option></select></div>
+        <div class="f-sec"><label>Sort Results</label><select id="fSort"><option value="rec">Best Match</option><option value="deal">Best Value Deals</option><option value="p_asc">Price: Low to High</option><option value="p_desc">Price: High to Low</option><option value="sqft">Largest Carpet</option><option value="metro">Closest to Metro</option><option value="rate">Top Google Rated</option></select></div>
       </div>
-      <button id="exportBtn" class="btn" style="width:100%;">⬇️ Download Filtered List (Excel / CSV)</button>
+      <div class="g2">
+        <button id="openClipFromFilter" class="btn">+ Clip Housing / 99acres</button>
+        <button id="exportBtn" class="btn">Download CSV</button>
+      </div>
     </div>
     <div class="s-foot">
       <button id="clearFiltersBtn" class="btn">Reset All</button>
@@ -342,20 +230,19 @@
   <div id="detailBackdrop" class="backdrop"></div>
   <aside id="detailSheet" class="sheet" aria-label="Home Details">
     <div class="s-head">
-      <div style="min-width:0;">
-        <h2 id="dName" style="font-size:17.5px;line-height:1.2;"></h2>
-        <div id="dSub" style="font-size:12.5px;color:var(--mut);margin-top:2px;"></div>
-      </div>
-      <button class="btn icon" id="closeDetailBtn">✕</button>
+      <div style="min-width:0;"><h2 id="dName"></h2><div id="dSub" class="sub-line"></div></div>
+      <button class="btn icon" id="closeDetailBtn" aria-label="Close">✕</button>
     </div>
     <div class="s-body" id="dBody"></div>
   </aside>
 
-  <div id="cmpModal">
+  <div id="cmpModal" class="modal-bg">
     <div class="mcard">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-        <h2 style="font-size:17px;">Compare Homes</h2>
-        <div style="display:flex;gap:8px;">
+      <div class="m-head">
+        <h2>Side-by-Side Comparison</h2>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn wa" id="shareCmpWa">Share on WhatsApp</button>
+          <button class="btn" id="copyCmpLink">Copy Shortlist Link</button>
           <button class="btn" id="clearCmp">Clear</button>
           <button class="btn pri" id="closeCmp">Done</button>
         </div>
@@ -364,439 +251,37 @@
     </div>
   </div>
 
-  <script>
-    window.addEventListener("error", e => { const b = document.getElementById("freshBadge"); if (b) b.textContent = "Error: " + (e.message || "script error"); });
-    const RENT_STOPS = [0,10000,15000,20000,25000,30000,35000,40000,45000,50000,60000,70000,80000,90000,100000,120000,140000,160000,180000,200000,250000,300000,350000,400000,500000,750000];
-    const BUY_STOPS  = [0,4000000,6000000,8000000,10000000,12500000,15000000,17500000,20000000,25000000,30000000,35000000,40000000,50000000,60000000,75000000,100000000,125000000,150000000];
-    const RENT_MAX = RENT_STOPS[RENT_STOPS.length - 1], BUY_MAX = BUY_STOPS[BUY_STOPS.length - 1], SQFT_MAX = 4000;
-    const pStops = () => st.mode === 'buy' ? BUY_STOPS : RENT_STOPS;
-    let _renderTimer = null;
-    const scheduleRender = () => { clearTimeout(_renderTimer); _renderTimer = setTimeout(renderAll, 70); };
-    const st = {
-      mode:"rent", theme:localStorage.getItem("mhf_t")||"dark", mapStyle:"dark",
-      bhks:new Set(), realOnly:false, zero:false, flood:false, mapBounds:false, savedOnly:false,
-      showMetro:true, showFlood:false, page:36, sel:null, cmp:[],
-      pLo:0, pHi:RENT_MAX, sLo:0, sHi:SQFT_MAX,
-      saved:(() => { try { return JSON.parse(localStorage.getItem("mhf_s3") || '{"ids":[],"notes":{}}'); } catch { return { ids:[], notes:{} }; } })()
-    };
-    if (!st.saved || !Array.isArray(st.saved.ids)) st.saved = { ids:[], notes:{} };
-    if (!st.saved.notes) st.saved.notes = {};
-    let societies = [], filtered = [];
-
-    const map = L.map("map", { preferCanvas: true }).setView([19.085, 72.905], 11);
-    const esriDark = L.layerGroup([
-      L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}", { maxZoom:16, attribution:"Esri" }),
-      L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}", { maxZoom:16, opacity:0.9 })
-    ]);
-    const esriStreet = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}", { maxZoom:19, attribution:"Esri" });
-    const esriSat = L.layerGroup([
-      L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { maxZoom:18, attribution:"Esri" }),
-      L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}", { maxZoom:18 })
-    ]);
-    const osmFallback = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom:19, attribution:"OSM" });
-    let activeBase = null;
-    function setMapStyle(style) {
-      st.mapStyle = style;
-      if (activeBase) map.removeLayer(activeBase);
-      activeBase = style === "dark" ? esriDark : (style === "sat" ? esriSat : esriStreet);
-      activeBase.addTo(map);
-      ["msDark","msStreet","msSat"].forEach(id => document.getElementById(id).classList.remove("active"));
-      document.getElementById(style === "dark" ? "msDark" : (style === "sat" ? "msSat" : "msStreet")).classList.add("active");
-    }
-    esriStreet.on("tileerror", () => { if (activeBase === esriStreet) { map.removeLayer(esriStreet); activeBase = osmFallback.addTo(map); } });
-
-    const cv = L.canvas({ padding: 0.5 });
-    const mLayer = L.layerGroup().addTo(map), metroL = L.layerGroup().addTo(map), floodL = L.layerGroup();
-
-    [
-      { n:"Aqua Line 3", c:"#06b6d4", p:[[19.1365,72.8748],[19.1082,72.8800],[19.0817,72.8482],[19.0653,72.8644],[19.0218,72.8414],[19.0074,72.8195],[18.9696,72.8193],[18.9352,72.8273],[18.9142,72.8213]] },
-      { n:"Blue Line 1", c:"#3b82f6", p:[[19.1307,72.8213],[19.1207,72.8481],[19.1082,72.8800],[19.0867,72.9082]] },
-      { n:"Yellow/Red Lines 2A/7", c:"#f59e0b", p:[[19.2288,72.8468],[19.1862,72.8358],[19.1469,72.8347],[19.1301,72.8306],[19.1190,72.8559],[19.1665,72.8576]] },
-      { n:"Navi Mumbai Line 1", c:"#a855f7", p:[[19.0185,73.0394],[19.0359,73.0631],[19.0548,73.0686],[19.0620,73.0715],[19.0772,73.0977]] }
-    ].forEach(l => L.polyline(l.p, { color:l.c, weight:3, opacity:.8, renderer:cv }).bindTooltip(l.n).addTo(metroL));
-
-    [
-      { n:"Hindmata", la:19.0079, ln:72.8423, r:650 }, { n:"Sion Gandhi Market", la:19.0322, ln:72.8576, r:700 },
-      { n:"Milan Subway", la:19.0853, ln:72.8439, r:550 }, { n:"Andheri Subway", la:19.1157, ln:72.8442, r:550 },
-      { n:"Kurla LBS", la:19.0764, ln:72.8832, r:800 }, { n:"Malad Subway", la:19.1846, ln:72.8468, r:500 }
-    ].forEach(s => L.circle([s.la, s.ln], { radius:s.r, color:"#ef4444", fillColor:"#ef4444", fillOpacity:.16, weight:1, renderer:cv }).bindTooltip("Flood Zone: " + s.n).addTo(floodL));
-
-    const esc = s => { const d = document.createElement("div"); d.textContent = String(s ?? ""); return d.innerHTML.replace(/"/g, String.fromCharCode(38) + "quot;"); };
-    const fmt = (v, buy) => !v ? "On request" : (buy ? (v>=1e7 ? `₹${(v/1e7).toFixed(2)} Cr` : `₹${(v/1e5).toFixed(1)} L`) : (v>=1e5 ? `₹${(v/1e5).toFixed(2)} L/mo` : `₹${Math.round(v).toLocaleString("en-IN")}/mo`));
-    const fmtS = (v, buy, ceil) => v<=0 ? "₹0" : (buy ? (v>=1e7 ? `₹${+(v/1e7).toFixed(2)}Cr` : `₹${Math.round(v/1e5)}L`) : (v>=1e5 ? `₹${+(v/1e5).toFixed(2)}L` : `₹${Math.round(v/1e3)}k`)) + (v>=ceil ? "+" : "");
-    const getP = s => st.mode === "rent" ? (s.pricing?.rent_monthly_inr?.median || 0) : (s.pricing?.buy_inr?.median || 0);
-    const isEst = s => st.mode === "rent" ? !!s.pricing?.rent_monthly_inr?.is_estimate : !!s.pricing?.buy_inr?.is_estimate;
-    const priceMax = () => st.mode === "buy" ? BUY_MAX : RENT_MAX;
-
-    function syncPriceSliders(iLo, iHi) {
-      const stops = pStops(), maxI = stops.length - 1, ceil = stops[maxI];
-      if (iLo > iHi) { const t = iLo; iLo = iHi; iHi = t; }
-      st.pLo = stops[iLo]; st.pHi = stops[iHi];
-      [["dpMin","dpMax","dPriceFill","dPriceVal"],["mpMin","mpMax","mPriceFill","mPriceVal"]].forEach(([a,b,f,l]) => {
-        document.getElementById(a).value = iLo; document.getElementById(b).value = iHi;
-        const fill = document.getElementById(f);
-        fill.style.left = `${(iLo / maxI) * 100}%`; fill.style.width = `${((iHi - iLo) / maxI) * 100}%`;
-        document.getElementById(l).textContent = (iLo === 0 && iHi === maxI) ? "Any Price" : `${fmtS(st.pLo, st.mode==="buy", ceil)} – ${fmtS(st.pHi, st.mode==="buy", ceil)}`;
-      });
-    }
-    function resetPriceScale() {
-      const maxI = pStops().length - 1;
-      ["dpMin","dpMax","mpMin","mpMax"].forEach(id => { const el = document.getElementById(id); el.min = 0; el.max = maxI; el.step = 1; });
-      document.getElementById("dPriceLbl").textContent = st.mode === "buy" ? "Buy" : "Rent";
-      document.getElementById("mPriceLbl").textContent = st.mode === "buy" ? "Purchase Budget" : "Monthly Rent";
-      syncPriceSliders(0, maxI);
-    }
-    function syncSqftSlider() {
-      let lo = Number(document.getElementById("sMin").value), hi = Number(document.getElementById("sMax").value);
-      if (lo > hi) { const t = lo; lo = hi; hi = t; document.getElementById("sMin").value = lo; document.getElementById("sMax").value = hi; }
-      st.sLo = lo; st.sHi = hi;
-      const fill = document.getElementById("sqftFill");
-      fill.style.left = `${(lo / SQFT_MAX) * 100}%`; fill.style.width = `${((hi - lo) / SQFT_MAX) * 100}%`;
-      document.getElementById("sqftVal").textContent = (lo === 0 && hi === SQFT_MAX) ? "Any Size" : `${lo} – ${hi >= SQFT_MAX ? SQFT_MAX + "+" : hi} sq ft`;
-    }
-
-    function applyTheme(t) {
-      st.theme = t; localStorage.setItem("mhf_t", t); document.documentElement.setAttribute("data-theme", t);
-      document.getElementById("themeBtn").textContent = t === "dark" ? "☀️" : "🌙";
-      setMapStyle(t === "dark" ? "dark" : "street");
-    }
-    function syncCounts() {
-      localStorage.setItem("mhf_s3", JSON.stringify(st.saved));
-      const sc = st.saved.ids.length, cc = st.cmp.length;
-      document.getElementById("savedCount").textContent = sc;
-      document.getElementById("cmpCount").textContent = cc;
-      document.getElementById("mSavedLbl").textContent = sc ? `Saved (${sc})` : "Saved";
-      document.getElementById("mCmpLbl").textContent = cc ? `Compare (${cc})` : "Compare";
-    }
-    function populateLocalities() {
-      const z = document.getElementById("fZone").value, prev = document.getElementById("fLoc").value;
-      const locs = [...new Set(societies.filter(s => z === "ALL" || s.zone === z).map(s => s.locality).filter(Boolean))].sort();
-      document.getElementById("fLoc").innerHTML = `<option value="ALL">All Localities (${locs.length})</option>` + locs.map(l => `<option value="${esc(l)}">${esc(l)}</option>`).join("");
-      if (locs.includes(prev)) document.getElementById("fLoc").value = prev;
-    }
-
-    function renderActivePills() {
-      const bar = document.getElementById("activeBar"), tags = [];
-      const z = document.getElementById("fZone").value, loc = document.getElementById("fLoc").value;
-      const ceil = priceMax();
-      if (z !== "ALL") tags.push(z);
-      if (loc !== "ALL") tags.push(loc);
-      if (st.bhks.size) tags.push([...st.bhks].sort().map(x => x===0 ? "1 RK" : (x===4 ? "4+ BHK" : x+" BHK")).join(", "));
-      if (st.pLo > 0 || st.pHi < ceil) tags.push(`${fmtS(st.pLo, st.mode==="buy", ceil)}–${fmtS(st.pHi, st.mode==="buy", ceil)}`);
-      if (st.sLo > 0 || st.sHi < SQFT_MAX) tags.push(`${st.sLo}–${st.sHi} sq ft`);
-      if (st.realOnly) tags.push("Active Only");
-      if (st.zero) tags.push("Zero Brokerage");
-      if (st.flood) tags.push("Monsoon Safe");
-      if (Number(document.getElementById("fMetro").value)) tags.push(`Metro ≤${document.getElementById("fMetro").value}m`);
-      if (document.getElementById("fHub").value && Number(document.getElementById("fHubMin").value)) tags.push(`${document.getElementById("fHub").selectedOptions[0].text} ≤${document.getElementById("fHubMin").value}m`);
-      if (document.getElementById("fFurn").value !== "ALL") tags.push(document.getElementById("fFurn").selectedOptions[0].text);
-      if (document.getElementById("fTen").value !== "ALL") tags.push(document.getElementById("fTen").selectedOptions[0].text);
-      if (Number(document.getElementById("fRate").value)) tags.push(`${document.getElementById("fRate").value}★+`);
-      if (st.savedOnly) tags.push("Saved Only");
-      if (st.mapBounds) tags.push("This Map Area");
-
-      const fc = document.getElementById("filterCount");
-      fc.textContent = tags.length; fc.style.visibility = tags.length ? "visible" : "hidden";
-      if (!tags.length) { bar.style.display = "none"; return; }
-      bar.style.display = "flex";
-      bar.innerHTML = tags.map(t => `<span class="af-pill">${esc(t)}</span>`).join("") + `<button class="af-clear" onclick="resetAll()">Clear All</button>`;
-    }
-
-    function renderAll() {
-      const q = document.getElementById("searchBox").value.trim().toLowerCase();
-      const z = document.getElementById("fZone").value, loc = document.getElementById("fLoc").value;
-      const ceil = priceMax();
-      const maxM = Number(document.getElementById("fMetro").value || 0);
-      const hub = document.getElementById("fHub").value, hubMax = Number(document.getElementById("fHubMin").value || 0);
-      const furn = document.getElementById("fFurn").value, ten = document.getElementById("fTen").value;
-      const minRate = Number(document.getElementById("fRate").value || 0);
-      const srt = document.getElementById("fSort").value;
-      const bounds = st.mapBounds ? map.getBounds() : null;
-
-      filtered = societies.filter(s => {
-        if (z !== "ALL" && s.zone !== z) return false;
-        if (loc !== "ALL" && s.locality !== loc) return false;
-        if (q && !`${s.name} ${s.locality} ${s.zone} ${(s.rera_ids||[]).join(" ")}`.toLowerCase().includes(q)) return false;
-        if (st.bhks.size) {
-          const bs = s.bhks || [];
-          if (!bs.length || ![...st.bhks].some(b => b === 4 ? bs.some(x => x >= 4) : bs.includes(b))) return false;
-        }
-        const p = getP(s);
-        if (st.realOnly && (!p || isEst(s))) return false;
-        if (st.pLo > 0 && (!p || p < st.pLo)) return false;
-        if (st.pHi < ceil && (!p || p > st.pHi)) return false;
-        if (st.sLo > 0 && (!s.rera_carpet_sqft || s.rera_carpet_sqft < st.sLo)) return false;
-        if (st.sHi < SQFT_MAX && (!s.rera_carpet_sqft || s.rera_carpet_sqft > st.sHi)) return false;
-        if (maxM > 0 && (s.mumbai_context?.nearest_metro?.walk_min || 999) > maxM) return false;
-        if (hub && hubMax > 0 && (s.mumbai_context?.commute_hubs_min?.[hub] || 999) > hubMax) return false;
-        if (furn !== "ALL" && !(s.furnishing || []).includes(furn)) return false;
-        if (ten !== "ALL" && !(s.tenant || []).includes(ten)) return false;
-        if (minRate > 0 && (s.google?.rating || 0) < minRate) return false;
-        if (st.zero && !s.pricing?.has_zero_brokerage) return false;
-        if (st.flood && s.mumbai_context?.monsoon_flood_risk === "high") return false;
-        if (st.savedOnly && !st.saved.ids.includes(s.id)) return false;
-        if (bounds && !bounds.contains([s.lat, s.lng])) return false;
-        return true;
-      });
-
-      filtered.sort((a, b) => {
-        if (srt === "p_asc") return (getP(a)||9e12) - (getP(b)||9e12);
-        if (srt === "p_desc") return (getP(b)||0) - (getP(a)||0);
-        if (srt === "sqft") return (b.rera_carpet_sqft||0) - (a.rera_carpet_sqft||0);
-        if (srt === "metro") return (a.mumbai_context?.nearest_metro?.walk_min||999) - (b.mumbai_context?.nearest_metro?.walk_min||999);
-        if (srt === "rate") return (b.google?.rating||0) - (a.google?.rating||0);
-        const sc = x => (isEst(x)?0:14) + (x.google?.rating||0)*3 + (x.pricing?.has_zero_brokerage?8:0) + Object.keys(x.sources||{}).length*4 - Math.min(20,(x.mumbai_context?.nearest_metro?.walk_min||20)*.3);
-        return sc(b) - sc(a);
-      });
-
-      document.getElementById("resSum").textContent = `${filtered.length.toLocaleString("en-IN")} of ${societies.length.toLocaleString("en-IN")} homes`;
-      document.getElementById("applyFiltersBtn").textContent = `Show ${filtered.length.toLocaleString("en-IN")} Homes`;
-      renderActivePills(); renderMap(); renderList();
-    }
-
-    function renderMap() {
-      mLayer.clearLayers();
-      for (const s of filtered) {
-        const col = s.pricing?.has_zero_brokerage ? "#10b981" : ((s.google?.rating||0)>=4 ? "#f59e0b" : "#0ea5e9");
-        const mk = L.circleMarker([s.lat, s.lng], { renderer:cv, radius:s.id===st.sel?9:5.5, color:s.id===st.sel?"#fff":col, fillColor:col, fillOpacity:.85, weight:s.id===st.sel?2.5:1.2 });
-        mk.bindTooltip(`<b>${esc(s.name)}</b><br/>${esc(s.locality)} • ${fmt(getP(s), st.mode==="buy")}`);
-        mk.on("click", () => openDetail(s));
-        mk.addTo(mLayer);
-      }
-    }
-
-    function renderList() {
-      const box = document.getElementById("cardList");
-      if (!filtered.length) { box.innerHTML = `<div class="empty"><p>No homes match your filters.</p><button class="btn pri" onclick="resetAll()">Reset Filters</button></div>`; return; }
-      const sl = filtered.slice(0, st.page);
-      box.innerHTML = sl.map(s => {
-        const ctx = s.mumbai_context||{}, g = s.google, fl = ctx.monsoon_flood_risk||"low";
-        const isS = st.saved.ids.includes(s.id), isC = st.cmp.includes(s.id);
-        const bits = [];
-        if (s.bhks?.length) bits.push(s.bhks.map(x => x===0 ? "1 RK" : x+" BHK").join(", "));
-        if (s.rera_carpet_sqft) bits.push(s.rera_carpet_sqft + " sq ft");
-        if (g?.rating) bits.push(`★ ${g.rating}`);
-        return `<article class="hc ${s.id===st.sel?"sel":""}" data-id="${esc(s.id)}">
-          <div class="hc-top">
-            <div style="min-width:0;"><div class="hc-name">${esc(s.name)}</div><div class="hc-loc">${esc(s.locality)} · ${esc(s.zone)}</div></div>
-            <div class="hc-price"><strong>${fmt(getP(s), st.mode==="buy")}</strong><span>${isEst(s)?"Estimated":"Active"}</span></div>
-          </div>
-          <div class="hc-specs">
-            <span>${bits.join(" · ") || "Check listing"}</span>
-            ${s.pricing?.has_zero_brokerage ? `<span class="pill-tag g">Zero Brok</span>` : ""}
-            ${fl==="high" ? `<span class="pill-tag r">Flood Risk</span>` : ""}
-          </div>
-          <div class="hc-foot">
-            <span class="hc-transit">🚇 ${ctx.nearest_metro ? `${ctx.nearest_metro.walk_min}m ${esc(ctx.nearest_metro.name)}` : esc(ctx.nearest_local?.name || "")}</span>
-            <div class="hc-acts">
-              <button class="act-btn ${isS?"sv":""}" data-a="sv">${isS?"❤️":"🤍"}</button>
-              <button class="act-btn ${isC?"cm":""}" data-a="cm">${isC?"✓ Cmp":"⚖️"}</button>
-            </div>
-          </div>
-        </article>`;
-      }).join("") + (filtered.length > st.page ? `<button class="btn" id="moreBtn" style="grid-column:1/-1;width:100%;">Show More (${filtered.length - st.page} left)</button>` : "");
-
-      box.querySelectorAll(".hc").forEach(el => {
-        el.onclick = e => {
-          const b = e.target.closest("button[data-a]"), id = el.dataset.id;
-          if (b) { e.stopPropagation(); if (b.dataset.a==="sv") toggleSave(id); else toggleCmp(id); return; }
-          const s = societies.find(x => x.id === id);
-          if (s) { map.flyTo([s.lat, s.lng], Math.max(map.getZoom(), 14), { duration:.45 }); openDetail(s); }
-        };
-      });
-      const mb = document.getElementById("moreBtn");
-      if (mb) mb.onclick = () => { st.page += 36; renderList(); };
-    }
-
-    function toggleSave(id) {
-      const i = st.saved.ids.indexOf(id);
-      if (i >= 0) st.saved.ids.splice(i, 1); else st.saved.ids.push(id);
-      syncCounts(); renderAll();
-      if (st.sel === id && document.getElementById("detailSheet").style.display === "flex") {
-        const s = societies.find(x => x.id === id); if (s) openDetail(s);
-      }
-    }
-    function toggleCmp(id) {
-      const i = st.cmp.indexOf(id);
-      if (i >= 0) st.cmp.splice(i, 1); else if (st.cmp.length < 3) st.cmp.push(id); else alert("Compare up to 3 homes at once.");
-      syncCounts(); renderList();
-    }
-
-    function openDetail(s) {
-      st.sel = s.id;
-      const p = s.pricing||{}, ctx = s.mumbai_context||{}, g = s.google||{}, pr = p.by_portal||{}, src = s.sources||{};
-      const qMaps = encodeURIComponent(`${s.name} ${s.locality} Mumbai`);
-      const isS = st.saved.ids.includes(s.id), isC = st.cmp.includes(s.id);
-      const rent = p.rent_monthly_inr?.median, buy = p.buy_inr?.median;
-      const share = `${location.origin}${location.pathname}?open=${encodeURIComponent(s.id)}`;
-      const wa = encodeURIComponent(`🏠 *${s.name}* (${s.locality}, ${s.zone})\n• Rent: ${fmt(rent,false)} | Buy: ${fmt(buy,true)}\n• Metro: ${ctx.nearest_metro?.walk_min||"?"}m to ${ctx.nearest_metro?.name||"Metro"}\n• Monsoon: ${(ctx.monsoon_flood_risk||"low").toUpperCase()}\n${g.rating?`• Google: ${g.rating}★ (${g.review_count||0} reviews)\n`:""}Link: ${share}`);
-
-      const activePortals = Object.entries(pr).filter(([_, info]) => info && (info.rent_median || info.buy_median));
-      const portalCardsHtml = activePortals.map(([k, info]) => `
-        <div class="met">
-          <small style="text-transform:uppercase;">${esc(k)} (${info.count || 1})</small>
-          <strong>${info.rent_median ? fmt(info.rent_median, false) : fmt(info.buy_median, true)}</strong>
-          ${info.rent_median && info.buy_median ? `<small>Buy: ${fmt(info.buy_median, true)}</small>` : (info.deposit_median ? `<small>Deposit: ${fmt(info.deposit_median, true)}</small>` : "")}
-        </div>`).join("");
-
-      const portalLabels = { magicbricks:"MagicBricks Listing ↗", nobroker:"NoBroker (0% Brok) ↗", "99acres":"99acres Listing ↗", housing:"Housing.com ↗" };
-      const linkBtns = [`<a target="_blank" href="${g.url || `https://www.google.com/maps/search/?api=1&query=${qMaps}`}">📍 Google Maps<span>Directions and Reviews</span></a>`];
-      Object.entries(src).forEach(([k, url]) => {
-        if (url && portalLabels[k]) linkBtns.push(`<a target="_blank" href="${esc(url)}">${portalLabels[k]}<span>Verified Direct Listing</span></a>`);
-      });
-      if (s.rera_ids?.length) {
-        linkBtns.push(`<a target="_blank" href="https://maharera.maharashtra.gov.in/projects-search-result?project_name=${encodeURIComponent(s.rera_ids[0])}">🏛️ MahaRERA (${esc(s.rera_ids[0])})<span>Official RERA Record</span></a>`);
-      }
-      linkBtns.push(`<a class="sub" target="_blank" href="https://www.google.com/search?q=${encodeURIComponent(`"${s.name}" "${s.locality}" Mumbai flat ${st.mode}`)}">🔎 Search "${esc(s.name)}" on other portals via Google ↗</a>`);
-
-      document.getElementById("dName").textContent = s.name;
-      document.getElementById("dSub").textContent = `${s.locality} · ${s.zone}${g.rating?` · ★ ${g.rating} (${g.review_count||0})`:""}`;
-      document.getElementById("dBody").innerHTML = `
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="btn ${isS?"active":""}" id="dSv">${isS?"❤️ Saved":"🤍 Save"}</button>
-          <button class="btn ${isC?"active":""}" id="dCm">${isC?"✓ Compare":"⚖️ Compare"}</button>
-          <a class="btn wa" target="_blank" href="https://wa.me/?text=${wa}">📲 WhatsApp</a>
+  <div id="clipModal" class="modal-bg">
+    <div class="mcard" style="max-width:560px;">
+      <div class="m-head">
+        <h2>Add from Housing.com or 99acres</h2>
+        <button class="btn icon" id="closeClip">✕</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px;margin-top:12px;">
+        <div class="card-box">
+          <h3>1-Click Browser Bookmarklet (Desktop)</h3>
+          <p class="help-txt">Drag this button to your bookmarks bar. Whenever you view a flat on Housing.com or 99acres, click it to save and compare it here instantly:</p>
+          <div style="margin-top:10px;"><a id="bookmarkletLink" class="btn pri" href="#">+ Clip to Mumbai Homes</a></div>
         </div>
-        ${s.coords_approx?`<div style="font-size:12px;color:var(--amb);background:var(--amb-s);padding:8px 10px;border-radius:9px;">📍 Approx. locality pin — open <b>Google Maps</b> below for exact gate directions.</div>`:""}
-        <div class="card-box"><h3>Price and Size</h3><div class="g2">
-          <div class="met"><small>Monthly Rent ${p.rent_monthly_inr?.is_estimate?"(Est.)":"(Active)"}</small><strong>${fmt(rent,false)}</strong></div>
-          <div class="met"><small>Purchase Price ${p.buy_inr?.is_estimate?"(Est.)":"(Active)"}</small><strong>${fmt(buy,true)}</strong></div>
-          <div class="met"><small>BHKs / Furnishing</small><strong>${s.bhks?.length?s.bhks.map(x=>x===0 ? "1 RK" : x+" BHK").join(", "):"—"}</strong><small>${(s.furnishing||[]).join(", ")||"Check listing"}</small></div>
-          <div class="met"><small>Carpet / Rate</small><strong>${s.rera_carpet_sqft?s.rera_carpet_sqft+" sq ft":"—"}</strong><small>${p.price_per_carpet_sqft?`₹${p.price_per_carpet_sqft.toLocaleString("en-IN")}/sq ft`:""}</small></div>
-        </div>${p.move_in_cash_nobroker?`<div style="margin-top:9px;padding:10px;border-radius:9px;background:var(--grn-s);font-size:12.5px;line-height:1.5;"><strong>Move-In Cash (Rent):</strong> Direct <b>${fmt(p.move_in_cash_nobroker,true)}</b> · Broker <b>${fmt(p.move_in_cash_broker,true)}</b></div>`:""}</div>
-        <div class="card-box"><h3>Verified Links</h3><div class="plinks">${linkBtns.join("")}</div></div>
-        ${activePortals.length ? `<div class="card-box"><h3>Active Portal Prices (${activePortals.length})</h3><div class="g2">${portalCardsHtml}</div></div>` : ""}
-        <div class="card-box"><h3>Transit and Monsoon Safety</h3><div class="g2">
-          <div class="met"><small>Nearest Metro (2026)</small><strong>${esc(ctx.nearest_metro?.name||"—")}</strong><small>${ctx.nearest_metro?.walk_min||"—"} min walk</small></div>
-          <div class="met"><small>Local Train</small><strong>${esc(ctx.nearest_local?.name||"—")}</strong><small>${ctx.nearest_local?.walk_min||"—"} min walk</small></div>
-          <div class="met"><small>Monsoon Flood Risk</small><strong style="color:${ctx.monsoon_flood_risk==="high"?"var(--red)":(ctx.monsoon_flood_risk==="moderate"?"var(--amb)":"var(--grn)")}">${(ctx.monsoon_flood_risk||"low").toUpperCase()}</strong></div>
-          <div class="met"><small>MahaRERA</small><strong>${s.rera_ids?.length?esc(s.rera_ids[0]):"Not listed"}</strong></div>
-        </div>${ctx.commute_hubs_min?`<div style="margin-top:8px;font-size:12px;color:var(--mut);"><b>Peak Commute:</b> BKC ~${ctx.commute_hubs_min.bkc}m · Lower Parel ~${ctx.commute_hubs_min.lower_parel}m · Andheri ~${ctx.commute_hubs_min.andheri_seepz}m · Powai ~${ctx.commute_hubs_min.powai}m</div>`:""}</div>
-        ${g.reviews?.length?`<div class="card-box"><h3>Google Resident Reviews</h3>${g.reviews.map(r=>`<div class="rev"><b>★ ${r.rating||""}</b> — ${esc(r.text)}</div>`).join("")}</div>`:""}
-        <div class="card-box"><h3>Your Visit / Broker Notes</h3><textarea id="dNote" rows="3" placeholder="Broker contact, floor, sunlight, water pressure...">${esc(st.saved.notes[s.id]||"")}</textarea></div>`;
+        <div class="card-box">
+          <h3>Quick Add Listing (Phone or PC)</h3>
+          <div class="f-sec" style="margin-bottom:8px;"><label>Society / Flat Name</label><input id="cName" type="text" placeholder="e.g. Oberoi Springs 2 BHK" /></div>
+          <div class="g2" style="margin-bottom:8px;">
+            <div class="f-sec"><label>Locality</label><input id="cLoc" type="text" placeholder="e.g. Andheri West" /></div>
+            <div class="f-sec"><label>Monthly Rent or Buy (₹)</label><input id="cPrice" type="number" placeholder="e.g. 85000" /></div>
+          </div>
+          <div class="g2" style="margin-bottom:8px;">
+            <div class="f-sec"><label>Portal</label><select id="cPortal"><option value="housing">Housing.com</option><option value="99acres">99acres</option><option value="other">Direct / Other</option></select></div>
+            <div class="f-sec"><label>Carpet Area (sq ft)</label><input id="cSqft" type="number" placeholder="e.g. 750" /></div>
+          </div>
+          <div class="f-sec" style="margin-bottom:10px;"><label>Listing Link (paste URL)</label><input id="cUrl" type="text" placeholder="Paste Housing.com or 99acres URL..." /></div>
+          <button id="saveClipBtn" class="btn pri" style="width:100%;">Save to Shortlist & Compare</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-      document.getElementById("detailBackdrop").style.display = "block";
-      document.getElementById("detailSheet").style.display = "flex";
-      document.getElementById("dSv").onclick = () => toggleSave(s.id);
-      document.getElementById("dCm").onclick = () => { toggleCmp(s.id); openDetail(s); };
-      document.getElementById("dNote").oninput = e => { st.saved.notes[s.id] = e.target.value; syncCounts(); };
-      renderMap();
-    }
-
-    const closeDetail = () => { document.getElementById("detailBackdrop").style.display = "none"; document.getElementById("detailSheet").style.display = "none"; };
-    const openFilters = () => { document.getElementById("filterBackdrop").style.display = "block"; document.getElementById("filterSheet").style.display = "flex"; };
-    const closeFilters = () => { document.getElementById("filterBackdrop").style.display = "none"; document.getElementById("filterSheet").style.display = "none"; };
-
-    function openCmp() {
-      const items = st.cmp.map(id => societies.find(x => x.id === id)).filter(Boolean);
-      const row = (l, fn) => `<tr><th>${l}</th>${items.map(s => `<td>${fn(s)}</td>`).join("")}</tr>`;
-      document.getElementById("cmpBody").innerHTML = !items.length ? `<div class="empty"><p>Tap <b>⚖️</b> on up to 3 homes to compare them side-by-side.</p></div>` : `<table class="ctbl">
-        <tr><th>Feature</th>${items.map(s=>`<th>${esc(s.name)}<br/><small>${esc(s.locality)}</small></th>`).join("")}</tr>
-        ${row("Rent", s=>fmt(s.pricing?.rent_monthly_inr?.median,false))} ${row("Buy", s=>fmt(s.pricing?.buy_inr?.median,true))}
-        ${row("Move-In (Direct)", s=>fmt(s.pricing?.move_in_cash_nobroker,true))} ${row("BHKs", s=>s.bhks?.length?s.bhks.map(x=>x===0 ? "1 RK" : x+" BHK").join(", "):"—")}
-        ${row("Carpet", s=>s.rera_carpet_sqft?s.rera_carpet_sqft+" sq ft":"—")} ${row("Google", s=>s.google?.rating?`★ ${s.google.rating}`:"—")}
-        ${row("Metro", s=>s.mumbai_context?.nearest_metro?`${esc(s.mumbai_context.nearest_metro.name)} (${s.mumbai_context.nearest_metro.walk_min}m)`:"—")}
-        ${row("Flood Risk", s=>(s.mumbai_context?.monsoon_flood_risk||"low").toUpperCase())}</table>`;
-      document.getElementById("cmpModal").style.display = "grid";
-    }
-
-    function resetAll() {
-      document.getElementById("searchBox").value = "";
-      ["zoneQuick","fZone","fLoc","fFurn","fTen"].forEach(id => document.getElementById(id).value = "ALL");
-      document.getElementById("fHub").value = "";
-      ["fHubMin","fMetro","fRate"].forEach(id => document.getElementById(id).value = "0");
-      document.getElementById("sortSelect").value = document.getElementById("fSort").value = "rec";
-      document.getElementById("sMin").value = 0; document.getElementById("sMax").value = SQFT_MAX; syncSqftSlider();
-      resetPriceScale();
-      st.bhks.clear(); document.querySelectorAll(".bhk-opt").forEach(b => b.classList.remove("active"));
-      st.realOnly = st.zero = st.flood = st.mapBounds = st.savedOnly = false; st.page = 36;
-      ["fRealOnly","fZero","fFlood","savedBtn","mapAreaBtn"].forEach(id => document.getElementById(id).classList.remove("active"));
-      populateLocalities(); renderAll();
-    }
-
-    function setView(v) {
-      document.body.className = "view-" + v;
-      ["viewSplit","viewList","viewMap"].forEach(id => document.getElementById(id).classList.remove("active"));
-      const btn = document.getElementById("view" + v[0].toUpperCase() + v.slice(1));
-      if (btn) btn.classList.add("active");
-      ["mTabList","mTabMap","mTabSaved","mTabCmp"].forEach(id => document.getElementById(id).classList.remove("active"));
-      if (st.savedOnly) document.getElementById("mTabSaved").classList.add("active");
-      else document.getElementById(v === "map" ? "mTabMap" : "mTabList").classList.add("active");
-      setTimeout(() => map.invalidateSize(), 90);
-    }
-
-    document.getElementById("modeRent").onclick = () => { st.mode="rent"; document.getElementById("modeRent").classList.add("active"); document.getElementById("modeBuy").classList.remove("active"); resetPriceScale(); renderAll(); };
-    document.getElementById("modeBuy").onclick = () => { st.mode="buy"; document.getElementById("modeBuy").classList.add("active"); document.getElementById("modeRent").classList.remove("active"); resetPriceScale(); renderAll(); };
-    document.getElementById("viewSplit").onclick = () => { st.savedOnly=false; document.getElementById("savedBtn").classList.remove("active"); setView("split"); renderAll(); };
-    document.getElementById("viewList").onclick = () => { st.savedOnly=false; document.getElementById("savedBtn").classList.remove("active"); setView("list"); renderAll(); };
-    document.getElementById("viewMap").onclick = () => { setView("map"); };
-    document.getElementById("mTabList").onclick = () => { st.savedOnly=false; document.getElementById("savedBtn").classList.remove("active"); setView("list"); renderAll(); };
-    document.getElementById("mTabMap").onclick = () => { setView("map"); };
-    document.getElementById("mTabSaved").onclick = () => { st.savedOnly=!st.savedOnly; document.getElementById("savedBtn").classList.toggle("active", st.savedOnly); setView("list"); renderAll(); };
-    document.getElementById("mTabCmp").onclick = openCmp;
-
-    document.getElementById("themeBtn").onclick = () => applyTheme(st.theme==="dark"?"light":"dark");
-    document.getElementById("savedBtn").onclick = e => { st.savedOnly=!st.savedOnly; e.currentTarget.classList.toggle("active", st.savedOnly); renderAll(); };
-    document.getElementById("compareBtn").onclick = openCmp;
-    document.getElementById("closeCmp").onclick = () => document.getElementById("cmpModal").style.display="none";
-    document.getElementById("clearCmp").onclick = () => { st.cmp=[]; syncCounts(); openCmp(); renderList(); };
-
-    document.getElementById("openFilterBtn").onclick = openFilters;
-    document.getElementById("mobSortBtn").onclick = openFilters;
-    document.getElementById("closeFilterBtn").onclick = closeFilters;
-    document.getElementById("filterBackdrop").onclick = closeFilters;
-    document.getElementById("applyFiltersBtn").onclick = closeFilters;
-    document.getElementById("clearFiltersBtn").onclick = resetAll;
-    document.getElementById("closeDetailBtn").onclick = closeDetail;
-    document.getElementById("detailBackdrop").onclick = closeDetail;
-
-    document.getElementById("msDark").onclick = () => setMapStyle("dark");
-    document.getElementById("msStreet").onclick = () => setMapStyle("street");
-    document.getElementById("msSat").onclick = () => setMapStyle("sat");
-    document.getElementById("togMetro").onclick = e => { st.showMetro=!st.showMetro; e.currentTarget.classList.toggle("active", st.showMetro); if(st.showMetro) metroL.addTo(map); else map.removeLayer(metroL); };
-    document.getElementById("togFlood").onclick = e => { st.showFlood=!st.showFlood; e.currentTarget.classList.toggle("active", st.showFlood); if(st.showFlood) floodL.addTo(map); else map.removeLayer(floodL); };
-    document.getElementById("mapAreaBtn").onclick = e => { st.mapBounds=!st.mapBounds; e.currentTarget.classList.toggle("active", st.mapBounds); st.page=36; renderAll(); };
-
-    document.getElementById("zoneQuick").addEventListener("change", e => { document.getElementById("fZone").value = e.target.value; populateLocalities(); st.page=36; renderAll(); });
-    document.getElementById("fZone").addEventListener("change", e => { document.getElementById("zoneQuick").value = e.target.value; populateLocalities(); st.page=36; renderAll(); });
-    document.getElementById("sortSelect").addEventListener("change", e => { document.getElementById("fSort").value = e.target.value; st.page=36; renderAll(); });
-    document.getElementById("fSort").addEventListener("change", e => { document.getElementById("sortSelect").value = e.target.value; st.page=36; renderAll(); });
-
-    ["dpMin","dpMax"].forEach(id => document.getElementById(id).addEventListener("input", () => { syncPriceSliders(Number(document.getElementById("dpMin").value), Number(document.getElementById("dpMax").value)); st.page=36; scheduleRender(); }));
-    ["mpMin","mpMax"].forEach(id => document.getElementById(id).addEventListener("input", () => { syncPriceSliders(Number(document.getElementById("mpMin").value), Number(document.getElementById("mpMax").value)); st.page=36; scheduleRender(); }));
-    ["sMin","sMax"].forEach(id => document.getElementById(id).addEventListener("input", () => { syncSqftSlider(); st.page=36; scheduleRender(); }));
-
-    document.querySelectorAll(".bhk-opt").forEach(btn => {
-      btn.onclick = () => { const v = Number(btn.dataset.bhk); if (st.bhks.has(v)) st.bhks.delete(v); else st.bhks.add(v); btn.classList.toggle("active", st.bhks.has(v)); st.page=36; renderAll(); };
-    });
-    [["fRealOnly","realOnly"],["fZero","zero"],["fFlood","flood"]].forEach(([id,k]) => {
-      document.getElementById(id).onclick = e => { st[k]=!st[k]; e.currentTarget.classList.toggle("active", st[k]); st.page=36; renderAll(); };
-    });
-    ["searchBox","fLoc","fMetro","fHub","fHubMin","fFurn","fTen","fRate"].forEach(id => {
-      document.getElementById(id).addEventListener("input", () => { st.page=36; renderAll(); });
-    });
-    map.on("moveend", () => { if (st.mapBounds) renderAll(); });
-
-    document.getElementById("exportBtn").onclick = () => {
-      const rows = [["Society","Zone","Locality","BHKs","Carpet","Rent_INR","Buy_INR","Google","Metro","Walk_Min","Flood"]];
-      filtered.forEach(s => rows.push([`"${(s.name||"").replace(/"/g,'""')}"`,`"${s.zone||""}"`,`"${s.locality||""}"`,`"${(s.bhks||[]).map(x=>x===0?"1 RK":x+" BHK").join('/')}"`,s.rera_carpet_sqft||"",s.pricing?.rent_monthly_inr?.median||"",s.pricing?.buy_inr?.median||"",s.google?.rating||"",`"${s.mumbai_context?.nearest_metro?.name||""}"`,s.mumbai_context?.nearest_metro?.walk_min||"",s.mumbai_context?.monsoon_flood_risk||""]));
-      const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([rows.map(r=>r.join(",")).join("\n")],{type:"text/csv"})); a.download="mumbai-homes.csv"; a.click();
-    };
-    document.addEventListener("keydown", e => {
-      if (e.key==="Escape") { closeDetail(); closeFilters(); document.getElementById("cmpModal").style.display="none"; }
-      if (e.key==="/" && !["INPUT","TEXTAREA","SELECT"].includes(document.activeElement.tagName)) { e.preventDefault(); document.getElementById("searchBox").focus(); }
-    });
-
-    applyTheme(st.theme); resetPriceScale(); syncSqftSlider(); syncCounts();
-    if (window.innerWidth <= 1024) setView("list");
-    fetch("./public/data/mumbai-index.json", { cache: "no-store" }).then(r => r.json()).then(d => {
-      societies = d.societies || [];
-      populateLocalities();
-      document.getElementById("freshBadge").textContent = `${societies.length.toLocaleString("en-IN")} homes · ${d.generated_at}`;
-      renderAll();
-      const oid = new URLSearchParams(location.search).get("open");
-      if (oid) { const t = societies.find(s => s.id === oid); if (t) { map.setView([t.lat, t.lng], 15); openDetail(t); } }
-    }).catch(err => { document.getElementById("freshBadge").textContent = "Load failed: " + (err?.message || "retry"); });
-  </script>
+  <div id="toast" class="toast"></div>
+  <script src="./app.js"></script>
 </body>
 </html>

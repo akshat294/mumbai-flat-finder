@@ -2,10 +2,11 @@ from __future__ import annotations
 import argparse, json, signal, sys
 from pathlib import Path
 from pipeline.build_city import build_mumbai
+from pipeline.connectors.reddit import RedditRentalsConnector
 from pipeline.connectors.portals import NoBrokerConnector, MagicBricksConnector, NinetyNineAcresConnector
 from pipeline.core.checkpoint import CheckpointDB
 
-CONNECTORS = {"magicbricks": MagicBricksConnector, "nobroker": NoBrokerConnector, "99acres": NinetyNineAcresConnector}
+CONNECTORS = {"magicbricks": MagicBricksConnector, "nobroker": NoBrokerConnector, "99acres": NinetyNineAcresConnector, "reddit": RedditRentalsConnector}
 
 def _sig(signum, frame):
     print(f"\n[run_pipeline] Caught signal {signum} - SQLite WAL safe. Exiting."); sys.exit(0)

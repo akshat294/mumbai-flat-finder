@@ -24,7 +24,7 @@ jobs:
           PYTHONUNBUFFERED: "1"
           GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLEPLACESAPI }}
           PROXY_URL: ${{ secrets.PROXY_URL }}
-        run: python -u run_pipeline.py --all-mmr --sources magicbricks,nobroker,99acres --limit 90 --fresh-hours 1 --max-google-calls 25
+        run: python -u run_pipeline.py --all-mmr --sources magicbricks,nobroker,reddit,99acres --limit 90 --fresh-hours 1 --max-google-calls 25
       - run: python -u pipeline/verify_build.py
       - name: Deploy fresh site to Cloudflare Pages
         env:
@@ -35,5 +35,5 @@ jobs:
         run: |
           git config user.name "mumbai-flat-finder-bot"
           git config user.email "bot@users.noreply.github.com"
-          git add data/google_places_cache.json data/osm_geo_cache.json web/public/data/mumbai-index.json web/public/data/mumbai-societies.csv
+          git add data/google_places_cache.json data/osm_geo_cache.json data/osm_civic_cache.json web/public/data/mumbai-index.json web/public/data/mumbai-societies.csv
           git diff --staged --quiet || (git commit -m "chore: daily Mumbai MMR sync" && git pull --rebase && git push)
