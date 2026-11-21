@@ -21,7 +21,7 @@ COMM_RE = re.compile(
 )
 
 def _http() -> httpx.Client:
-    return httpx.Client(headers=HDRS, timeout=25, follow_redirects=True, proxy=os.getenv("PROXY_URL") or None)
+    return httpx.Client(headers=HDRS, timeout=10, follow_redirects=True, proxy=os.getenv("PROXY_URL") or None)
 
 def parse_inr(text: Any) -> Optional[int]:
     if not text: return None
@@ -102,7 +102,7 @@ class MagicBricksConnector(BaseConnector):
                 return job, info, [], str(exc)[:300]
 
         saved = 0
-        with ThreadPoolExecutor(max_workers=4) as ex:
+        with ThreadPoolExecutor(max_workers=8) as ex:
             for fut in as_completed([ex.submit(_worker, j) for j in pending]):
                 job, info, items, err = fut.result()
                 loc = job["locality"]
@@ -213,7 +213,7 @@ class NoBrokerConnector(BaseConnector):
                 return job, info, [], str(exc)[:300]
 
         saved = 0
-        with ThreadPoolExecutor(max_workers=4) as ex:
+        with ThreadPoolExecutor(max_workers=8) as ex:
             for fut in as_completed([ex.submit(_worker, j) for j in pending]):
                 job, info, items, err = fut.result()
                 loc = job["locality"]
@@ -271,24 +271,33 @@ class NoBrokerConnector(BaseConnector):
             if len(items) >= limit: break
         return items
 
-
 class NinetyNineAcresConnector(BaseConnector):
     source_name = "99acres"
 
-    def run_localities(self, loc_meta: List[Dict[str, str]], limit_per_locality: int = 40, fresh_hours: float = 20.0) -> int:
+    def run_localities(self, loc_meta: List[Dict[str, str]], limit_per_locality: int = 30, fresh_hours: float = 20.0) -> int:
+        import time
         try:
             from curl_cffi import requests as c_req
         except ImportError:
-            print("[99acres] curl_cffi not installed - skipping.")
+            print("[99acres] curl_cffi not installed - skipping.", flush=True)
             return 0
         meta_map = {m["locality"]: m for m in loc_meta}
         self.db.register_jobs(self.source_name, list(meta_map.keys()))
         pending = [j for j in self.db.next_pending_jobs(self.source_name) if j["locality"] in meta_map]
-        if not pending: return 0
+        if not pending:
+            return 0
 
         PROTO = "https" + "://"
-        saved = 0
+        saved, consec_fail = 0, 0
+        deadline = time.monotonic() + 90.0
+
         for job in pending:
+            if time.monotonic() > deadline:
+                print(f"[99acres] Reached 90s cap after {saved} records - moving on.", flush=True)
+                break
+            if consec_fail >= 5:
+                print("[99acres] 5 consecutive blocks on cloud IP - skipping rest so deploy finishes fast.", flush=True)
+                break
             loc, info = job["locality"], meta_map[job["locality"]]
             self.db.mark_job(job["job_key"], "in_progress")
             try:
@@ -296,30 +305,30 @@ class NinetyNineAcresConnector(BaseConnector):
                 if not cached:
                     slug = re.sub(r"[^a-z0-9]+", "-", loc.lower()).strip("-")
                     city_slug = info["city"].lower().replace(" ", "-")
-                    candidates = [
-                        f"{PROTO}www.99acres.com/property-in-{slug}-mumbai-south-west-ffid",
-                        f"{PROTO}www.99acres.com/property-in-{slug}-mumbai-andheri-dahisar-ffid",
-                        f"{PROTO}www.99acres.com/property-in-{slug}-central-mumbai-suburbs-ffid",
-                        f"{PROTO}www.99acres.com/property-in-{slug}-{city_slug}-ffid",
-                    ] if city_slug == "mumbai" else [f"{PROTO}www.99acres.com/property-in-{slug}-{city_slug}-ffid"]
-                    cached = []
-                    for u in candidates:
-                        resp = c_req.get(u, impersonate="chrome", timeout=18, allow_redirects=True)
-                        if resp.status_code == 200 and len(resp.text) > 80000:
-                            cached = self._parse_html(resp.text, loc, str(resp.url), limit_per_locality)
-                            if cached:
-                                break
+                    u = (
+                        f"{PROTO}www.99acres.com/property-in-{slug}-mumbai-south-west-ffid"
+                        if city_slug == "mumbai"
+                        else f"{PROTO}www.99acres.com/property-in-{slug}-{city_slug}-ffid"
+                    )
+                    resp = c_req.get(u, impersonate="chrome", timeout=7, allow_redirects=True)
+                    cached = self._parse_html(resp.text, loc, str(resp.url), limit_per_locality) if (resp.status_code == 200 and len(resp.text) > 80000) else []
                     if cached:
                         self.write_cache(f"99c:{loc}", cached)
-                for it in cached:
-                    self.db.upsert_raw_record(
-                        self.source_name, it["id"], it["name"], it,
-                        locality=loc, zone=info["zone"], rera_id=it.get("rera_id"), source_url=it.get("url"),
-                    )
-                    saved += 1
-                self.db.mark_job(job["job_key"], "done" if cached else "failed", None if cached else "0 records")
+                if cached:
+                    consec_fail = 0
+                    for it in cached:
+                        self.db.upsert_raw_record(
+                            self.source_name, it["id"], it["name"], it,
+                            locality=loc, zone=info["zone"], rera_id=it.get("rera_id"), source_url=it.get("url"),
+                        )
+                        saved += 1
+                    self.db.mark_job(job["job_key"], "done", None)
+                else:
+                    consec_fail += 1
+                    self.db.mark_job(job["job_key"], "failed", "0 records or blocked")
             except Exception as exc:
-                self.db.mark_job(job["job_key"], "failed", str(exc)[:300])
+                consec_fail += 1
+                self.db.mark_job(job["job_key"], "failed", str(exc)[:200])
         return saved
 
     def _parse_html(self, html: str, locality: str, url: str, limit: int) -> List[Dict[str, Any]]:

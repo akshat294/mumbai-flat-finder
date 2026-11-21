@@ -11,6 +11,7 @@ def _sig(signum, frame):
     print(f"\n[run_pipeline] Caught signal {signum} - SQLite WAL safe. Exiting."); sys.exit(0)
 
 def main():
+    sys.stdout.reconfigure(line_buffering=True)
     signal.signal(signal.SIGINT, _sig); signal.signal(signal.SIGTERM, _sig)
     ap = argparse.ArgumentParser()
     ap.add_argument("--all-mmr", action="store_true")

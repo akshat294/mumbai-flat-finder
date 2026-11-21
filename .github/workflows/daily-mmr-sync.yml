@@ -1,7 +1,7 @@
 name: Daily Mumbai MMR Sync & Deploy
 on:
   schedule:
-    - cron: '30 21 * * *' # 3:00 AM IST daily
+    - cron: '30 21 * * *'
   workflow_dispatch:
 concurrency:
   group: mumbai-mmr-daily-sync
@@ -11,29 +11,29 @@ permissions:
 jobs:
   crawl-and-deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: '3.12', cache: 'pip' }
       - uses: actions/setup-node@v4
-        with: { node-version: '20' }
+        with: { node-version: '22' }
       - run: pip install -r requirements.txt
       - name: Crawl all 53 Mumbai, Thane & Navi Mumbai localities
         env:
+          PYTHONUNBUFFERED: "1"
           GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLEPLACESAPI }}
           PROXY_URL: ${{ secrets.PROXY_URL }}
-        run: python run_pipeline.py --all-mmr --sources magicbricks,nobroker,99acres --limit 150 --fresh-hours 1 --max-google-calls 25
-      - run: python pipeline/verify_build.py
+        run: python -u run_pipeline.py --all-mmr --sources magicbricks,nobroker,99acres --limit 90 --fresh-hours 1 --max-google-calls 25
+      - run: python -u pipeline/verify_build.py
       - name: Deploy fresh site to Cloudflare Pages
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: npx --yes wrangler@latest pages deploy web --project-name=mumbai-flat-finder --branch=production
-      - name: Save updated Google cache & data
+      - name: Save updated caches & data
         run: |
           git config user.name "mumbai-flat-finder-bot"
           git config user.email "bot@users.noreply.github.com"
           git add data/google_places_cache.json data/osm_geo_cache.json web/public/data/mumbai-index.json web/public/data/mumbai-societies.csv
-          git diff --staged --quiet || git commit -m "chore: daily Mumbai MMR sync"
-          git push
+          git diff --staged --quiet || (git commit -m "chore: daily Mumbai MMR sync" && git pull --rebase && git push)
