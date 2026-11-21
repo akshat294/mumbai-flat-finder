@@ -47,3 +47,7 @@ v8_html_css.py
 v8_app_js.py
 
 fix_map_tiles.py
+
+fix_v8_1_backend.py
+fix_v8_1_ui.py
+probe_sources.py

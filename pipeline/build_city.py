@@ -113,13 +113,27 @@ def build_mumbai(db_path: str | Path = "pipeline/staging/mumbai_raw.db", max_goo
         pricing = summarize_portal_prices(can["raw_by_source"], carpet_sqft=med_carpet)
         if not pricing["rent_monthly_inr"]["median"] and not pricing["buy_inr"]["median"]: continue
 
-        clean_sources = {}
-        for k, u in (can.get("sources") or {}).items():
-            if not u: continue
-            if k == "magicbricks" and ("propertyDetails" in u or "-pdpid-" in u or "project-" in u): clean_sources[k] = u
-            elif k == "nobroker" and "/property/" in u: clean_sources[k] = u
-            elif k == "99acres" and ("-spid-" in u or "-npxid-" in u or "99acres.com/" in u): clean_sources[k] = u
-            elif k in ("reddit", "community", "squareyards", "commonfloor", "makaan", "nobrokerage") and u.startswith("http"): clean_sources[k] = u
+        def _valid_src_url(k: str, u: str) -> bool:
+            if not u or not str(u).startswith("http"): return False
+            if k == "magicbricks": return ("propertyDetails" in u or "-pdpid-" in u or "project-" in u)
+            if k == "nobroker": return "/property/" in u
+            if k == "99acres": return ("-spid-" in u or "-npxid-" in u or "99acres.com/" in u)
+            return k in ("reddit", "community", "squareyards", "commonfloor", "makaan", "nobrokerage")
+
+        sources_rent, sources_buy, clean_sources = {}, {}, {}
+        for src_k, grp in can["raw_by_source"].items():
+            for r in grp:
+                u = r.get("url")
+                if not _valid_src_url(src_k, u):
+                    continue
+                low_u = u.lower()
+                is_rent_u = bool(r.get("rent_inr")) or ("for-rent" in low_u) or ("/rent" in low_u)
+                is_buy_u = bool(r.get("buy_inr")) or ("for-sale" in low_u) or ("/sale" in low_u)
+                if is_rent_u and ("for-sale" not in low_u):
+                    sources_rent.setdefault(src_k, u)
+                if is_buy_u and ("for-rent" not in low_u):
+                    sources_buy.setdefault(src_k, u)
+                clean_sources.setdefault(src_k, u)
 
         gblock = None
         if gplace:
@@ -135,7 +149,7 @@ def build_mumbai(db_path: str | Path = "pipeline/staging/mumbai_raw.db", max_goo
             "rera_ids": can["rera_ids"], "rera_carpet_sqft": int(med_carpet) if med_carpet else None,
             "pricing": pricing, "mumbai_context": enrich_mumbai(lat, lng, transit),
             "civic": enrich_civic(lat, lng, civic_pois),
-            "google": gblock, "sources": clean_sources,
+            "google": gblock, "sources": clean_sources, "sources_rent": sources_rent, "sources_buy": sources_buy,
         })
 
     great_deals = _attach_fair_price_deals(compiled)

@@ -32,7 +32,7 @@
 
   const st = {
     mode: "rent", theme: localStorage.getItem("mhf_t_v8") || "light", mapStyle: "street",
-    bhks: new Set(), realOnly: false, zero: false, dealOnly: false, flood: false, mapBounds: false, savedOnly: false,
+    bhks: new Set(), realOnly: true, zero: false, dealOnly: false, flood: false, mapBounds: false, savedOnly: false,
     mission: null, showMetro: true, showFlood: false, page: 36, sel: null, cmp: [],
     pLo: 0, pHi: RENT_STOPS[RENT_STOPS.length - 1], sLo: 0, sHi: SQFT_MAX,
     saved: savedInit, clipped: readJSON("mhf_clipped_v7", [])
@@ -151,6 +151,22 @@
 
   function rebuildSocietyList() { societies = [...st.clipped, ...baseSocieties]; }
 
+  function populateSources() {
+    const counts = {};
+    for (const s of societies) {
+      for (const k of getSources(s)) {
+        const key = k === "reddit" ? "community" : k;
+        counts[key] = (counts[key] || 0) + 1;
+      }
+    }
+    const sel = $("fSource"), prev = sel.value;
+    const ordered = Object.entries(counts).filter(([_, n]) => n > 0).sort((a, b) => b[1] - a[1]);
+    sel.innerHTML = '<option value="ALL">All Available Sources</option>' + ordered.map(([k, n]) => `<option value="${esc(k)}">${esc(PORTAL_NAMES[k] || k)} (${n.toLocaleString("en-IN")})</option>`).join("");
+    if (ordered.some(([k]) => k === prev)) sel.value = prev;
+    const commChip = document.querySelector('.m-chip[data-mission="community"]');
+    if (commChip) commChip.style.display = (counts.community || 0) > 0 ? "" : "none";
+  }
+
   function populateLocalities() {
     const z = $("fZone").value, prev = $("fLoc").value;
     const locs = [...new Set(societies.filter(s => z === "ALL" || s.zone === z).map(s => s.locality).filter(Boolean))].sort();
@@ -259,7 +275,6 @@
     if (st.bhks.size) tags.push([...st.bhks].sort((a, b) => a - b).map(x => x === 4 ? "4+ BHK" : fmtBhk(x)).join(", "));
     if (st.pLo > 0 || st.pHi < ceil) tags.push(`${fmtS(st.pLo, st.mode === "buy", ceil)}–${fmtS(st.pHi, st.mode === "buy", ceil)}`);
     if (st.sLo > 0 || st.sHi < SQFT_MAX) tags.push(`${st.sLo}–${st.sHi} sq ft`);
-    if (st.realOnly) tags.push("Active Only");
     if (st.zero) tags.push("Zero Brokerage");
     if (st.dealOnly) tags.push("Great Value");
     if (st.flood) tags.push("Monsoon Safe");
@@ -439,7 +454,9 @@
 
   function openDetail(s) {
     st.sel = s.id;
-    const p = s.pricing || {}, ctx = s.mumbai_context || {}, g = s.google || {}, pr = p.by_portal || {}, src = s.sources || {}, civ = s.civic || {};
+    const p = s.pricing || {}, ctx = s.mumbai_context || {}, g = s.google || {}, pr = p.by_portal || {}, civ = s.civic || {};
+    const modeSrc = st.mode === "rent" ? (s.sources_rent || {}) : (s.sources_buy || {});
+    const src = Object.keys(modeSrc).length ? modeSrc : (s.sources || {});
     const deal = getDeal(s);
     const qMaps = encodeURIComponent(`${s.name} ${s.locality} Mumbai`);
     const isS = st.saved.ids.includes(s.id), isC = st.cmp.includes(s.id);
@@ -447,10 +464,10 @@
     const share = `${location.origin}${location.pathname}?open=${encodeURIComponent(s.id)}`;
     const wa = encodeURIComponent(`${s.name} (${s.locality}, ${s.zone})\nRent: ${fmt(rent, false)} | Buy: ${fmt(buy, true)}\n${deal ? `Market Verdict: ${deal.label} (${deal.pct > 0 ? "+" : ""}${deal.pct}% vs area median)\n` : ""}Metro: ${ctx.nearest_metro?.walk_min || "?"}m to ${ctx.nearest_metro?.name || "Metro"}\nMonsoon Risk: ${(ctx.monsoon_flood_risk || "low").toUpperCase()}\n${share}`);
 
-    const activePortals = Object.entries(pr).filter(([_, info]) => info && (info.rent_median || info.buy_median));
+    const activePortals = Object.entries(pr).filter(([_, info]) => info && (st.mode === "rent" ? info.rent_median : info.buy_median));
     const linkBtns = [];
     Object.entries(src).forEach(([k, url]) => {
-      if (url) linkBtns.push(`<a class="primary-link" target="_blank" href="${esc(url)}">${esc(PORTAL_NAMES[k] || k)} ↗<span>Verified Direct Link</span></a>`);
+      if (url) linkBtns.push(`<a class="primary-link" target="_blank" href="${esc(url)}">${esc(PORTAL_NAMES[k] || k)} ↗<span>Verified ${st.mode === "rent" ? "Rent" : "Sale"} Listing</span></a>`);
     });
     linkBtns.push(`<a target="_blank" href="${g.url || (H + "www.google.com/maps/search/?api=1&query=" + qMaps)}">Google Maps ↗<span>Gate Directions and Reviews</span></a>`);
     if (s.rera_ids?.length) {
@@ -498,7 +515,7 @@
           <a target="_blank" href="${fbSearch}">Search Flats & Flatmates Mumbai (${esc(s.locality)}) ↗</a>
         </div>
       </div>
-      ${activePortals.length ? `<div class="card-box"><h3>Active Portal Breakdown (${activePortals.length})</h3><div class="g2">${activePortals.map(([k, info]) => `<div class="met"><small>${esc(PORTAL_NAMES[k] || k)} (${info.count || 1})</small><strong>${info.rent_median ? fmt(info.rent_median, false) : fmt(info.buy_median, true)}</strong>${info.deposit_median ? `<small>Deposit: ${fmt(info.deposit_median, true)}</small>` : ""}</div>`).join("")}</div></div>` : ""}
+      ${activePortals.length ? `<div class="card-box"><h3>Active Portal Breakdown (${activePortals.length})</h3><div class="g2">${activePortals.map(([k, info]) => `<div class="met"><small>${esc(PORTAL_NAMES[k] || k)} (${info.count || 1})</small><strong>${st.mode === "rent" ? fmt(info.rent_median, false) : fmt(info.buy_median, true)}</strong>${info.deposit_median ? `<small>Deposit: ${fmt(info.deposit_median, true)}</small>` : ""}</div>`).join("")}</div></div>` : ""}
       <div class="card-box">
         <h3>Transit, Commute and Monsoon</h3>
         <div class="g2">
@@ -641,9 +658,10 @@
     $("sMin").value = 0; $("sMax").value = SQFT_MAX; syncSqftSlider();
     resetPriceScale();
     st.bhks.clear(); document.querySelectorAll(".bhk-opt").forEach(b => b.classList.remove("active"));
-    st.realOnly = st.zero = st.dealOnly = st.flood = st.mapBounds = st.savedOnly = false;
+    st.realOnly = true; st.zero = st.dealOnly = st.flood = st.mapBounds = st.savedOnly = false;
     st.page = 36;
-    ["fRealOnly","fZero","fDealOnly","fFlood","savedBtn","mapAreaBtn"].forEach(id => $(id).classList.remove("active"));
+    ["fZero","fDealOnly","fFlood","savedBtn","mapAreaBtn"].forEach(id => $(id).classList.remove("active"));
+    $("fRealOnly").classList.add("active");
     populateLocalities();
     if (!silent) renderAll();
   }
@@ -752,6 +770,7 @@
   });
 
   applyTheme(st.theme);
+  $("fRealOnly").classList.add("active");
   resetPriceScale();
   syncSqftSlider();
   syncCounts();
@@ -763,6 +782,7 @@
       baseSocieties = d.societies || [];
       rebuildSocietyList();
       populateLocalities();
+      populateSources();
       $("freshBadge").textContent = `${baseSocieties.length.toLocaleString("en-IN")} homes · ${d.generated_at}`;
       renderAll();
 

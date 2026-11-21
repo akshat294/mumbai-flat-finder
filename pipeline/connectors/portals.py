@@ -305,11 +305,18 @@ class NinetyNineAcresConnector(BaseConnector):
                 if not cached:
                     slug = re.sub(r"[^a-z0-9]+", "-", loc.lower()).strip("-")
                     city_slug = info["city"].lower().replace(" ", "-")
-                    u = (
-                        f"{PROTO}www.99acres.com/property-in-{slug}-mumbai-south-west-ffid"
-                        if city_slug == "mumbai"
-                        else f"{PROTO}www.99acres.com/property-in-{slug}-{city_slug}-ffid"
-                    )
+                    zmap = {
+                        "South Mumbai": "south-mumbai",
+                        "Bandra-Santacruz": "mumbai-south-west",
+                        "Andheri-Juhu": "mumbai-andheri-dahisar",
+                        "Western Suburbs North": "mumbai-andheri-dahisar",
+                        "Powai-Central": "central-mumbai-suburbs",
+                        "Chembur-Wadala": "mumbai-harbour",
+                        "Thane": "thane",
+                        "Navi Mumbai": "navi-mumbai",
+                    }
+                    reg = zmap.get(info.get("zone", ""), city_slug)
+                    u = f"{PROTO}www.99acres.com/property-in-{slug}-{reg}-ffid"
                     resp = c_req.get(u, impersonate="chrome", timeout=7, allow_redirects=True)
                     cached = self._parse_html(resp.text, loc, str(resp.url), limit_per_locality) if (resp.status_code == 200 and len(resp.text) > 80000) else []
                     if cached:
