@@ -83,6 +83,7 @@
   }
 
   function passesV15SocietyFilter(s) {
+    if (Array.isArray(st.multiLocs) && st.multiLocs.length && !st.multiLocs.includes(s.locality)) return false;
     if (!matchingUnits(s).length) return false;
     const ftags = s.features?.tags || [];
     if (st.seaview && !ftags.includes("sea_view")) return false;
@@ -265,9 +266,9 @@
       const pt = map.latLngToContainerPoint([s.lat, s.lng]);
       const key = `${Math.floor(pt.x / cellW)}:${Math.floor(pt.y / cellH)}`;
       let b = buckets.get(key);
-      if (!b) { b = { items: [], lat: 0, lng: 0, minP: Infinity }; buckets.set(key, b); }
+      if (!b) { b = { items: [], lat: 0, lng: 0, minP: Infinity, maxP: 0 }; buckets.set(key, b); }
       b.items.push(s); b.lat += s.lat; b.lng += s.lng;
-      const pv = getP(s); if (pv > 0 && pv < b.minP) b.minP = pv;
+      const pv = getP(s); if (pv > 0) { if (pv < b.minP) b.minP = pv; if (pv > b.maxP) b.maxP = pv; }
     }
 
     for (const b of buckets.values()) {
@@ -275,7 +276,9 @@
       occupied.push(map.latLngToContainerPoint([cla, cln]));
       if (b.items.length === 1) { addPricePill(b.items[0]); }
       else {
-        const label = b.minP < Infinity ? `${fmtPill(b.minP, st.mode === "buy")}+` : "Homes";
+        const loS = b.minP < Infinity ? fmtPill(b.minP, st.mode === "buy") : "";
+        const hiS = b.maxP > 0 ? fmtPill(b.maxP, st.mode === "buy").replace(/^₹/, "") : "";
+        const label = !loS ? "Homes" : (hiS && b.maxP > b.minP * 1.15 ? `${loS}–${hiS}` : loS);
         const ic = L.divIcon({ className: "cluster-wrap", html: `<div class="cluster-pill"><span>${label}</span><span class="cluster-cnt">· ${b.items.length}</span></div>`, iconSize: [0, 0] });
         L.marker([cla, cln], { icon: ic }).on("click", () => {
           const lats = b.items.map(x => x.lat), lngs = b.items.map(x => x.lng);
@@ -963,7 +966,10 @@
     })
     .catch(err => { $("freshBadge").textContent = "Load error: " + (err?.message || "retry"); });
 
-  /* === V15.5 INTERACTIVE CONTROLS === */
+  
+
+
+  /* === V15.6 INTERACTIVE CONTROLS === */
   if (st.seaview === undefined) st.seaview = false;
   if (st.balcony === undefined) st.balcony = false;
   if (st.terrace === undefined) st.terrace = false;
@@ -972,8 +978,11 @@
   if (!st.view) st.view = "split";
   if (!st.hub) st.hub = "ALL";
   if (!st.hubMin) st.hubMin = 45;
+  if (!Array.isArray(st.multiLocs)) st.multiLocs = [];
 
+  const MAX_MULTI_LOCS = 5;
   const V15_CHIP_KEYS = new Set(["seaview", "balcony", "terrace", "drop"]);
+
   document.querySelectorAll(".chip[data-q]").forEach(btn => {
     const k = btn.dataset.q;
     if (!V15_CHIP_KEYS.has(k)) return;
@@ -1020,19 +1029,221 @@
     if ($("fHubMin")) $("fHubMin").addEventListener("input", onHubChange);
   }
 
+  // Smart Search Autocomplete + Multi-Locality Picker (pick up to 5 localities at once!)
+  const sInput = $("searchInput");
+  let ssBox = $("searchSuggest");
+  if (!ssBox && document.body && document.body.appendChild) {
+    ssBox = document.createElement("div");
+    ssBox.id = "searchSuggest";
+    document.body.appendChild(ssBox);
+  }
+  let locBar = $("locChipsBar");
+  const cardListEl = $("cardList");
+  if (!locBar && cardListEl && cardListEl.parentNode && cardListEl.parentNode.insertBefore) {
+    locBar = document.createElement("div");
+    locBar.id = "locChipsBar";
+    cardListEl.parentNode.insertBefore(locBar, cardListEl);
+  }
+
+  function fitToSelectedLocalities() {
+    if (!st.multiLocs.length || typeof L === "undefined") return;
+    const pts = societies.filter(s => st.multiLocs.includes(s.locality) && s.lat && s.lng).map(s => [s.lat, s.lng]);
+    if (pts.length >= 2 && typeof map.fitBounds === "function") {
+      try { map.fitBounds(L.latLngBounds(pts).pad(0.18), { maxZoom: 14, animate: true }); } catch {}
+    } else if (pts.length === 1) {
+      map.flyTo(pts[0], 14, { duration: 0.5 });
+    }
+  }
+
+  function renderLocChips() {
+    if (!locBar) return;
+    if (!st.multiLocs.length) { locBar.style.display = "none"; locBar.innerHTML = ""; return; }
+    locBar.style.display = "flex";
+    const rem = MAX_MULTI_LOCS - st.multiLocs.length;
+    locBar.innerHTML = st.multiLocs.map(loc =>
+      `<span class="loc-chip">${esc(loc)}<button type="button" data-rmloc="${esc(loc)}" aria-label="Remove ${esc(loc)}">×</button></span>`
+    ).join("") +
+      (rem > 0 ? `<span class="loc-chip-hint">+ Add up to ${rem} more in search</span>` : `<span class="loc-chip-hint">Max ${MAX_MULTI_LOCS} localities</span>`) +
+      `<button type="button" class="loc-chip-clr" id="clearLocChips">Clear</button>`;
+    locBar.querySelectorAll("[data-rmloc]").forEach(b => {
+      b.onclick = () => {
+        st.multiLocs = st.multiLocs.filter(x => x !== b.dataset.rmloc);
+        renderLocChips(); st.page = 36; renderAll();
+      };
+    });
+    const clr = $("clearLocChips");
+    if (clr) clr.onclick = () => { st.multiLocs = []; renderLocChips(); st.page = 36; renderAll(); };
+  }
+
+  function addMultiLocality(loc) {
+    if (!loc) return;
+    if (st.multiLocs.includes(loc)) {
+      st.multiLocs = st.multiLocs.filter(x => x !== loc);
+    } else {
+      if (st.multiLocs.length >= MAX_MULTI_LOCS) st.multiLocs.shift();
+      st.multiLocs.push(loc);
+    }
+    if ($("fZone") && $("fZone").value !== "ALL") $("fZone").value = "ALL";
+    if ($("fLoc") && $("fLoc").value !== "ALL") $("fLoc").value = "ALL";
+    if (st.zone && st.zone !== "ALL") st.zone = "ALL";
+    document.querySelectorAll(".zone-pill, [data-zone]").forEach(z => z.classList.toggle("active", z.dataset.zone === "ALL"));
+    if (sInput) sInput.value = "";
+    if ("q" in st) st.q = "";
+    renderLocChips();
+    st.page = 36;
+    renderAll();
+    fitToSelectedLocalities();
+  }
+
+  let ssHi = -1;
+  function positionSuggest() {
+    if (!ssBox || !sInput || !sInput.getBoundingClientRect) return;
+    const r = sInput.getBoundingClientRect();
+    ssBox.style.left = Math.max(12, r.left - 18) + "px";
+    ssBox.style.top  = (r.bottom + 8) + "px";
+    ssBox.style.width = Math.max(340, Math.min(480, r.width + 80)) + "px";
+  }
+
+  function buildSuggestions(rawQ) {
+    if (!ssBox) return;
+    const q = (rawQ || "").trim().toLowerCase();
+    const isBuy = st.mode === "buy";
+
+    const locMap = new Map();
+    for (const s of societies) {
+      if (!s.locality) continue;
+      const uLen = ((isBuy ? s.units_buy : s.units_rent) || []).length;
+      if (!uLen) continue;
+      let g = locMap.get(s.locality);
+      if (!g) { g = { loc: s.locality, zone: s.zone || "", flats: 0, socs: 0 }; locMap.set(s.locality, g); }
+      g.flats += uLen; g.socs += 1;
+    }
+
+    let locList = [...locMap.values()];
+    if (q) locList = locList.filter(x => x.loc.toLowerCase().includes(q) || x.zone.toLowerCase().includes(q));
+    locList.sort((a, b) => {
+      const aPre = q && a.loc.toLowerCase().startsWith(q) ? 1 : 0;
+      const bPre = q && b.loc.toLowerCase().startsWith(q) ? 1 : 0;
+      return (bPre - aPre) || (b.flats - a.flats);
+    });
+    locList = locList.slice(0, q ? 6 : 7);
+
+    let socList = [];
+    if (q.length >= 2) {
+      socList = societies.filter(s => {
+        const uLen = ((isBuy ? s.units_buy : s.units_rent) || []).length;
+        return uLen > 0 && (s.name || "").toLowerCase().includes(q);
+      }).sort((a, b) => ((b.coords_approx ? 0 : 1) - (a.coords_approx ? 0 : 1)) || ((b.google?.rating || 0) - (a.google?.rating || 0))).slice(0, 5);
+    }
+
+    const featHints = [
+      { k: "balcony", lbl: "Balcony flats", kw: "balcony sitout verandah" },
+      { k: "terrace", lbl: "Terrace / Garden flats", kw: "terrace garden lawn deck patio" },
+      { k: "seaview", lbl: "Sea View flats (Coast verified)", kw: "sea view ocean arabian beach waterfront" },
+      { k: "drop", lbl: "Recent Price Drops", kw: "price drop discount deal" },
+    ].filter(f => q.length >= 2 && f.kw.includes(q));
+
+    if (!locList.length && !socList.length && !featHints.length) {
+      ssBox.style.display = "none"; return;
+    }
+
+    let h = "";
+    if (locList.length) {
+      h += `<div class="ss-hdr"><span>Localities (pick up to ${MAX_MULTI_LOCS})</span><span>${st.multiLocs.length}/${MAX_MULTI_LOCS} selected</span></div>`;
+      h += locList.map(x => {
+        const picked = st.multiLocs.includes(x.loc);
+        return `<div class="ss-item${picked ? " picked" : ""}" data-ss-type="loc" data-ss-val="${esc(x.loc)}">
+          <div class="ss-main"><div class="ss-title">${esc(x.loc)}</div><div class="ss-sub">${esc(x.zone)} · ${x.flats.toLocaleString("en-IN")} flats</div></div>
+          <span class="ss-badge">${picked ? "✓ Added" : "+ Add"}</span>
+        </div>`;
+      }).join("");
+    }
+    if (socList.length) {
+      h += `<div class="ss-hdr"><span>Buildings & Societies</span><span>Jump to flat</span></div>`;
+      h += socList.map(s => {
+        const us = (isBuy ? s.units_buy : s.units_rent) || [];
+        const pTxt = us.length ? fmt(us[0].p, isBuy) : "";
+        return `<div class="ss-item" data-ss-type="soc" data-ss-val="${esc(s.id)}">
+          <div class="ss-main"><div class="ss-title">${esc(s.name)}</div><div class="ss-sub">${esc(s.locality)} · ${us.length} unit${us.length > 1 ? "s" : ""}</div></div>
+          <span class="ss-badge">${esc(pTxt)}</span>
+        </div>`;
+      }).join("");
+    }
+    if (featHints.length) {
+      h += `<div class="ss-hdr"><span>Feature Filters</span><span>1-click</span></div>`;
+      h += featHints.map(f =>
+        `<div class="ss-item" data-ss-type="feat" data-ss-val="${f.k}">
+          <div class="ss-main"><div class="ss-title">${esc(f.lbl)}</div><div class="ss-sub">Toggle quick filter</div></div>
+          <span class="ss-badge">${st[f.k] ? "Active" : "Apply"}</span>
+        </div>`
+      ).join("");
+    }
+
+    ssBox.innerHTML = h;
+    ssHi = -1;
+    positionSuggest();
+    ssBox.style.display = "block";
+
+    ssBox.querySelectorAll(".ss-item").forEach(el => {
+      el.onmousedown = e => {
+        e.preventDefault();
+        const tp = el.dataset.ssType, val = el.dataset.ssVal;
+        if (tp === "loc") {
+          addMultiLocality(val);
+          buildSuggestions("");
+        } else if (tp === "soc") {
+          ssBox.style.display = "none";
+          const soc = societies.find(x => x.id === val);
+          if (soc) {
+            if (sInput) sInput.value = soc.name;
+            if (soc.lat && soc.lng) map.flyTo([soc.lat, soc.lng], 16, { duration: 0.5 });
+            if (typeof openDetail === "function") openDetail(soc);
+          }
+        } else if (tp === "feat") {
+          ssBox.style.display = "none";
+          if (sInput) sInput.value = "";
+          st[val] = true;
+          document.querySelectorAll(`.chip[data-q="${val}"]`).forEach(c => { c.classList.add("on", "active"); });
+          st.page = 36; renderAll();
+        }
+      };
+    });
+  }
+
+  if (sInput && ssBox) {
+    sInput.addEventListener("focus", () => buildSuggestions(sInput.value));
+    sInput.addEventListener("input", () => buildSuggestions(sInput.value));
+    sInput.addEventListener("keydown", e => {
+      const items = [...ssBox.querySelectorAll(".ss-item")];
+      if (e.key === "Backspace" && !sInput.value && st.multiLocs.length) {
+        st.multiLocs.pop(); renderLocChips(); st.page = 36; renderAll(); return;
+      }
+      if (!items.length || ssBox.style.display === "none") return;
+      if (e.key === "ArrowDown") { e.preventDefault(); ssHi = (ssHi + 1) % items.length; items.forEach((x, i) => x.classList.toggle("hi", i === ssHi)); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); ssHi = (ssHi - 1 + items.length) % items.length; items.forEach((x, i) => x.classList.toggle("hi", i === ssHi)); }
+      else if (e.key === "Enter" && ssHi >= 0) { e.preventDefault(); items[ssHi].onmousedown({ preventDefault(){} }); }
+      else if (e.key === "Escape") { ssBox.style.display = "none"; }
+    });
+    document.addEventListener("click", e => {
+      if (e.target !== sInput && !ssBox.contains(e.target)) ssBox.style.display = "none";
+    });
+  }
+
+  window.__BH_ADD_LOC = addMultiLocality;
+
   ["resetMiniBtn", "resetBtn", "fReset"].forEach(id => {
     const el = $(id);
     if (!el) return;
     el.addEventListener("click", () => {
       st.seaview = st.balcony = st.terrace = st.drop = false;
-      st.lister = "ALL";
-      st.hub = "ALL";
+      st.lister = "ALL"; st.hub = "ALL"; st.multiLocs = [];
       if ($("fHub")) $("fHub").value = "";
       if ($("hubVal")) $("hubVal").textContent = "Any";
       document.querySelectorAll(".chip[data-q]").forEach(b => {
         if (V15_CHIP_KEYS.has(b.dataset.q)) b.classList.remove("on", "active");
       });
       document.querySelectorAll("#listerToggle button").forEach(x => x.classList.toggle("active", x.dataset.lt === "ALL"));
+      renderLocChips();
       setTimeout(() => renderAll(), 0);
     });
   });
@@ -1041,10 +1252,11 @@
     if (e.key === "/" && !["INPUT","TEXTAREA","SELECT"].includes(document.activeElement?.tagName)) {
       e.preventDefault(); $("searchInput")?.focus();
     } else if (e.key === "Escape") {
+      if (ssBox) ssBox.style.display = "none";
       ["detailSheet","filterSheet"].forEach(id => $(id)?.classList.remove("open"));
       ["savedModal","postModal"].forEach(id => { if ($(id)) $(id).style.display = "none"; });
     }
   });
-  /* === END V15.5 CONTROLS === */
+  /* === END V15.6 CONTROLS === */
 
 })();

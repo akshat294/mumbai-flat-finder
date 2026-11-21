@@ -296,7 +296,7 @@ table.ctbl th { background:var(--bg); color:var(--mut); font-weight:600; }
 .d-hero { width:100%; height:168px; object-fit:cover; border-radius:12px; border:1px solid var(--line); background:var(--hover); display:block; }
 .hc-thumb { width:78px; height:78px; border-radius:11px; border:1px solid var(--line); }
 
-/* v15.5: Authoritative Individual Flat Grid, Non-Squishing Cards, Gallery Mode & Clean Controls */
+/* v15.6: Authoritative Individual Flat Grid, Smart Multi-Locality Search, Sheet Z-Index & Gallery Mode */
 
 @media (min-width: 1120px) {
   .ws { grid-template-columns: minmax(520px, 560px) 1fr !important; }
@@ -312,6 +312,9 @@ body.gallery-mode .ws { display:block !important; grid-template-columns:1fr !imp
 @media (min-width: 901px) and (max-width: 1119px) {
   #listPane { width:400px !important; min-width:380px !important; max-width:400px !important; flex:0 0 400px !important; display:flex !important; flex-direction:column !important; min-height:0 !important; height:100% !important; overflow:hidden !important; }
 }
+
+#filterSheet, #detailSheet, .sheet, .drawer, .modal { z-index:2500 !important; }
+.leaflet-control-attribution { z-index:400 !important; }
 
 #cardList {
   display:grid !important;
@@ -401,6 +404,56 @@ body.gallery-mode .ws { display:block !important; grid-template-columns:1fr !imp
 .chip { flex-shrink:0 !important; }
 .chip.on, .chip.active { background:var(--pine) !important; color:#f6f1e7 !important; border-color:var(--pine) !important; }
 [data-theme="dark"] .chip.on, [data-theme="dark"] .chip.active { background:var(--brass) !important; color:#111715 !important; border-color:var(--brass) !important; }
+
+#searchSuggest {
+  position:fixed;
+  z-index:3200;
+  background:var(--card);
+  border:1px solid rgba(196,158,92,.55);
+  border-radius:14px;
+  box-shadow:0 16px 40px rgba(14,24,22,.26);
+  max-height:380px;
+  overflow-y:auto;
+  padding:6px;
+  display:none;
+}
+.ss-hdr { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--mut); padding:6px 10px 4px; display:flex; justify-content:space-between; }
+.ss-item { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 10px; border-radius:10px; cursor:pointer; font-size:13px; color:var(--txt); }
+.ss-item:hover, .ss-item.hi { background:var(--hover); }
+.ss-item.picked { opacity:.55; }
+.ss-main { min-width:0; display:flex; flex-direction:column; gap:1px; }
+.ss-title { font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ss-sub { font-size:11px; color:var(--mut); }
+.ss-badge { font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:999px; background:var(--hover); color:var(--pine); border:1px solid var(--line); white-space:nowrap; flex-shrink:0; }
+[data-theme="dark"] .ss-badge { color:var(--brass); }
+.ss-item.picked .ss-badge { background:var(--pine); color:#f6f1e7; border-color:var(--pine); }
+
+#locChipsBar {
+  display:none;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:6px;
+  padding:7px 14px;
+  background:var(--card);
+  border-bottom:1px solid var(--line);
+}
+.loc-chip {
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  background:var(--pine);
+  color:#f6f1e7;
+  border:1px solid rgba(196,158,92,.65);
+  border-radius:999px;
+  padding:3px 10px 3px 11px;
+  font-size:12px;
+  font-weight:600;
+}
+[data-theme="dark"] .loc-chip { background:var(--brass); color:#111715; }
+.loc-chip button { background:none; border:none; color:inherit; font-size:14px; line-height:1; cursor:pointer; padding:0; opacity:.85; }
+.loc-chip button:hover { opacity:1; }
+.loc-chip-hint { font-size:11px; color:var(--mut); margin-left:4px; }
+.loc-chip-clr { margin-left:auto; background:none; border:none; color:var(--pri); font-size:11.5px; font-weight:600; cursor:pointer; }
 
 body.gallery-mode #mapPane, body.gallery-mode #map { display:none !important; }
 body.gallery-mode #listPane { width:100% !important; max-width:100% !important; min-width:0 !important; flex:1 1 100% !important; border-right:none !important; }
