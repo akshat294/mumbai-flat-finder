@@ -75,11 +75,15 @@ def _parse_ghosla_page(html: str, default_loc: str, page_url: str, is_flatmate: 
                 name = ht if len(ht) >= 6 else f"Shared Room in {default_loc}"
             else:
                 name = clean_name(ht, default_loc)
-                if len(name) < 4 or name.lower() == default_loc.lower(): continue
+                if len(name) < 4 or name.lower() == default_loc.lower():
+                    name = f"Independent House — {default_loc}" if "independent" in low else f"Standalone Flat — {default_loc}"
 
         li = _match_loc(txt, loc_meta) if default_loc == "Mumbai" else None
         loc_name = li["locality"] if li else default_loc
         zone_name = li["zone"] if li else None
+        img_el = el.select_one("img[data-src], img[src]")
+        img_u = (img_el.get("data-src") or img_el.get("src")) if img_el else None
+        if img_u and not img_u.startswith("http"): img_u = (ORIGIN + img_u) if img_u.startswith("/") else None
         a_el = el.select_one("a[href]")
         href = a_el.get("href") if a_el else ""
         full_url = href if href.startswith("http") else (ORIGIN + href if href.startswith("/") else page_url)
@@ -92,7 +96,7 @@ def _parse_ghosla_page(html: str, default_loc: str, page_url: str, is_flatmate: 
             "name": name, "locality": loc_name, "zone": zone_name, "bhk": parse_bhk(txt),
             "rent_inr": rent, "buy_inr": None, "carpet_sqft": parse_sqft(txt),
             "furnishing": parse_furnishing(txt), "tenant": "bachelors_ok" if is_flatmate else parse_tenant(txt),
-            "zero_brokerage": zb, "url": full_url, "_detected_source": orig_src,
+            "zero_brokerage": zb, "image": img_u, "url": full_url, "_detected_source": orig_src,
         })
     return items
 

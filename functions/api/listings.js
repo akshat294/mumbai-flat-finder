@@ -46,7 +46,7 @@ export async function onRequestPost({ request, env }) {
   const lng = Number.isFinite(Number(body.lng)) ? Number(body.lng) : null;
 
   const now = Math.floor(Date.now() / 1000);
-  const expires = now + 14 * 86400;
+  const expires = now + 28 * 86400;
   const id = "bh-" + now.toString(36) + "-" + Math.random().toString(36).slice(2, 6);
 
   try {

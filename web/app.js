@@ -371,7 +371,7 @@
     else if (ctx.nearest_metro) meta.push(`${ctx.nearest_metro.walk_min}m Metro`);
 
     return `<article class="hc ${s.id === st.sel ? "sel" : ""}" data-id="${esc(s.id)}">
-      ${s.thumb ? `<img class="hc-thumb" src="${esc(s.thumb)}" alt="" loading="lazy" onerror="this.remove()" />` : ""}
+      ${s.thumb ? `<img class="hc-thumb" src="${esc(s.thumb)}" referrerpolicy="no-referrer" alt="" loading="lazy" onerror="this.remove()" />` : ""}
       <div class="hc-main">
         <div class="hc-row1">
           <div style="min-width:0;"><div class="hc-name">${esc(s.name)}</div><div class="hc-loc">${esc(s.locality)}${g?.rating ? ` · <span class="hc-star">★ ${g.rating}</span>` : ""}</div></div>
@@ -478,6 +478,7 @@
     $("dName").textContent = s.name;
     $("dSub").textContent = `${s.locality} · ${s.coords_approx ? "Locality Area Pin" : "Verified Building Pin"}${g.rating ? ` · ★ ${g.rating}` : ""}`;
     $("dBody").innerHTML = `
+      ${s.thumb ? `<img class="d-hero" src="${esc(s.thumb)}" referrerpolicy="no-referrer" alt="" onerror="this.remove()" />` : ""}
       <div class="d-actions">
         <button class="btn ${isS ? "active" : ""}" id="dSv">${isS ? "Saved" : "Save"}</button>
         <a class="btn" target="_blank" href="${mapsUrl}">Google Maps ↗</a>

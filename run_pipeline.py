@@ -1,4 +1,6 @@
 from __future__ import annotations
+from pipeline.media_geo_enricher import HARVESTER as harvester, install_harvester
+install_harvester()
 import argparse, json, signal, sys
 from pathlib import Path
 from pipeline.build_city import build_mumbai
@@ -37,6 +39,7 @@ def main():
                 print(f"[pipeline] Syncing {src} across {len(loc_meta)} localities...")
                 n = CONNECTORS[src](db).run_localities(loc_meta, limit_per_locality=args.limit, fresh_hours=args.fresh_hours)
                 print(f"[pipeline] {src}: saved {n} records")
+    print(f"[harvester] pages={harvester.stats['pages']} | geo_hits={harvester.stats['geo_hits']} | img_hits={harvester.stats['img_hits']} | applied_geo={harvester.stats['applied_geo']} | applied_img={harvester.stats['applied_img']}", flush=True)
     print("[pipeline] Compiling web/public/data/mumbai-index.json...")
     print("[pipeline] DONE:", json.dumps(build_mumbai(max_google_calls=args.max_google_calls, max_osm_calls=0 if args.build_only else 60), indent=2))
 

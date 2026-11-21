@@ -14,15 +14,16 @@ from pipeline.pricing_engine import summarize_portal_prices
 
 IST = timezone(timedelta(hours=5, minutes=30))
 RK_RE = re.compile(r"\b1[\s\-]*rk\b|\bstudio\b", re.I)
-JUNK_NAME = re.compile(r"(^s\s+for\s+(rent|sale)|\bfor\s+(rent|sale)\s+in\b|flats?,?\s*apartments?|houses?\s+for\s+(rent|sale)|properties\s+for\s+(rent|sale)|\bnear\s+me\b|^\d+\s*(bhk|rk)\s*(flat|apartment|house)?$|^property\s+in\b|^residential\s+)", re.I)
+HARD_JUNK = re.compile(r"(^s\s+for\s+(rent|sale)|\bnear\s+me\b|^property\s+in\b|^flats?,?\s*apartments?$|^properties\s+for\s+(rent|sale)$)", re.I)
+UNNAMED_RES = re.compile(r"(\bfor\s+(rent|sale)\s+in\b|^\d+\s*(bhk|rk)\s*(flat|apartment|house|independent)?$|\bindependent\s*house\b|\bstandalone\b|\bbuilder\s*floor\b|^residential\s+|houses?\s+for\s+(rent|sale)|flats?,?\s*apartments?)", re.I)
+IND_HOUSE_RE = re.compile(r"\b(independent\s*house|villa|bungalow|row\s*house)\b", re.I)
 COMM_DROP = re.compile(r"\b(office|commercial|shop|showroom|warehouse|business\s*park|corporate|chambers|trade\s*star|trade\s*center|town\s*center|it\s*park|coworking|the\s*summit|industrial\s*estate|mindspace|tech\s*park|infotech|cyber\s*park|knowledge\s*park|business\s*bay|corporate\s*park|sez)\b", re.I)
 
 def _valid_src_url(k: str, u: Any) -> bool:
     if not u or not isinstance(u, str) or not u.startswith("http"): return False
-    if "findghosla.com/" in u: return True
     if k == "magicbricks": return ("propertyDetails" in u or "-pdpid-" in u or "project-" in u)
     if k == "nobroker": return ("/property/" in u or "nobroker.in/" in u)
-    if k == "99acres": return ("99acres.com/" in u or "findghosla.com/" in u)
+    if k == "99acres": return ("99acres.com/" in u and ("-spid-" in u or "-npxid-" in u or "property-in-" not in u))
     return k in ("reddit","community","squareyards","commonfloor","makaan","nobrokerage","housing")
 
 def _build_units(raw_by_source: Dict[str, List[Dict[str, Any]]]):
@@ -75,7 +76,7 @@ def _build_units(raw_by_source: Dict[str, List[Dict[str, Any]]]):
 
     units_r.sort(key=lambda x: (x["p"], 0 if x["u"] else 1, 0 if x["zb"] else 1))
     units_b.sort(key=lambda x: (x["p"], 0 if x["u"] else 1))
-    return units_r[:8], units_b[:8], sources_rent, sources_buy, clean_sources, thumb
+    return units_r[:16], units_b[:16], sources_rent, sources_buy, clean_sources, thumb
 
 def _ensure_pricing(pricing: Dict[str, Any], units_r: List[Dict], units_b: List[Dict]) -> Dict[str, Any]:
     if units_r:
@@ -116,7 +117,7 @@ def _merge_duplicates(compiled: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
             for u in s[uf]:
                 if (u["s"], u["b"], u["p"]) not in seen_u:
                     seen_u.add((u["s"], u["b"], u["p"])); cur[uf].append(u)
-            cur[uf].sort(key=lambda x: (x["p"], 0 if x["u"] else 1)); cur[uf] = cur[uf][:8]
+            cur[uf].sort(key=lambda x: (x["p"], 0 if x["u"] else 1)); cur[uf] = cur[uf][:24 if cur.get('is_unnamed') else 16]
         for sf in ("sources","sources_rent","sources_buy"): cur[sf].update(s[sf])
         cur["pricing"] = _ensure_pricing(cur["pricing"], cur["units_rent"], cur["units_buy"])
     return list(by_key.values())
@@ -143,7 +144,7 @@ def _attach_deals(compiled: List[Dict[str, Any]]) -> int:
         s["deal"] = deal or None
     return great
 
-def build_mumbai(db_path: str | Path = "pipeline/staging/mumbai_raw.db", max_google_calls: int = 25, max_osm_calls: int = 40, max_record_age_days: float = 7.0) -> Dict[str, Any]:
+def build_mumbai(db_path: str | Path = "pipeline/staging/mumbai_raw.db", max_google_calls: int = 25, max_osm_calls: int = 40, max_record_age_days: float = 28.0) -> Dict[str, Any]:
     db = CheckpointDB(db_path)
     if hasattr(db, "prune_stale_records"): db.prune_stale_records(max_age_days=max_record_age_days)
     raw = db.fetch_all_raw()
@@ -174,7 +175,9 @@ def build_mumbai(db_path: str | Path = "pipeline/staging/mumbai_raw.db", max_goo
         src_keys = set(can["raw_by_source"].keys())
         is_comm = bool(src_keys & {"community", "reddit"})
         if COMM_DROP.search(can["name"]): continue
-        if not is_comm and (len(can["name"].strip()) < 4 or JUNK_NAME.search(can["name"])): continue
+        raw_cname = (can["name"] or "").strip()
+        if not is_comm and HARD_JUNK.search(raw_cname): continue
+        is_unnamed = (not is_comm) and (len(raw_cname) < 4 or bool(UNNAMED_RES.search(raw_cname)))
 
         recs = [r for grp in can["raw_by_source"].values() for r in grp]
         hint_text = can["name"] + " " + " ".join(str(r.get("url") or "") for r in recs[:4])
@@ -219,7 +222,7 @@ def build_mumbai(db_path: str | Path = "pipeline/staging/mumbai_raw.db", max_goo
             gblock = {"rating": gplace.get("rating"), "review_count": gplace.get("userRatingCount"), "url": gplace.get("googleMapsUri"), "reviews": [{"rating": r.get("rating"), "text": (r.get("text") or {}).get("text","")[:220]} for r in (gplace.get("reviews") or [])[:3] if (r.get("text") or {}).get("text")]}
 
         compiled.append({
-            "id": can["id"], "name": can["name"], "locality": loc,
+            "id": can["id"], "name": ((f"Independent Houses — {loc}" if IND_HOUSE_RE.search(raw_cname) else f"Standalone Flats — {loc}") if is_unnamed else raw_cname), "locality": loc, "is_unnamed": is_unnamed,
             "zone": loc_to_zone.get((loc or "").lower(), can.get("zone") or "Mumbai") if loc_reassigned else (can.get("zone") or loc_to_zone.get((loc or "").lower(), "Mumbai")),
             "lat": lat, "lng": lng, "coords_approx": coords_approx, "bhks": sorted(bhk_set),
             "furnishing": sorted({r["furnishing"] for r in recs if r.get("furnishing")}),
@@ -241,4 +244,5 @@ def build_mumbai(db_path: str | Path = "pipeline/staging/mumbai_raw.db", max_goo
         w.writerow(["id","name","zone","locality","bhks","carpet_sqft","rent_inr","buy_inr","exact_pin","zero_brok","google","metro","walk_min","flood","sources"])
         for s in compiled:
             w.writerow([s["id"],s["name"],s["zone"],s["locality"],"/".join("1 RK" if b==0 else f"{b} BHK" for b in s["bhks"]),s["rera_carpet_sqft"] or "",(s["units_rent"][0]["p"] if s["units_rent"] else s["pricing"]["rent_monthly_inr"].get("median") or ""),(s["units_buy"][0]["p"] if s["units_buy"] else s["pricing"]["buy_inr"].get("median") or ""),not s["coords_approx"],s["pricing"]["has_zero_brokerage"],(s["google"] or {}).get("rating",""),(s["mumbai_context"]["nearest_metro"] or {}).get("name",""),(s["mumbai_context"]["nearest_metro"] or {}).get("walk_min",""),s["mumbai_context"]["monsoon_flood_risk"],",".join(sorted(s["sources"].keys()))])
-    return {"compiled": len(compiled), "exact_pins": exact_hits, "great_value_deals": great, "updated_at": now_ist}
+    with_photos = sum(1 for s in compiled if s.get("thumb"))
+    return {"compiled": len(compiled), "exact_pins": exact_hits, "with_photos": with_photos, "great_value_deals": great, "updated_at": now_ist}
