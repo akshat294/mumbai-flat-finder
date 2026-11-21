@@ -221,20 +221,25 @@
       }
     }
 
-    if (!st.exactOnly && z >= 14 && approx.length) {
+    if (!st.exactOnly && z >= 13 && approx.length) {
       const byLoc = new Map();
       for (const s of approx) {
         let g = byLoc.get(s.locality);
         if (!g) { g = { loc: s.locality, items: [], lat: 0, lng: 0 }; byLoc.set(s.locality, g); }
         g.items.push(s); g.lat += s.lat; g.lng += s.lng;
       }
+      const offsets = [[0,0],[0,-40],[0,40],[96,0],[-96,0],[76,-36],[-76,-36],[76,36],[-76,36],[0,-76],[0,76]];
       for (const g of byLoc.values()) {
-        const cla = g.lat / g.items.length, cln = g.lng / g.items.length;
-        const pt = map.latLngToContainerPoint([cla, cln]);
-        if (occupied.some(o => Math.abs(o.x - pt.x) < 92 && Math.abs(o.y - pt.y) < 36)) continue;
-        occupied.push(pt);
+        const basePt = map.latLngToContainerPoint([g.lat / g.items.length, g.lng / g.items.length]);
+        let placed = basePt;
+        for (const [dx, dy] of offsets) {
+          const cand = L.point(basePt.x + dx, basePt.y + dy);
+          if (!occupied.some(o => Math.abs(o.x - cand.x) < 92 && Math.abs(o.y - cand.y) < 34)) { placed = cand; break; }
+        }
+        occupied.push(placed);
+        const ll = map.containerPointToLatLng(placed);
         const ic = L.divIcon({ className: "cluster-wrap", html: `<div class="area-pill">${esc(g.loc)} · +${g.items.length}</div>`, iconSize: [0, 0] });
-        L.marker([cla, cln], { icon: ic, zIndexOffset: -100 })
+        L.marker([ll.lat, ll.lng], { icon: ic, zIndexOffset: -100 })
           .on("click", () => openClusterSheet(`${g.loc} — Area Listings`, `${g.items.length} homes in ${g.loc}`, g.items))
           .addTo(mLayer);
       }

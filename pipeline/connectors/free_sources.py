@@ -10,6 +10,15 @@ from pipeline.connectors.portals import (
 )
 
 PROTO = "https" + "://"
+
+NOISE_PRICE_RE = re.compile(
+    r"(?:₹|Rs\.?|INR)\s*[0-9,.]+\s*(?:k|lac|lakh|l|cr|crore)?\s*(?:/\s*sq\.?\s*ft|per\s+sq\.?\s*ft|per\s+sqft|psf|/\s*sq\.?\s*m)"
+    r"|\b(?:emi|deposit|security\s*deposit|maintenance|brokerage|booking\s*amount)\s*[:\-–]?\s*(?:₹|Rs\.?|INR)?\s*[0-9,.]+\s*(?:k|lac|lakh|l|cr|crore)?",
+    re.I,
+)
+def _clean_price_text(txt: str) -> str:
+    return NOISE_PRICE_RE.sub(" ", txt or "")
+
 UA_HDRS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
@@ -76,10 +85,12 @@ def _extract_ld_items(html: str, default_url: str, locality: str, prefix: str, m
             desc = str(obj.get("description") or "")
             full = f"{title} {desc}"
             if not p_val:
-                prices = [parse_inr(m) for m in re.findall(r"(?:₹|Rs\.?)\s*[0-9,.]+\s*(?:Cr|Crore|Lac|Lakh|L|K)?", full, re.I)]
+                prices = [parse_inr(m) for m in re.findall(r"(?:₹|Rs\.?)\s*[0-9,.]+\s*(?:Cr|Crore|Lac|Lakh|L|K)?", _clean_price_text(full), re.I)]
                 prices = [p for p in prices if p]
                 p_val = prices[0] if prices else None
             if not p_val: continue
+            u_chk = str(obj.get("url") or "").lower()
+            if mode == "rent" and ("/project" in u_chk or "/sale/" in u_chk or "for-sale" in u_chk): continue
             is_buy = (mode == "buy") or (p_val >= 1_800_000)
             if is_buy and not (2_500_000 <= p_val <= 600_000_000): continue
             if not is_buy and not (6_000 <= p_val <= 850_000): continue
@@ -119,7 +130,7 @@ def _extract_cards_generic(html: str, base_origin: str, locality: str, prefix: s
         name = clean_name(h.get_text(" ", strip=True), locality)
         if len(name) < 3 or name.lower() in seen or name.lower() == locality.lower() or COMM_RE.search(name) or JUNK_NAME.search(name):
             continue
-        prices = [parse_inr(m) for m in re.findall(r"(?:₹|Rs\.?)\s*[0-9,.]+\s*(?:Cr|Crore|Lac|Lakh|L|K)?", txt, re.I)]
+        prices = [parse_inr(m) for m in re.findall(r"(?:₹|Rs\.?)\s*[0-9,.]+\s*(?:Cr|Crore|Lac|Lakh|L|K)?", _clean_price_text(txt), re.I)]
         buys = [p for p in prices if p and 2_500_000 <= p <= 600_000_000]
         rents = [p for p in prices if p and 6_000 <= p <= 850_000]
         if mode == "buy" and not buys: continue
@@ -132,8 +143,8 @@ def _extract_cards_generic(html: str, base_origin: str, locality: str, prefix: s
         items.append({
             "id": f"{prefix}-{_slug(locality)[:10]}-{idx}-{_slug(name)[:14]}",
             "name": name, "locality": locality, "bhk": parse_bhk(txt),
-            "buy_inr": buys[0] if (mode == "buy" or not rents) and buys else None,
-            "rent_inr": rents[0] if rents else None,
+            "buy_inr": buys[0] if mode == "buy" and buys else None,
+            "rent_inr": (rents[0] if mode == "rent" and rents and not (full_url and ("/project" in full_url.lower() or "/sale/" in full_url.lower())) else None),
             "carpet_sqft": parse_sqft(txt), "furnishing": parse_furnishing(txt),
             "tenant": parse_tenant(txt), "rera_id": rm.group(0) if rm else None,
             "url": full_url,

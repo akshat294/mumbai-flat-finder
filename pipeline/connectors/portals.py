@@ -271,6 +271,12 @@ class NoBrokerConnector(BaseConnector):
             if len(items) >= limit: break
         return items
 
+NOISE_PRICE_99 = re.compile(
+    r"(?:₹|Rs\.?|INR)\s*[0-9,.]+\s*(?:k|lac|lakh|l|cr|crore)?\s*(?:/\s*sq\.?\s*ft|per\s+sq\.?\s*ft|per\s+sqft|psf|/\s*sq\.?\s*m)"
+    r"|\b(?:emi|deposit|security\s*deposit|maintenance|brokerage|booking\s*amount)\s*[:\-–]?\s*(?:₹|Rs\.?|INR)?\s*[0-9,.]+\s*(?:k|lac|lakh|l|cr|crore)?",
+    re.I,
+)
+
 class NinetyNineAcresConnector(BaseConnector):
     source_name = "99acres"
 
@@ -290,13 +296,22 @@ class NinetyNineAcresConnector(BaseConnector):
             "Powai-Central":"central-mumbai-suburbs","Chembur-Wadala":"mumbai-harbour",
             "Thane":"thane","Navi Mumbai":"navi-mumbai",
         }
-        deadline = time.monotonic() + 95.0
+        priority = {
+            "Bandra West":0,"Bandra East":1,"Pali Hill":2,"Khar West":3,"Santacruz West":4,
+            "Juhu":5,"Andheri West":6,"Versova":7,"Powai":8,"Worli":9,"Lower Parel":10,
+            "Dadar West":11,"Goregaon West":12,"Goregaon East":13,"Malad West":14,"Chembur":15,
+            "Thane West":16,"Vashi":17,"Colaba":18,"Cuffe Parade":19,
+        }
+        ordered = sorted(loc_meta, key=lambda m: (priority.get(m["locality"], 99), m["locality"]))
+        deadline = time.monotonic() + 125.0
+        diag_logs = []
 
-        def _fetch_one(info):
+        def _fetch_one(idx, info):
             if time.monotonic() > deadline: return info, []
             loc = info["locality"]
-            cached = self.read_cache(f"99c4:{loc}", max_age_hours=fresh_hours)
+            cached = self.read_cache(f"99c5:{loc}", max_age_hours=fresh_hours)
             if cached: return info, cached
+            time.sleep(0.25)
             slug = re.sub(r"[^a-z0-9]+", "-", loc.lower()).strip("-")
             reg = zmap.get(info.get("zone", ""), info["city"].lower().replace(" ", "-"))
             out = []
@@ -304,66 +319,113 @@ class NinetyNineAcresConnector(BaseConnector):
                 if time.monotonic() > deadline: break
                 u = f"{PROTO}www.99acres.com/{prefix}-{slug}-{reg}-ffid"
                 try:
-                    resp = c_req.get(u, impersonate="chrome", timeout=8, allow_redirects=True)
-                    if resp.status_code == 200 and len(resp.text) > 60000:
-                        out.extend(self._parse_html(resp.text, loc, str(resp.url), mode, limit_per_locality // 2))
-                except Exception:
+                    resp = c_req.get(u, impersonate="chrome", timeout=9, allow_redirects=True)
+                    sc, bl = resp.status_code, len(resp.text)
+                    parsed, stats = self._parse_html(resp.text, loc, str(resp.url), mode, limit_per_locality // 2) if (sc == 200 and bl > 40000) else ([], "short/err")
+                    out.extend(parsed)
+                    if idx < 3:
+                        diag_logs.append(f"[99acres-diag] {loc} ({mode}): HTTP {sc} | {bl:,} B | {stats} -> {len(parsed)} items")
+                except Exception as exc:
+                    if idx < 3: diag_logs.append(f"[99acres-diag] {loc} ({mode}): EXC {str(exc)[:70]}")
                     continue
-            if out: self.write_cache(f"99c4:{loc}", out)
+            if out: self.write_cache(f"99c5:{loc}", out)
             return info, out
 
         saved = 0
-        with ThreadPoolExecutor(max_workers=6) as ex:
-            for fut in as_completed([ex.submit(_fetch_one, m) for m in loc_meta]):
+        with ThreadPoolExecutor(max_workers=2) as ex:
+            for fut in as_completed([ex.submit(_fetch_one, i, m) for i, m in enumerate(ordered)]):
                 info, items = fut.result()
                 for it in items:
                     self.db.upsert_raw_record(self.source_name, it["id"], it["name"], it, locality=info["locality"], zone=info["zone"], rera_id=it.get("rera_id"), source_url=it.get("url"))
                     saved += 1
+        for dl in diag_logs: print(dl, flush=True)
         return saved
 
-    def _extract_soc_name(self, raw_title: str, locality: str) -> str:
-        t = (raw_title or "").strip()
-        m = re.search(r"\bin\s+([^,|]+)", t, re.I)
-        if m:
-            cand = m.group(1).strip()
-            if len(cand) >= 3 and cand.lower() != locality.lower(): t = cand
-        return clean_name(t, locality)
-
-    def _parse_html(self, html: str, locality: str, url: str, mode: str, limit: int) -> List[Dict[str, Any]]:
+    def _extract_initial_data(self, html: str, locality: str, mode: str, limit: int) -> List[Dict[str, Any]]:
         import json as _json
         PROTO = "https" + "://"
-        soup = BeautifulSoup(html, "html.parser")
-        items, seen = [], set()
+        idx = html.find("window.__initialData__")
+        if idx < 0: return []
+        eq = html.find("=", idx)
+        if eq < 0: return []
+        start = html.find("{", eq)
+        if start < 0: return []
+        try: data, _ = _json.JSONDecoder().raw_decode(html, start)
+        except Exception: return []
 
-        cards = soup.select("[data-label='SRP_TUPLE'], .tupleNew__tupleWrap, .projectTuple__cardWrap, section[data-propid], div[class*='tupleWrap']")
-        for idx, card in enumerate(cards):
-            txt = card.get_text(" ", strip=True)
-            if "₹" not in txt or len(txt) < 35 or len(txt) > 3000: continue
-            soc_el = card.select_one(".tupleNew__locationName, .projectTuple__projectName, a[class*='propertyHeading'], h2 a, h2, h3, a[title]")
-            if not soc_el: continue
-            name = self._extract_soc_name(soc_el.get("title") or soc_el.get_text(" ", strip=True), locality)
+        props: List[Dict[str, Any]] = []
+        def _walk(node, depth=0):
+            if depth > 7 or len(props) >= limit * 2: return
+            if isinstance(node, list):
+                for el in node:
+                    if isinstance(el, dict) and (el.get("PROP_ID") or el.get("SPID") or el.get("SOCIETY_NAME") or el.get("PROP_NAME")):
+                        props.append(el)
+                    elif isinstance(el, (dict, list)): _walk(el, depth + 1)
+            elif isinstance(node, dict):
+                for k, v in node.items():
+                    if k in ("properties","tuples","results") and isinstance(v, list):
+                        for el in v:
+                            if isinstance(el, dict): props.append(el)
+                    elif depth < 5 and isinstance(v, (dict, list)): _walk(v, depth + 1)
+        _walk(data)
+
+        items, seen = [], set()
+        for idx_p, pr in enumerate(props):
+            raw_name = str(pr.get("SOCIETY_NAME") or pr.get("BUILDING_NAME") or pr.get("PROP_NAME") or pr.get("HEADING") or "").strip()
+            if len(raw_name) < 3: continue
+            name = clean_name(raw_name, locality)
             if len(name) < 3 or name.lower() in seen or name.lower() == locality.lower() or COMM_RE.search(name) or JUNK_NAME.search(name): continue
-            prices = [parse_inr(m) for m in re.findall(r"₹\s*[0-9,.]+\s*(?:Cr|Crore|Lac|Lakh|L|K)?", txt, re.I)]
-            buys = [p for p in prices if p and 2_500_000 <= p <= 600_000_000]
-            rents = [p for p in prices if p and 7_000 <= p <= 550_000]
-            if mode == "rent" and not rents: continue
-            if mode == "buy" and not buys: continue
-            a_el = card.select_one("a[href*='-spid-'], a[href*='-npxid-'], a[href]")
-            href = (a_el.get("href") if a_el else "") or ""
-            full_url = href if href.startswith("http") else (f"{PROTO}www.99acres.com{href}" if href.startswith("/") else None)
-            img_el = card.select_one("img[src^='http']")
-            rm = RERA_RE.search(txt)
+            pv = None
+            for pk in ("MIN_PRICE","PRICE","MAX_PRICE","price","FORMATTED_PRICE"):
+                val = pr.get(pk)
+                if val is None: continue
+                if isinstance(val, (int, float)) and val > 5000: pv = int(val); break
+                if isinstance(val, str):
+                    p2 = parse_inr(NOISE_PRICE_99.sub(" ", val))
+                    if p2: pv = p2; break
+            if not pv: continue
+            if mode == "rent" and not (7_000 <= pv <= 550_000): continue
+            if mode == "buy" and not (2_500_000 <= pv <= 600_000_000): continue
+            md = pr.get("MAP_DETAILS") or {}
+            lat = md.get("LATITUDE") or pr.get("LATITUDE") or pr.get("lat")
+            lng = md.get("LONGITUDE") or pr.get("LONGITUDE") or pr.get("lng")
+            try:
+                lat = float(lat) if lat is not None and str(lat).strip() else None
+                lng = float(lng) if lng is not None and str(lng).strip() else None
+            except Exception: lat = lng = None
+            bhk = pr.get("BEDROOM_NUM")
+            try: bhk = int(bhk) if bhk is not None else parse_bhk(str(pr.get("PROP_HEADING") or raw_name))
+            except Exception: bhk = parse_bhk(str(pr.get("PROP_HEADING") or raw_name))
+            sqft = pr.get("MIN_AREA_NUM") or pr.get("CARPET_SQFT") or pr.get("SUPER_SQFT")
+            try: sqft = int(float(sqft)) if sqft and 140 <= float(sqft) <= 8000 else parse_sqft(str(pr.get("AREA") or ""))
+            except Exception: sqft = parse_sqft(str(pr.get("AREA") or ""))
+            pd_u = str(pr.get("PD_URL") or pr.get("URL") or "").strip()
+            full_url = pd_u if pd_u.startswith("http") else (f"{PROTO}www.99acres.com/{pd_u.lstrip('/')}" if pd_u else None)
+            photo = pr.get("PHOTO_URL") or pr.get("MEDIUM_PHOTO_URL")
+            photo = photo if isinstance(photo, str) and photo.startswith("http") else None
+            rm = RERA_RE.search(str(pr))
+            rera = pr.get("RERA_REGISTRATION_ID") or (rm.group(0) if rm else None)
             seen.add(name.lower())
             items.append({
-                "id": f"99a-{mode[0]}-{re.sub(r'[^a-z0-9]','',locality.lower())[:9]}-{idx}-{re.sub(r'[^a-z0-9]','',name.lower())[:14]}",
-                "name": name, "locality": locality, "bhk": parse_bhk(txt),
-                "buy_inr": buys[0] if mode == "buy" and buys else None,
-                "rent_inr": rents[0] if mode == "rent" and rents else None,
-                "carpet_sqft": parse_sqft(txt), "furnishing": parse_furnishing(txt), "tenant": parse_tenant(txt),
-                "rera_id": rm.group(0) if rm else None, "image": img_el.get("src") if img_el else None, "url": full_url,
+                "id": f"99a-{mode[0]}-{pr.get('PROP_ID') or pr.get('SPID') or idx_p}",
+                "name": name, "locality": locality, "bhk": bhk,
+                "buy_inr": pv if mode == "buy" else None, "rent_inr": pv if mode == "rent" else None,
+                "carpet_sqft": sqft, "furnishing": parse_furnishing(str(pr.get("FURNISH") or pr.get("FURNISHING") or "")),
+                "tenant": parse_tenant(str(pr.get("PREFERENCE") or pr.get("DESCRIPTION") or "")),
+                "rera_id": rera if isinstance(rera, str) and rera.startswith("P") else None,
+                "lat": lat, "lng": lng, "image": photo, "url": full_url,
             })
-            if len(items) >= limit: return items
+            if len(items) >= limit: break
+        return items
 
+    def _parse_html(self, html: str, locality: str, url: str, mode: str, limit: int):
+        import json as _json
+        PROTO = "https" + "://"
+        init_items = self._extract_initial_data(html, locality, mode, limit)
+        if init_items:
+            return init_items, f"initData={len(init_items)}"
+        soup = BeautifulSoup(html, "html.parser")
+        items, seen, ld_total = [], set(), 0
         for sc in soup.find_all("script", type="application/ld+json"):
             raw = sc.string or sc.get_text() or ""
             if not raw.strip(): continue
@@ -378,13 +440,17 @@ class NinetyNineAcresConnector(BaseConnector):
                     for el in nd["itemListElement"]:
                         flat.append(el.get("item") if isinstance(el, dict) and isinstance(el.get("item"), dict) else el)
                 else: flat.append(nd)
+            ld_total += len(flat)
             for obj in flat:
                 if not isinstance(obj, dict): continue
                 addr = obj.get("address") or {}
                 street = addr.get("streetAddress") if isinstance(addr, dict) else ""
-                full = f"{obj.get('name') or ''} {street} {obj.get('description') or ''}"
-                name = self._extract_soc_name(str(street or obj.get("name") or ""), locality)
+                raw_t = str(street or obj.get("name") or "").strip()
+                m_in = re.search(r"\bin\s+([^,|]+)", raw_t, re.I)
+                if m_in and len(m_in.group(1).strip()) >= 3: raw_t = m_in.group(1).strip()
+                name = clean_name(raw_t, locality)
                 if len(name) < 3 or name.lower() in seen or name.lower() == locality.lower() or COMM_RE.search(name) or JUNK_NAME.search(name): continue
+                full = NOISE_PRICE_99.sub(" ", f"{obj.get('name') or ''} {street} {obj.get('description') or ''}")
                 offers = obj.get("offers") or {}
                 if isinstance(offers, list): offers = offers[0] if offers else {}
                 prices = [parse_inr(m) for m in re.findall(r"(?:₹|Rs\.?)\s*[0-9,.]+\s*(?:Cr|Crore|Lac|Lakh|L|K)?", full, re.I)]
@@ -406,16 +472,42 @@ class NinetyNineAcresConnector(BaseConnector):
                 if isinstance(img, dict): img = img.get("url")
                 u = obj.get("url") or ""
                 full_url = u if isinstance(u, str) and u.startswith("http") else (f"{PROTO}www.99acres.com{u}" if isinstance(u, str) and u.startswith("/") else None)
-                rm = RERA_RE.search(full)
                 seen.add(name.lower())
                 items.append({
                     "id": f"99a-{mode[0]}-{re.sub(r'[^a-z0-9]','',locality.lower())[:9]}-ld{len(items)}-{re.sub(r'[^a-z0-9]','',name.lower())[:14]}",
                     "name": name, "locality": locality, "bhk": parse_bhk(full),
-                    "buy_inr": buys[0] if mode == "buy" and buys else None,
-                    "rent_inr": rents[0] if mode == "rent" and rents else None,
+                    "buy_inr": buys[0] if mode == "buy" and buys else None, "rent_inr": rents[0] if mode == "rent" and rents else None,
                     "carpet_sqft": parse_sqft(full), "furnishing": parse_furnishing(full), "tenant": parse_tenant(full),
-                    "rera_id": rm.group(0) if rm else None, "lat": lat, "lng": lng,
-                    "image": img if isinstance(img, str) and img.startswith("http") else None, "url": full_url,
+                    "rera_id": None, "lat": lat, "lng": lng, "image": img if isinstance(img, str) and img.startswith("http") else None, "url": full_url,
                 })
-                if len(items) >= limit: return items
-        return items
+                if len(items) >= limit: return items, f"initData=0, ld={len(items)}/{ld_total}"
+
+        cards = soup.select("section[data-propid], [data-label='SRP_TUPLE'], [class*='tupleWrap'], [class*='projectTuple'], [class*='srpTuple']")
+        for idx, card in enumerate(cards):
+            txt = NOISE_PRICE_99.sub(" ", card.get_text(" ", strip=True))
+            if "₹" not in txt or len(txt) < 35 or len(txt) > 3000: continue
+            soc_el = card.select_one("[class*='locationName'], [class*='projectName'], [class*='propertyHeading'], h2 a, h2, h3, a[title]")
+            if not soc_el: continue
+            raw_t = soc_el.get("title") or soc_el.get_text(" ", strip=True)
+            m_in = re.search(r"\bin\s+([^,|]+)", raw_t, re.I)
+            if m_in and len(m_in.group(1).strip()) >= 3: raw_t = m_in.group(1).strip()
+            name = clean_name(raw_t, locality)
+            if len(name) < 3 or name.lower() in seen or name.lower() == locality.lower() or COMM_RE.search(name) or JUNK_NAME.search(name): continue
+            prices = [parse_inr(m) for m in re.findall(r"₹\s*[0-9,.]+\s*(?:Cr|Crore|Lac|Lakh|L)?", txt, re.I)]
+            buys = [p for p in prices if p and 2_500_000 <= p <= 600_000_000]
+            rents = [p for p in prices if p and 7_000 <= p <= 550_000]
+            if mode == "rent" and not rents: continue
+            if mode == "buy" and not buys: continue
+            a_el = card.select_one("a[href*='-spid-'], a[href*='-npxid-'], a[href]")
+            href = (a_el.get("href") if a_el else "") or ""
+            full_url = href if href.startswith("http") else (f"{PROTO}www.99acres.com{href}" if href.startswith("/") else None)
+            seen.add(name.lower())
+            items.append({
+                "id": f"99a-{mode[0]}-{re.sub(r'[^a-z0-9]','',locality.lower())[:9]}-c{idx}-{re.sub(r'[^a-z0-9]','',name.lower())[:14]}",
+                "name": name, "locality": locality, "bhk": parse_bhk(txt),
+                "buy_inr": buys[0] if mode == "buy" and buys else None, "rent_inr": rents[0] if mode == "rent" and rents else None,
+                "carpet_sqft": parse_sqft(txt), "furnishing": parse_furnishing(txt), "tenant": parse_tenant(txt),
+                "rera_id": None, "url": full_url,
+            })
+            if len(items) >= limit: break
+        return items, f"initData=0, ld={ld_total}, cards={len(cards)}"

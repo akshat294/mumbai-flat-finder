@@ -50,7 +50,8 @@ def _build_units(raw_by_source: Dict[str, List[Dict[str, Any]]]):
             if rv and 6_000 <= int(rv) <= 550_000:
                 pv = int(rv)
                 if (bhk == 0 and pv > 85_000) or (bhk == 1 and pv > 165_000) or (bhk == 2 and pv > 320_000): continue
-                ur = valid_u if ("for-sale" not in low_u) else None
+                if low_u.endswith("/project") or "/project/" in low_u or "/sale/" in low_u or "for-sale" in low_u: continue
+                ur = valid_u
                 if ur: sources_rent.setdefault(src_k, ur); clean_sources.setdefault(src_k, ur)
                 ded = (src_k, bhk, pv, (sqft // 50) if sqft else 0)
                 if ded not in seen_r:
