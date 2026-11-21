@@ -962,4 +962,89 @@
       const oid = params.get("open"); if (oid) { const t = societies.find(s => s.id === oid); if (t) { map.setView([t.lat, t.lng], 15); openDetail(t); } }
     })
     .catch(err => { $("freshBadge").textContent = "Load error: " + (err?.message || "retry"); });
+
+  /* === V15.5 INTERACTIVE CONTROLS === */
+  if (st.seaview === undefined) st.seaview = false;
+  if (st.balcony === undefined) st.balcony = false;
+  if (st.terrace === undefined) st.terrace = false;
+  if (st.drop === undefined) st.drop = false;
+  if (!st.lister) st.lister = "ALL";
+  if (!st.view) st.view = "split";
+  if (!st.hub) st.hub = "ALL";
+  if (!st.hubMin) st.hubMin = 45;
+
+  const V15_CHIP_KEYS = new Set(["seaview", "balcony", "terrace", "drop"]);
+  document.querySelectorAll(".chip[data-q]").forEach(btn => {
+    const k = btn.dataset.q;
+    if (!V15_CHIP_KEYS.has(k)) return;
+    btn.addEventListener("click", e => {
+      e.stopImmediatePropagation();
+      st[k] = !st[k];
+      btn.classList.toggle("on", !!st[k]);
+      btn.classList.toggle("active", !!st[k]);
+      st.page = 36;
+      renderAll();
+    }, true);
+  });
+
+  document.querySelectorAll("#listerToggle button").forEach(btn => {
+    btn.onclick = () => {
+      st.lister = btn.dataset.lt || "ALL";
+      document.querySelectorAll("#listerToggle button").forEach(x => x.classList.toggle("active", x.dataset.lt === st.lister));
+      st.page = 36;
+      renderAll();
+    };
+  });
+
+  document.querySelectorAll("#viewToggle button").forEach(btn => {
+    btn.onclick = () => {
+      st.view = btn.dataset.v || "split";
+      document.querySelectorAll("#viewToggle button").forEach(x => x.classList.toggle("active", x.dataset.v === st.view));
+      document.body.classList.toggle("gallery-mode", st.view === "gallery");
+      if (st.view === "split") setTimeout(() => map.invalidateSize(), 120);
+      st.page = st.view === "gallery" ? 48 : 36;
+      renderAll();
+    };
+  });
+
+  if ($("fHub")) {
+    const onHubChange = () => {
+      st.hub = $("fHub").value || "ALL";
+      st.hubMin = Number($("fHubMin")?.value || 45);
+      if ($("hubVal")) $("hubVal").textContent = st.hub === "ALL" ? "Any" : `≤ ${st.hubMin} min to ${HUB_META[st.hub]?.name || st.hub}`;
+      if (st.hub !== "ALL" && HUB_META[st.hub]) map.flyTo(HUB_META[st.hub].ll, 12, { duration: 0.5 });
+      st.page = 36;
+      renderAll();
+    };
+    $("fHub").addEventListener("change", onHubChange);
+    if ($("fHubMin")) $("fHubMin").addEventListener("input", onHubChange);
+  }
+
+  ["resetMiniBtn", "resetBtn", "fReset"].forEach(id => {
+    const el = $(id);
+    if (!el) return;
+    el.addEventListener("click", () => {
+      st.seaview = st.balcony = st.terrace = st.drop = false;
+      st.lister = "ALL";
+      st.hub = "ALL";
+      if ($("fHub")) $("fHub").value = "";
+      if ($("hubVal")) $("hubVal").textContent = "Any";
+      document.querySelectorAll(".chip[data-q]").forEach(b => {
+        if (V15_CHIP_KEYS.has(b.dataset.q)) b.classList.remove("on", "active");
+      });
+      document.querySelectorAll("#listerToggle button").forEach(x => x.classList.toggle("active", x.dataset.lt === "ALL"));
+      setTimeout(() => renderAll(), 0);
+    });
+  });
+
+  document.addEventListener("keydown", e => {
+    if (e.key === "/" && !["INPUT","TEXTAREA","SELECT"].includes(document.activeElement?.tagName)) {
+      e.preventDefault(); $("searchInput")?.focus();
+    } else if (e.key === "Escape") {
+      ["detailSheet","filterSheet"].forEach(id => $(id)?.classList.remove("open"));
+      ["savedModal","postModal"].forEach(id => { if ($(id)) $(id).style.display = "none"; });
+    }
+  });
+  /* === END V15.5 CONTROLS === */
+
 })();
