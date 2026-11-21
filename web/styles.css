@@ -460,21 +460,14 @@ body.gallery-mode #listPane { width:100% !important; max-width:100% !important; 
 body.gallery-mode #cardList { grid-template-columns:repeat(auto-fill, minmax(285px, 1fr)) !important; gap:18px !important; padding:18px 26px 64px !important; }
 body.gallery-mode .fc-media { height:172px !important; min-height:172px !important; }
 
-/* v15.7: Resizable Split Pane, Dynamic Card Columns, Unclipped Chip Bar & Hide Sort Dropdown */
+/* v16: Photo Carousel (Cards + Detail Sheet), Resizable Split Pane, Unclipped Chips & Hide Sort */
 :root { --pane-w: 560px; }
-
 #sortSelect, .sort-sel { display:none !important; }
 
 .chips {
-  display:flex !important;
-  align-items:center !important;
-  flex-wrap:nowrap !important;
-  gap:5px !important;
-  overflow-x:auto !important;
-  scrollbar-width:none !important;
-  padding-right:16px !important;
-  min-width:0 !important;
-  flex:1 1 auto !important;
+  display:flex !important; align-items:center !important; flex-wrap:nowrap !important;
+  gap:5px !important; overflow-x:auto !important; scrollbar-width:none !important;
+  padding-right:16px !important; min-width:0 !important; flex:1 1 auto !important;
 }
 .chips::-webkit-scrollbar { display:none; }
 .chips .chip { padding:4px 9px !important; font-size:11.5px !important; white-space:nowrap !important; }
@@ -486,70 +479,48 @@ body.gallery-mode .fc-media { height:172px !important; min-height:172px !importa
 body.gallery-mode .ws { display:block !important; grid-template-columns:1fr !important; }
 
 @media (min-width: 901px) {
-  #listPane {
-    width:var(--pane-w, 560px) !important;
-    min-width:290px !important;
-    max-width:82vw !important;
-    flex:0 0 var(--pane-w, 560px) !important;
-  }
-  #mapPane {
-    position:relative !important;
-    min-width:240px !important;
-    flex:1 1 auto !important;
-  }
+  #listPane { width:var(--pane-w, 560px) !important; min-width:290px !important; max-width:82vw !important; flex:0 0 var(--pane-w, 560px) !important; }
+  #mapPane { position:relative !important; min-width:240px !important; flex:1 1 auto !important; }
 }
+#cardList { grid-template-columns:repeat(auto-fill, minmax(235px, 1fr)) !important; }
+@media (max-width: 900px) { #cardList { grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)) !important; } }
 
-/* Cards adapt smoothly to 1, 2, 3, or 4 columns as you drag the panel */
-#cardList {
-  grid-template-columns:repeat(auto-fill, minmax(235px, 1fr)) !important;
+.fc-nav {
+  position:absolute; top:50%; transform:translateY(-50%); z-index:4;
+  width:28px; height:28px; border-radius:999px;
+  border:1px solid rgba(255,255,255,.42); background:rgba(16,28,25,.66); color:#fff;
+  display:grid; place-items:center; cursor:pointer; font-size:17px; line-height:1; padding:0 0 2px 0;
+  backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+  opacity:.82; transition:opacity .15s, background .15s, transform .15s;
 }
-@media (max-width: 900px) {
-  #cardList { grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)) !important; }
+.fc-nav.prev { left:7px; }
+.fc-nav.next { right:7px; }
+.fc-nav:hover { opacity:1; background:rgba(16,28,25,.92); border-color:var(--brass); transform:translateY(-50%) scale(1.06); }
+.fc-pcount {
+  position:absolute; bottom:7px; right:8px; z-index:4;
+  font-family:var(--font-body); font-size:10px; font-weight:700; font-variant-numeric:tabular-nums;
+  padding:2px 7px; border-radius:999px; background:rgba(16,28,25,.72); color:#f6f1e7;
+  border:1px solid rgba(255,255,255,.22); backdrop-filter:blur(6px); pointer-events:none;
 }
+.d-gal-wrap {
+  position:relative; width:100%; height:220px; border-radius:13px; overflow:hidden;
+  border:1px solid var(--line); background:var(--hover); margin-bottom:10px;
+}
+.d-gal-wrap .d-hero { width:100% !important; height:100% !important; object-fit:cover !important; border:none !important; border-radius:0 !important; display:block; }
+.d-gal-wrap .fc-nav { width:34px; height:34px; font-size:20px; opacity:.92; }
 
-/* Tactile Pull Handle on the Map's Left Seam (never overlaps #cardList scrollbar) */
-#paneResizer {
-  position:absolute;
-  top:0;
-  left:0;
-  bottom:0;
-  width:12px;
-  z-index:1150;
-  cursor:col-resize;
-  touch-action:none;
-  user-select:none;
-  background:transparent;
-  transition:background .15s ease;
-}
+#paneResizer { position:absolute; top:0; left:0; bottom:0; width:12px; z-index:1150; cursor:col-resize; touch-action:none; user-select:none; background:transparent; transition:background .15s ease; }
 #paneResizer:hover, body.resizing-pane #paneResizer { background:rgba(196,158,92,.22); }
 #paneResizer::after {
-  content:"";
-  position:absolute;
-  top:50%;
-  left:0;
-  transform:translateY(-50%);
-  width:14px;
-  height:52px;
-  border-radius:0 9px 9px 0;
-  background:var(--card);
-  border:1px solid var(--line);
-  border-left:none;
+  content:""; position:absolute; top:50%; left:0; transform:translateY(-50%); width:14px; height:52px;
+  border-radius:0 9px 9px 0; background:var(--card); border:1px solid var(--line); border-left:none;
   box-shadow:3px 0 12px rgba(22,42,39,.14);
   background-image:radial-gradient(circle, rgba(22,42,39,.48) 1.3px, transparent 1.5px);
-  background-size:6px 7px;
-  background-position:center;
-  background-repeat:repeat-y;
+  background-size:6px 7px; background-position:center; background-repeat:repeat-y;
   transition:background-color .15s, border-color .15s, width .15s;
 }
-[data-theme="dark"] #paneResizer::after {
-  background-image:radial-gradient(circle, rgba(196,158,92,.75) 1.3px, transparent 1.5px);
-}
-#paneResizer:hover::after, body.resizing-pane #paneResizer::after {
-  width:17px;
-  border-color:var(--brass);
-  background-color:var(--pine);
-  background-image:radial-gradient(circle, #e8cfa0 1.4px, transparent 1.6px);
-}
+[data-theme="dark"] #paneResizer::after { background-image:radial-gradient(circle, rgba(196,158,92,.75) 1.3px, transparent 1.5px); }
+#paneResizer:hover::after, body.resizing-pane #paneResizer::after { width:17px; border-color:var(--brass); background-color:var(--pine); background-image:radial-gradient(circle, #e8cfa0 1.4px, transparent 1.6px); }
 body.resizing-pane { cursor:col-resize !important; user-select:none !important; }
 body.resizing-pane #map { pointer-events:none !important; }
 body.gallery-mode #paneResizer { display:none !important; }
