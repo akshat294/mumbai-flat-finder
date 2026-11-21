@@ -51,3 +51,7 @@ fix_map_tiles.py
 fix_v8_1_backend.py
 fix_v8_1_ui.py
 probe_sources.py
+
+audit_gps.py
+fix_loc_and_gps.py
+diag_sources.py

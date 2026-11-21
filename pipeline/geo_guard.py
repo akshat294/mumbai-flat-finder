@@ -1,5 +1,5 @@
 from __future__ import annotations
-import hashlib, json, math
+import hashlib, json, math, re
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 import httpx
@@ -137,3 +137,46 @@ def enrich_with_osm_photon(societies: List[Dict], max_calls: int = 40) -> Dict[s
     OSM_CACHE.parent.mkdir(parents=True, exist_ok=True)
     OSM_CACHE.write_text(json.dumps(cache, separators=(",", ":")), encoding="utf-8")
     return cache
+SUBLOC_ALIASES: Dict[str, str] = {
+    "bhatt lane": "Borivali West", "khandivali": "Kandivali West",
+    "kandivli west": "Kandivali West", "kandivli east": "Kandivali East",
+    "borivli west": "Borivali West", "borivli east": "Borivali West",
+    "yogi nagar": "Borivali West", "ic colony": "Borivali West", "i c colony": "Borivali West",
+    "shimpoli": "Borivali West", "charkop": "Kandivali West", "mahavir nagar": "Kandivali West",
+    "thakur village": "Kandivali East", "thakur complex": "Kandivali East",
+    "evershine nagar": "Malad West", "orlem": "Malad West", "mindspace": "Malad West",
+    "dindoshi": "Goregaon East", "gokuldham": "Goregaon East", "royal palms": "Goregaon East",
+    "four bungalows": "Andheri West", "seven bungalows": "Versova", "yari road": "Versova",
+    "jb nagar": "Andheri East", "chakala": "Andheri East", "saki naka": "Chandivali",
+    "sakinaka": "Chandivali", "nahar amrit shakti": "Chandivali", "hiranandani gardens": "Powai",
+    "vakola": "Santacruz West", "kalina": "Bandra East", "kalanagar": "Bandra East",
+    "carter road": "Bandra West", "bandstand": "Bandra West", "hill road": "Bandra West",
+    "chapel road": "Bandra West", "ranwar": "Bandra West", "shivaji park": "Dadar West",
+    "byculla": "Lower Parel", "parel": "Lower Parel", "tardeo": "Malabar Hill",
+    "pedder road": "Malabar Hill", "breach candy": "Malabar Hill", "walkeshwar": "Malabar Hill",
+    "kemps corner": "Malabar Hill", "nariman point": "Colaba",
+    "mira road": "Dahisar East", "bhayandar": "Dahisar East",
+    "kasarvadavali": "Ghodbunder Road", "waghbil": "Ghodbunder Road",
+    "manpada": "Ghodbunder Road", "brahmand": "Ghodbunder Road",
+    "balkum": "Majiwada", "vartak nagar": "Pokhran Road", "vasant vihar": "Pokhran Road",
+    "sanpada": "Vashi", "kopar khairane": "Vashi", "koparkhairane": "Vashi",
+    "ghansoli": "Airoli", "kamothe": "Panvel", "kalamboli": "Panvel", "taloja": "Kharghar",
+}
+
+def nearest_locality(lat: float, lng: float) -> Tuple[str, float]:
+    best_loc, best_km = "Mumbai", 999.0
+    for loc, (cla, cln) in SAFE_CENTROIDS.items():
+        d = _hav_km(lat, lng, cla, cln)
+        if d < best_km:
+            best_km, best_loc = d, loc
+    return best_loc, best_km
+
+def infer_true_locality(text: str, current_loc: str) -> str:
+    low = (text or "").lower().replace("-", " ")
+    for loc in sorted(SAFE_CENTROIDS.keys(), key=lambda x: -len(x)):
+        if re.search(r"\b" + re.escape(loc.lower()) + r"\b", low):
+            return loc
+    for alias, target in sorted(SUBLOC_ALIASES.items(), key=lambda kv: -len(kv[0])):
+        if re.search(r"\b" + re.escape(alias) + r"\b", low):
+            return target
+    return current_loc

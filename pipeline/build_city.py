@@ -7,7 +7,7 @@ from pipeline.civic_osm import load_civic_pois, enrich_civic
 from pipeline.connectors.google_places import enrich_with_google_places
 from pipeline.core.checkpoint import CheckpointDB
 from pipeline.entity_resolver import resolve_entities
-from pipeline.geo_guard import is_valid_mmr_land, safe_approx_coords, enrich_with_osm_photon
+from pipeline.geo_guard import is_valid_mmr_land, safe_approx_coords, enrich_with_osm_photon, infer_true_locality, nearest_locality
 from pipeline.mumbai_enricher import enrich_mumbai, load_transit
 from pipeline.pricing_engine import summarize_portal_prices
 
@@ -81,7 +81,11 @@ def build_mumbai(db_path: str | Path = "pipeline/staging/mumbai_raw.db", max_goo
 
     for can in canonicals:
         if COMM_DROP.search(can["name"]) or JUNK_NAME.search(can["name"]): continue
-        loc = can["locality"]
+        recs_tmp = [r for grp in can["raw_by_source"].values() for r in grp]
+        hint_text = can["name"] + " " + " ".join(str(r.get("url") or "") for r in recs_tmp[:4])
+        loc = infer_true_locality(hint_text, can["locality"])
+        loc_reassigned = (loc != can["locality"])
+
         gplace = gcache.get(can["id"])
         gloc = (gplace or {}).get("location") or {}
         osm_pt = osm_cache.get(can["id"]) or []
@@ -92,6 +96,15 @@ def build_mumbai(db_path: str | Path = "pipeline/staging/mumbai_raw.db", max_goo
             if is_valid_mmr_land(cla, cln, loc):
                 lat, lng = round(float(cla), 6), round(float(cln), 6)
                 break
+        if lat is None:
+            for cla, cln in ((gloc.get("latitude"), gloc.get("longitude")), (can.get("lat"), can.get("lng"))):
+                if is_valid_mmr_land(cla, cln, None):
+                    lat, lng = round(float(cla), 6), round(float(cln), 6)
+                    snap_loc, snap_km = nearest_locality(lat, lng)
+                    if snap_km <= 6.0:
+                        loc = snap_loc
+                        loc_reassigned = True
+                    break
         if lat is None:
             if can.get("lat") is not None: fixed_bad += 1
             lat, lng = safe_approx_coords(can["id"], loc)
@@ -143,7 +156,7 @@ def build_mumbai(db_path: str | Path = "pipeline/staging/mumbai_raw.db", max_goo
             }
         compiled.append({
             "id": can["id"], "name": can["name"], "locality": loc,
-            "zone": can.get("zone") or loc_to_zone.get((loc or "").lower(), "Mumbai"),
+            "zone": loc_to_zone.get((loc or "").lower(), can.get("zone") or "Mumbai") if loc_reassigned else (can.get("zone") or loc_to_zone.get((loc or "").lower(), "Mumbai")),
             "lat": lat, "lng": lng, "coords_approx": coords_approx, "bhks": bhks,
             "furnishing": furns, "tenant": tenants,
             "rera_ids": can["rera_ids"], "rera_carpet_sqft": int(med_carpet) if med_carpet else None,
