@@ -1,19 +1,20 @@
 :root {
-  --bg:#faf9f6; --surf:#ffffff; --card:#ffffff; --hover:#f4f2ee; --line:#eae7e1;
-  --txt:#18181b; --mut:#71717a; --pri:#d95338; --pri-h:#c0442b; --pri-s:rgba(217,83,56,.10);
-  --sage:#157347; --sage-s:#edf7f1; --amb:#a16207; --red:#b91c1c; --red-s:#fef2f2;
-  --pill-bg:#ffffff; --pill-txt:#18181b; --pill-sel:#18181b; --pill-sel-txt:#ffffff;
-  --sh-sm:0 1px 2px rgba(0,0,0,.04), 0 2px 8px rgba(0,0,0,.03);
-  --sh:0 10px 30px rgba(0,0,0,.12);
+  --bg:#f6f3ec; --surf:#fdfcf9; --card:#ffffff; --hover:#efeae0; --line:#e4ddd0;
+  --txt:#1a1917; --mut:#756f65; --pri:#c25238; --pri-h:#a8432b; --pri-s:rgba(194,82,56,.10);
+  --sage:#1f6b5c; --sage-s:#e7f3f0; --brass:#b08d57; --amb:#9a6b25; --red:#b42318; --red-s:#fef3f2;
+  --pill-bg:#ffffff; --pill-txt:#1a1917; --pill-sel:#1a1917; --pill-sel-txt:#fdfcf9;
+  --sh-sm:0 1px 2px rgba(26,25,23,.04), 0 3px 10px rgba(26,25,23,.03);
+  --sh:0 12px 32px rgba(26,25,23,.13);
+  --font-serif:"Fraunces","Georgia",serif;
   --font-head:"Plus Jakarta Sans",-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",sans-serif;
   --font-body:"Inter",-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;
 }
 [data-theme="dark"] {
-  --bg:#111110; --surf:#191918; --card:#1f1f1d; --hover:#292926; --line:#2e2e2b;
-  --txt:#f4f4f0; --mut:#9e9e98; --pri:#f06a4e; --pri-h:#ff7e62; --pri-s:rgba(240,106,78,.15);
-  --sage:#34d399; --sage-s:rgba(52,211,153,.14); --amb:#fbbf24; --red:#f87171; --red-s:rgba(248,113,113,.15);
-  --pill-bg:#242422; --pill-txt:#f4f4f0; --pill-sel:#f4f4f0; --pill-sel-txt:#111110;
-  --sh-sm:0 1px 4px rgba(0,0,0,.35); --sh:0 14px 36px rgba(0,0,0,.55);
+  --bg:#121210; --surf:#181816; --card:#1e1e1b; --hover:#272622; --line:#2e2d28;
+  --txt:#f3efe6; --mut:#9c968b; --pri:#e27358; --pri-h:#f08469; --pri-s:rgba(226,115,88,.15);
+  --sage:#4db8a3; --sage-s:rgba(77,184,163,.14); --brass:#c9a86c; --amb:#eab308; --red:#f87171; --red-s:rgba(248,113,113,.15);
+  --pill-bg:#22221f; --pill-txt:#f3efe6; --pill-sel:#f3efe6; --pill-sel-txt:#121210;
+  --sh-sm:0 1px 4px rgba(0,0,0,.38); --sh:0 14px 36px rgba(0,0,0,.58);
 }
 
 * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; font-family:var(--font-body); }
@@ -209,3 +210,18 @@ table.ctbl th { background:var(--bg); color:var(--mut); font-weight:600; }
 @media (max-width: 560px) {
   #cardList { grid-template-columns:1fr; }
 }
+
+/* Bombay Homes Subtle Art Deco Architectural Polish */
+.logo { background:var(--txt); color:var(--brass); border:1px solid rgba(176,141,87,.35); border-radius:11px; }
+[data-theme="dark"] .logo { background:#22201c; color:var(--brass); border-color:rgba(201,168,108,.35); }
+.brand-txt h1 { font-family:var(--font-serif); font-size:17.5px; font-weight:600; letter-spacing:-.015em; }
+.s-head h2, .m-head h2 { font-family:var(--font-serif); font-size:20px; font-weight:600; letter-spacing:-.015em; }
+.s-head { position:relative; }
+.s-head::after { content:""; position:absolute; left:20px; bottom:-1px; width:36px; height:2px; background:var(--brass); border-radius:2px; }
+.hc-loc { text-transform:uppercase; letter-spacing:.055em; font-size:10.5px; font-weight:600; color:var(--mut); }
+.hc-star { color:var(--brass); font-weight:700; letter-spacing:0; }
+.hc { border-radius:14px; }
+.hc:hover { border-color:rgba(176,141,87,.55); }
+#map.map-street .leaflet-tile-pane { filter:sepia(0.10) saturate(0.62) contrast(0.96) brightness(1.02); }
+.price-pill.val { background:var(--sage); color:#fff; border-color:var(--sage); }
+.area-pill { font-family:var(--font-body); letter-spacing:.01em; border-color:rgba(176,141,87,.55); }

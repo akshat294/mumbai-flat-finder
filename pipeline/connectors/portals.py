@@ -319,7 +319,16 @@ class NinetyNineAcresConnector(BaseConnector):
                 if time.monotonic() > deadline: break
                 u = f"{PROTO}www.99acres.com/{prefix}-{slug}-{reg}-ffid"
                 try:
-                    resp = c_req.get(u, impersonate="chrome", timeout=9, allow_redirects=True)
+                    hdrs_99 = {
+                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+                        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                        "Accept-Language": "en-IN,en;q=0.9",
+                        "Referer": PROTO + "www.99acres.com/",
+                    }
+                    resp = c_req.get(u, impersonate="safari15_5", headers=hdrs_99, timeout=9, allow_redirects=True)
+                    if resp.status_code == 417:
+                        with httpx.Client(http2=False, headers=hdrs_99, timeout=9.0, follow_redirects=True) as hc:
+                            resp = hc.get(u)
                     sc, bl = resp.status_code, len(resp.text)
                     parsed, stats = self._parse_html(resp.text, loc, str(resp.url), mode, limit_per_locality // 2) if (sc == 200 and bl > 40000) else ([], "short/err")
                     out.extend(parsed)

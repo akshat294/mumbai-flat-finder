@@ -2,7 +2,7 @@
   const H = "https" + "://";
   const fLink = document.createElement("link");
   fLink.rel = "stylesheet";
-  fLink.href = H + "fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap";
+  fLink.href = H + "fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap";
   document.head.appendChild(fLink);
 
   const RENT_STOPS = [0,10000,15000,20000,25000,30000,35000,40000,45000,50000,60000,70000,80000,90000,100000,120000,140000,160000,180000,200000,250000,300000,350000,400000,500000,750000];
@@ -373,7 +373,7 @@
       ${s.thumb ? `<img class="hc-thumb" src="${esc(s.thumb)}" alt="" loading="lazy" onerror="this.remove()" />` : ""}
       <div class="hc-main">
         <div class="hc-row1">
-          <div style="min-width:0;"><div class="hc-name">${esc(s.name)}</div><div class="hc-loc">${esc(s.locality)}${g?.rating ? ` · ★ ${g.rating}` : ""}</div></div>
+          <div style="min-width:0;"><div class="hc-name">${esc(s.name)}</div><div class="hc-loc">${esc(s.locality)}${g?.rating ? ` · <span class="hc-star">★ ${g.rating}</span>` : ""}</div></div>
           <button class="heart-btn ${isS ? "sv" : ""}" data-sv="1" aria-label="Save"><svg class="ic" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg></button>
         </div>
         <div class="hc-row2">
@@ -544,7 +544,7 @@
     const shareLink = `${location.origin}${location.pathname}?list=${encodeURIComponent(items.map(x => x.id).join(","))}`;
     $("copyCmpLink").onclick = () => navigator.clipboard?.writeText(shareLink).then(() => toast("Shortlist link copied"));
     $("shareCmpWa").onclick = () => {
-      const msg = `Mumbai Flat Shortlist (${items.length} homes):\n` + items.map((s, i) => `${i + 1}. ${s.name} (${s.locality}) — ${getPriceLabel(s)}`).join("\n") + `\n\nCompare: ${shareLink}`;
+      const msg = `Bombay Homes Shortlist (${items.length} homes):\n` + items.map((s, i) => `${i + 1}. ${s.name} (${s.locality}) — ${getPriceLabel(s)}`).join("\n") + `\n\nCompare: ${shareLink}`;
       window.open(H + "wa.me/?text=" + encodeURIComponent(msg), "_blank");
     };
     $("cmpModal").style.display = "grid";
