@@ -162,6 +162,11 @@ def run():
     data["count"] = len(socs)
     data["societies"] = socs
     save_compacted_index(idx_p, data)
+    try:
+        from pipeline.vision_vibe import score_societies
+        score_societies()
+    except Exception as _ve:
+        print(f'[v25 VIBE WARN] {_ve}')
 
     print(f"[v20 DONE] Pins fixed: {fixed_pins} | Names cleaned: {fixed_names} | Native +{n_u} ({n_s} bldgs) | Apify +{a_u} | NB photos +{nb_photos} | Multi-photo bldgs: {multi_photo_socs} | RERA bldgs: {rera_total} (+{rera_hits} matched)")
 

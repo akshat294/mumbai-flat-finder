@@ -1,0 +1,56 @@
+name: 2-Hour Zero-Brokerage Sniper
+
+on:
+  schedule:
+    - cron: '15 */2 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: bombayhomes-sniper-2h
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  sniper:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install curl_cffi
+        run: pip install -q curl_cffi
+
+      - name: Poll 12 hot Mumbai hubs for fresh Zero-Brokerage drops
+        env:
+          PYTHONUNBUFFERED: "1"
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          python -u pipeline/sniper_nobroker.py
+          python -u pipeline/vision_vibe.py
+
+      - name: Deploy & save if new drops found
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if ! git diff --quiet web/public/data/mumbai-index.json; then
+            npx --yes wrangler@latest pages deploy web --project-name=bombayhomes --branch=production --commit-dirty=true
+            git config user.name "mumbai-flat-finder-bot"
+            git config user.email "bot@users.noreply.github.com"
+            git add web/public/data/mumbai-index.json
+            git commit -m "chore: 2h zero-brokerage sniper update"
+            git pull --rebase && git push
+          else
+            echo "No new drops - skipping deploy."
+          fi

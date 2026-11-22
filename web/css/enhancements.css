@@ -135,3 +135,53 @@ button[data-act="save"], [aria-label*="Save" i].fc-act {
     width: 100% !important; height: calc(100dvh - 108px) !important; z-index: 50;
   }
 }
+
+
+/* === V25 AI VIBE & TALK-TO-MAP === */
+.bh-vibe-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 11px; border-radius: 999px; font-size: 12px; font-weight: 700;
+  border: 1px solid rgba(234, 179, 8, 0.45);
+  background: rgba(234, 179, 8, 0.10); color: #a16207; cursor: pointer; white-space: nowrap;
+}
+[data-theme="dark"] .bh-vibe-chip { color: #fde047; }
+.bh-vibe-chip.active { background: #eab308; color: #111; border-color: #eab308; }
+
+.bh-vibe-badge {
+  display: inline-flex; align-items: center; padding: 2px 7px; border-radius: 999px;
+  font-size: 10px; font-weight: 700; margin-left: 6px;
+  background: rgba(234, 179, 8, 0.16); color: #a16207;
+}
+[data-theme="dark"] .bh-vibe-badge { color: #fde047; }
+.bh-render-badge {
+  display: inline-flex; align-items: center; padding: 2px 7px; border-radius: 999px;
+  font-size: 10px; font-weight: 700; margin-left: 6px;
+  background: rgba(168, 85, 247, 0.14); color: #7e22ce;
+}
+[data-theme="dark"] .bh-render-badge { color: #d8b4fe; }
+
+.bh-ai-bar {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  padding: 6px 14px; background: rgba(18, 37, 29, 0.04);
+  border-bottom: 1px solid var(--border, rgba(128, 128, 128, 0.18));
+  font-size: 12px;
+}
+[data-theme="dark"] .bh-ai-bar { background: rgba(230, 194, 120, 0.05); }
+.bh-ai-input {
+  flex: 1; min-width: 220px; height: 30px; padding: 0 11px; border-radius: 999px;
+  border: 1px solid rgba(196, 154, 69, 0.45); background: var(--surface, #fff);
+  color: var(--text, #18181b); font-size: 12px; outline: none;
+}
+.bh-ai-input:focus { border-color: #c49a45; box-shadow: 0 0 0 2px rgba(196, 154, 69, 0.18); }
+.bh-ai-go {
+  height: 30px; padding: 0 13px; border-radius: 999px; border: none;
+  background: #12251d; color: #f8f5ec; font-size: 12px; font-weight: 700; cursor: pointer;
+}
+.bh-ai-go:hover { background: #1e3d30; }
+.bh-ai-preset {
+  padding: 3px 9px; border-radius: 999px; border: 1px solid var(--border, rgba(128, 128, 128, 0.28));
+  background: var(--surface, #fff); color: var(--text, #18181b); font-size: 11px; cursor: pointer;
+}
+.bh-ai-preset:hover { border-color: #c49a45; }
+.bh-ai-status { font-size: 11px; font-weight: 600; color: #15803d; }
+[data-theme="dark"] .bh-ai-status { color: #4ade80; }

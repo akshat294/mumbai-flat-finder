@@ -90,3 +90,5 @@ bombayhomes_status.txt
 .env.*
 *.env
 bombayhomes_v24_audit.txt
+bombayhomes_diag.txt
+bombayhomes_v25_report.txt

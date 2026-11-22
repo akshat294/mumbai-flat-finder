@@ -564,3 +564,178 @@
   let _mapTries = 0; const _mapIv = setInterval(() => { hookMapUpgrades(); if ((bh().map && bh().map._bhUpgraded) || ++_mapTries > 15) clearInterval(_mapIv); }, 300);
   applyUrlStateOnBoot();
 })();
+
+
+// === V25 AI VIBE & TALK-TO-MAP ===
+(function initV25Features() {
+  "use strict";
+  function bh() { return (typeof window.__bh === "function" ? window.__bh() : {}) || {}; }
+
+  let brightOnly = false;
+
+  function applyBrightFilterToDom() {
+    const cl = document.getElementById("cardList");
+    if (!cl) return;
+    const socById = new Map((bh().societies || []).map(s => [s.id, s]));
+    cl.querySelectorAll("article.fc").forEach(card => {
+      const soc = socById.get(card.dataset.id);
+      if (!soc) return;
+      const vs = typeof soc.vs === "number" ? soc.vs : 50;
+      const isRender = !!soc.vr;
+      card.style.display = (brightOnly && (vs < 74 || isRender)) ? "none" : "";
+
+      const metaRow = card.querySelector(".fc-price, .fc-top") || card.querySelector(".fc-body") || card;
+      if (vs >= 78 && !isRender && !card.querySelector(".bh-vibe-badge")) {
+        const vb = document.createElement("span");
+        vb.className = "bh-vibe-badge";
+        vb.textContent = "Sunlit";
+        metaRow.appendChild(vb);
+      } else if (isRender && !card.querySelector(".bh-render-badge")) {
+        const rb = document.createElement("span");
+        rb.className = "bh-render-badge";
+        rb.textContent = "3D Render";
+        metaRow.appendChild(rb);
+      }
+    });
+  }
+
+  function injectBrightChip() {
+    if (document.getElementById("bhBrightBtn")) return;
+    const anchor = [...document.querySelectorAll("button")].find(b => /Zero Brokerage|Sea View|Balcony/i.test(b.textContent || ""));
+    if (!anchor || !anchor.parentElement) return;
+    const btn = document.createElement("button");
+    btn.id = "bhBrightBtn";
+    btn.type = "button";
+    btn.className = "bh-vibe-chip";
+    btn.textContent = "Bright & Modern";
+    btn.title = "Filter for sunlit, modern, multi-photo flats (hides dark & 3D render ads)";
+    btn.addEventListener("click", () => {
+      brightOnly = !brightOnly;
+      btn.classList.toggle("active", brightOnly);
+      applyBrightFilterToDom();
+    });
+    anchor.parentElement.insertBefore(btn, anchor);
+  }
+
+  const KNOWN_LOCS = [
+    "Bandra West","Bandra East","Khar West","Khar East","Santacruz West","Santacruz East",
+    "Vile Parle West","Juhu","Versova","Andheri West","Andheri East","Powai","Chandivali",
+    "Colaba","Malabar Hill","Worli","Lower Parel","Prabhadevi","Dadar West","Mahim","Wadala",
+    "Chembur","Ghatkopar West","Vikhroli","Mulund West","Goregaon West","Goregaon East",
+    "Malad West","Kandivali West","Borivali West","Mira Road","Thane West","Ghodbunder Road",
+    "Vashi","Nerul","Kharghar","Airoli","Panvel"
+  ];
+  const LOC_ALIASES = {
+    "bandra": "Bandra West", "bkc": "Bandra East", "khar": "Khar West",
+    "santacruz": "Santacruz West", "andheri": "Andheri West", "dadar": "Dadar West",
+    "goregaon": "Goregaon West", "malad": "Malad West", "kandivali": "Kandivali West",
+    "borivali": "Borivali West", "thane": "Thane West", "mulund": "Mulund West",
+    "ghatkopar": "Ghatkopar West", "aqua line": "Worli"
+  };
+
+  function runTalkToMap(query) {
+    const q = String(query || "").trim();
+    const st = bh().st;
+    const statusEl = document.getElementById("bhAiStatus");
+    if (!q || !st) return;
+    const low = q.toLowerCase();
+    const applied = [];
+
+    if (/\b(buy|sale|purchase|invest|cr|crore)\b/i.test(low)) {
+      if (st.mode !== "buy") document.getElementById("modeBuy")?.click();
+      applied.push("Buy");
+    } else if (/\b(rent|lease|flatmate|sharing|pg|k\b)\b/i.test(low)) {
+      if (st.mode !== "rent") document.getElementById("modeRent")?.click();
+      applied.push("Rent");
+    }
+
+    if (st.bhk && st.bhk.clear) st.bhk.clear();
+    if (/\b1\s*rk\b|\bstudio\b/i.test(low)) {
+      st.bhk?.add(0); applied.push("1RK");
+    } else {
+      const bm = [...low.matchAll(/\b([1-4])\s*[-]?\s*bhk\b/gi)];
+      bm.forEach(m => { st.bhk?.add(Number(m[1])); applied.push(m[1] + "BHK"); });
+    }
+
+    const pm = low.match(/(?:under|below|max|upto|up to|<)\s*(?:\u20b9|rs\.?)?\s*([\d,.]+)\s*(cr|crore|l|lac|lakh|k)?/i);
+    if (pm) {
+      let val = parseFloat(pm[1].replace(/,/g, ""));
+      const u = (pm[2] || "").toLowerCase();
+      if (u.startsWith("cr")) val *= 1e7;
+      else if (u.startsWith("l")) val *= 1e5;
+      else if (u === "k") val *= 1e3;
+      if (isFinite(val) && val >= 5000) {
+        st.maxPrice = Math.round(val);
+        applied.push("Under " + pm[1] + (pm[2] || ""));
+      }
+    }
+
+    const matchedLocs = [];
+    for (const loc of KNOWN_LOCS) {
+      if (low.includes(loc.toLowerCase()) && !matchedLocs.includes(loc)) matchedLocs.push(loc);
+    }
+    if (!matchedLocs.length) {
+      for (const [al, tgt] of Object.entries(LOC_ALIASES)) {
+        if (new RegExp("\\b" + al + "\\b", "i").test(low) && !matchedLocs.includes(tgt)) matchedLocs.push(tgt);
+      }
+    }
+    if (matchedLocs.length) {
+      if (window.__v16Locs && window.__v16Locs.clear) {
+        window.__v16Locs.clear();
+        matchedLocs.slice(0, 5).forEach(l => window.__v16Locs.add(l));
+      }
+      st.locality = matchedLocs[0];
+      applied.push(matchedLocs.slice(0, 3).join(" + "));
+    }
+
+    if (/\b(zero brokerage|no broker|owner|direct)\b/i.test(low)) {
+      st.zb = true; applied.push("Zero Brokerage");
+    }
+    if (/\b(flatmate|roommate|shared|sharing)\b/i.test(low)) {
+      st.lister = "shared"; applied.push("Shared");
+    }
+    if (/\b(balcony)\b/i.test(low)) { st.balcony = true; applied.push("Balcony"); }
+    if (/\b(sea view|ocean|seaview)\b/i.test(low)) { st.seaview = true; applied.push("Sea View"); }
+    if (/\b(bright|sunlit|modern|daylight)\b/i.test(low)) {
+      brightOnly = true;
+      document.getElementById("bhBrightBtn")?.classList.add("active");
+      applied.push("Bright & Modern");
+    }
+
+    try { if (bh().applyFilters) bh().applyFilters(); } catch {}
+    setTimeout(applyBrightFilterToDom, 120);
+    if (statusEl) {
+      statusEl.textContent = applied.length ? ("Applied: " + applied.join(" \u00b7 ")) : "No filters recognized";
+    }
+  }
+
+  function injectTalkToMapBar() {
+    if (document.getElementById("bhAiBar")) return;
+    const header = document.querySelector("header.topbar");
+    if (!header || !header.parentElement) return;
+    const bar = document.createElement("div");
+    bar.id = "bhAiBar";
+    bar.className = "bh-ai-bar";
+    bar.innerHTML =
+      '<input id="bhAiInput" class="bh-ai-input" type="text" placeholder="Talk to the Map: e.g. Sunlit 2BHK under 80k in Bandra or Khar zero brokerage" />' +
+      '<button id="bhAiGo" class="bh-ai-go" type="button">Ask Map</button>' +
+      '<button type="button" class="bh-ai-preset" data-q="Sunlit 2BHK under 80k Bandra zero brokerage">2BHK Bandra <80k</button>' +
+      '<button type="button" class="bh-ai-preset" data-q="Bright 1BHK under 50k Andheri or Powai zero brokerage">1BHK Powai/Andheri</button>' +
+      '<button type="button" class="bh-ai-preset" data-q="Buy 3BHK under 4cr Worli or Lower Parel">Buy 3BHK SoBo</button>' +
+      '<span id="bhAiStatus" class="bh-ai-status"></span>';
+
+    header.insertAdjacentElement("afterend", bar);
+
+    const inp = document.getElementById("bhAiInput");
+    document.getElementById("bhAiGo").addEventListener("click", () => runTalkToMap(inp.value));
+    inp.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); runTalkToMap(inp.value); } });
+    bar.querySelectorAll(".bh-ai-preset").forEach(b => {
+      b.addEventListener("click", () => { inp.value = b.dataset.q; runTalkToMap(b.dataset.q); });
+    });
+  }
+
+  const cl = document.getElementById("cardList");
+  if (cl) new MutationObserver(() => requestAnimationFrame(applyBrightFilterToDom)).observe(cl, { childList: true });
+
+  setTimeout(() => { injectBrightChip(); injectTalkToMapBar(); applyBrightFilterToDom(); }, 600);
+})();
