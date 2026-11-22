@@ -265,7 +265,7 @@ def sync_apify(rent_limit=300, buy_limit=200, sources=("housing", "99acres"), fo
             try:
                 rows = _call_apify_actor(
                     "datascrapers~99acres-scraper",
-                    {"searchQueries": ["Mumbai"], "category": mode, "segment": "residential", "maxItems": lim},
+                    {"searchQueries": ["Bandra West Mumbai", "Khar West Mumbai", "Andheri West Mumbai", "Powai Mumbai", "Worli Mumbai", "Lower Parel Mumbai", "Goregaon West Mumbai", "Malad West Mumbai", "Chembur Mumbai", "Dadar West Mumbai", "Thane West", "Navi Mumbai"], "category": mode, "segment": "residential", "maxItems": lim},
                     token,
                 )
                 n_ok = 0
