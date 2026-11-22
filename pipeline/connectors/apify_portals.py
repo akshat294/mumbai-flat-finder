@@ -27,19 +27,29 @@ def _first_str(obj, keys):
     return ""
 
 def _find_first_url(obj):
-    u = _first_str(obj, ("url", "propertyUrl", "listingUrl", "detailUrl", "canonicalUrl", "link", "href", "pageUrl"))
+    u = _first_str(obj, (
+        "url", "listing_url", "property_url", "detail_url", "page_url", "source_url", "canonical_url",
+        "propertyUrl", "listingUrl", "detailUrl", "canonicalUrl", "link", "href", "pageUrl"
+    ))
     if u.startswith("http"):
         return u
     if u.startswith("/"):
         blob = json.dumps(obj, ensure_ascii=False).lower()
-        if "99acres" in blob:
-            return "https://www.99acres.com" + u
-        if "housing" in blob:
-            return "https://housing.com" + u
+        return ("https://www.99acres.com" if "99acres" in blob else "https://housing.com") + u
+    for v in obj.values():
+        if isinstance(v, str) and (v.startswith("https://housing.com") or v.startswith("https://www.99acres.com")):
+            return v.strip()
+    lid = obj.get("listing_id")
+    if lid:
+        lt = str(obj.get("listing_type") or "").lower()
+        pt = str(obj.get("property_type") or "").lower()
+        if lt == "buy":
+            return f"https://housing.com/in/buy/projects/page/{lid}" if "project" in pt else f"https://housing.com/in/buy/resale/page/{lid}"
+        return f"https://housing.com/in/rent/page/{lid}"
     return ""
 
 def _find_img(obj):
-    for k in ("coverImage", "mainImage", "imageUrl", "thumbnail", "image", "photo"):
+    for k in ("coverImage", "cover_image", "mainImage", "main_image", "imageUrl", "image_url", "photo_url", "thumbnail", "thumbnail_url", "image", "photo"):
         v = obj.get(k)
         if isinstance(v, str) and v.startswith("http"):
             return v
@@ -47,7 +57,7 @@ def _find_img(obj):
             u = _first_str(v, ("url", "src", "large", "original"))
             if u.startswith("http"):
                 return u
-    for k in ("images", "photos", "gallery", "media"):
+    for k in ("images", "photos", "image_urls", "photo_urls", "gallery", "media"):
         arr = obj.get(k)
         if isinstance(arr, list) and arr:
             first = arr[0]
@@ -57,6 +67,11 @@ def _find_img(obj):
                 u = _first_str(first, ("url", "src", "large", "original", "imageUrl"))
                 if u.startswith("http"):
                     return u
+    for v in obj.values():
+        if isinstance(v, str):
+            m = re.search(r"https?://[^\"'\s]+?\.(?:jpg|jpeg|webp|png)", v, re.I)
+            if m and "logo" not in m.group(0).lower():
+                return m.group(0)
     return None
 
 def _norm_any_item(it, source_hint="", mode_hint="rent"):
@@ -68,29 +83,30 @@ def _norm_any_item(it, source_hint="", mode_hint="rent"):
     src = source_hint
     if "99acres" in low_u or "99acres" in blob.lower():
         src = "99acres"
-    elif "housing.com" in low_u or "housing" in src:
+    elif "housing.com" in low_u or "housing" in src or it.get("listing_id"):
         src = "housing"
     if not u.startswith("http") or src not in ("housing", "99acres"):
         return None
 
     loc_parts = [
-        it.get("locality"), it.get("localityName"), it.get("subLocality"),
+        it.get("locality"), it.get("locality_name"), it.get("localityName"), it.get("subLocality"),
         it.get("location"), it.get("address"), it.get("suburb"),
-        it.get("neighbourhood"), it.get("title"), it.get("name"), u
+        it.get("neighbourhood"), it.get("title"), it.get("subtitle"), it.get("name"), u
     ]
     det = detect_locality(" ".join(str(x or "") for x in loc_parts))
     if not det:
         return None
 
     mode = mode_hint
-    if "/buy/" in low_u or "for-sale" in low_u or str(it.get("listingType") or it.get("category") or "").lower() in ("buy", "sale", "resale"):
+    lt_raw = str(it.get("listing_type") or it.get("listingType") or it.get("category") or "").lower()
+    if "/buy/" in low_u or "for-sale" in low_u or lt_raw in ("buy", "sale", "resale"):
         mode = "buy"
-    elif "/rent/" in low_u or "for-rent" in low_u or str(it.get("listingType") or it.get("category") or "").lower() == "rent":
+    elif "/rent/" in low_u or "for-rent" in low_u or lt_raw == "rent":
         mode = "rent"
 
     raw_p = None
-    for pk in ("priceInr", "price", "rent", "monthlyRent", "displayPrice", "formattedPrice", "minPrice", "priceMinInr", "priceText"):
-        if it.get(pk) not in (None, "", 0):
+    for pk in ("priceInr", "price", "rent", "monthly_rent", "monthlyRent", "price_label", "displayPrice", "formattedPrice", "minPrice", "priceMinInr", "priceText"):
+        if it.get(pk) not in (None, "", 0, "None"):
             raw_p = it.get(pk)
             break
     if isinstance(raw_p, dict):
@@ -104,25 +120,27 @@ def _norm_any_item(it, source_hint="", mode_hint="rent"):
     if not price:
         return None
 
-    title_raw = _first_str(it, ("society", "societyName", "projectName", "buildingName", "title", "name", "heading"))
-    seller = str(it.get("sellerType") or it.get("postedBy") or it.get("agentType") or it.get("ownerType") or "").lower()
+    title_raw = _first_str(it, ("society", "society_name", "societyName", "project_name", "projectName", "building_name", "buildingName", "title", "name", "heading"))
+    seller = str(it.get("seller_type") or it.get("posted_by") or it.get("sellerType") or it.get("postedBy") or it.get("agentType") or it.get("ownerType") or "").lower()
     is_owner = "owner" in seller
     coords = it.get("coords") or it.get("coordinates") or it.get("geo") or {}
     lat = it.get("latitude") or it.get("lat") or (coords.get("lat") or coords.get("latitude") if isinstance(coords, dict) else None)
     lng = it.get("longitude") or it.get("lng") or it.get("lon") or (coords.get("lng") or coords.get("lon") or coords.get("longitude") if isinstance(coords, dict) else None)
-    sq_raw = it.get("carpetAreaSqft") or it.get("carpetArea") or it.get("areaSqft") or it.get("builtUpArea") or it.get("area") or it.get("size")
+    sq_raw = it.get("area_sqft") or it.get("carpet_area") or it.get("carpetAreaSqft") or it.get("carpetArea") or it.get("areaSqft") or it.get("builtUpArea") or it.get("area") or it.get("size")
     sq_m = re.search(r"(\d{3,4})", str(sq_raw or ""))
-    rera = it.get("reraId") or it.get("rera") or it.get("reraIds")
+    rera = it.get("rera_id") or it.get("reraId") or it.get("rera") or it.get("reraIds")
     rera_list = rera if isinstance(rera, list) else ([rera] if isinstance(rera, str) and rera else [])
+
+    bhk_raw = it.get("bhk") or it.get("bedrooms") or it.get("config") or it.get("configurations") or it.get("subtitle") or it.get("amenities") or title_raw
 
     return {
         "name": clean_soc_name(title_raw or f"{det[0]} Flat", det[0]),
         "locality": det[0], "mode": mode, "p": price,
-        "b": parse_bhk(it.get("bhk") or it.get("bedrooms") or it.get("config") or it.get("configurations") or title_raw),
+        "b": parse_bhk(bhk_raw),
         "sq": int(sq_m.group(1)) if sq_m else None,
         "s": src, "u": u.split("?")[0], "zb": is_owner,
         "lt": "owner" if is_owner else "broker",
-        "f": norm_furnishing(it.get("furnishing") or it.get("furnishingType") or it.get("furnished")),
+        "f": norm_furnishing(it.get("furnishing") or it.get("furnishing_type") or it.get("furnishingType") or it.get("furnished")),
         "img": _find_img(it),
         "lat": lat, "lng": lng,
         "rera_ids": rera_list,
@@ -157,49 +175,30 @@ def recover_recent_runs():
         return []
     runs_resp = _api_get(f"https://api.apify.com/v2/actor-runs?token={urllib.parse.quote(token)}&desc=true&limit=10")
     runs = (runs_resp.get("data") or {}).get("items") or []
-    print(f"  [apify recover] Found {len(runs)} recent run(s) in your Apify account (0 credits used).")
+    print(f"  [apify recover] Found {len(runs)} recent run(s) (0 credits used).")
     fresh = []
     for r in runs:
-        rid, aid, status, ds_id = r.get("id"), r.get("actId"), r.get("status"), r.get("defaultDatasetId")
-        print(f"    Run {rid} | act={aid} | status={status} | dataset={ds_id}")
+        rid, ds_id = r.get("id"), r.get("defaultDatasetId")
         if not ds_id:
             continue
         try:
             items = _api_get(f"https://api.apify.com/v2/datasets/{ds_id}/items?token={urllib.parse.quote(token)}&clean=true&limit=600")
         except Exception as e:
-            print(f"      -> dataset read error: {e}")
+            print(f"    Run {rid} read error: {e}")
             continue
         if not isinstance(items, list):
             continue
-        print(f"      -> raw items in dataset: {len(items)}")
-        if items and isinstance(items[0], dict):
-            sample = {k: str(v)[:80] for k, v in list(items[0].items())[:14]}
-            print(f"      -> sample item[0]: {sample}")
-            ok = 0
-            for it in items:
-                rec = _norm_any_item(it)
-                if rec:
-                    fresh.append(rec)
-                    ok += 1
-            print(f"      -> normalized clean Mumbai records: {ok}")
-        elif len(items) == 0 and aid:
-            try:
-                act_info = _api_get(f"https://api.apify.com/v2/acts/{aid}?token={urllib.parse.quote(token)}")
-                d = act_info.get("data") or {}
-                print(f"      -> actor: {d.get('username')}/{d.get('name')}")
-                bid = ((d.get("taggedBuilds") or {}).get("latest") or {}).get("buildId")
-                if bid:
-                    binfo = _api_get(f"https://api.apify.com/v2/actor-builds/{bid}?token={urllib.parse.quote(token)}")
-                    in_schema = (binfo.get("data") or {}).get("inputSchema")
-                    if isinstance(in_schema, str):
-                        in_schema = json.loads(in_schema)
-                    props = (in_schema or {}).get("properties") or {}
-                    print(f"      -> expected input keys: {list(props.keys())[:15]}")
-            except Exception as e:
-                print(f"      -> schema inspect skipped: {e}")
+        ok = 0
+        for it in items:
+            rec = _norm_any_item(it)
+            if rec:
+                fresh.append(rec)
+                ok += 1
+        keys_str = list(items[0].keys()) if (items and isinstance(items[0], dict)) else []
+        print(f"    Run {rid} | raw={len(items)} -> clean Mumbai={ok} | keys={keys_str}")
     if fresh:
         merged = _save_merged_cache(fresh)
-        print(f"  [apify recover] Recovered {len(fresh)} records -> cache now has {len(merged)} records!")
+        print(f"  [apify recover] Cache now has {len(merged)} total clean Mumbai records!")
         return merged
     return load_cached_apify()
 
