@@ -366,7 +366,6 @@ def fetch_stanza_zolo_ssr():
     pages = [
         ("stanza", "https://www.stanzaliving.com/mumbai"),
         ("stanza", "https://www.stanzaliving.com/unisex-paying-guest-pg-hostel-near-mumbai"),
-        ("zolostays", "https://zolostays.com/pgs-in-mumbai"),
     ]
     for src, url in pages:
         try:
@@ -444,7 +443,6 @@ def fetch_playwright_coliving():
         ("nextflat", "https://nextflat.in/flatmates/flatmates-in-mumbai", "shared", True),
         ("nextflat", "https://nextflat.in/flats/flats-for-rent-in-mumbai", "owner", True),
         ("nestaway", "https://www.nestaway.com/mumbai", "shared", True),
-        ("zolostays", "https://zolostays.com/pgs-in-mumbai", "shared", True),
         ("stanza", "https://www.stanzaliving.com/mumbai", "shared", True),
     ]
     eval_js = (
@@ -484,9 +482,9 @@ def fetch_playwright_coliving():
                         out.append({
                             "name": f"{src.title()} {det[0]}",
                             "locality": det[0], "mode": "rent", "p": price,
-                            "b": parse_bhk(c["txt"]) or (0 if src in ("zolostays", "stanza") else 1),
+                            "b": parse_bhk(c["txt"]) or (0 if src in ("stanza",) else 1),
                             "sq": None, "s": src, "u": u, "zb": is_zb, "lt": lt,
-                            "f": norm_furnishing(c["txt"]) or ("furnished" if src in ("zolostays", "stanza") else None),
+                            "f": norm_furnishing(c["txt"]) or ("furnished" if src in ("stanza",) else None),
                             "img": imgs[0] if imgs else None, "imgs": imgs,
                         })
                 except Exception:
