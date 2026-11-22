@@ -9,7 +9,7 @@
   const BUY_STOPS  = [0,4000000,6000000,8000000,10000000,12500000,15000000,17500000,20000000,25000000,30000000,35000000,40000000,50000000,60000000,75000000,100000000,125000000,150000000];
   const SQFT_MAX = 4000;
   const HUB_LABELS = { bkc:"BKC", lower_parel:"Lower Parel", andheri_seepz:"Andheri", powai:"Powai", goregaon_nesco:"Goregaon", nariman_point:"Nariman Pt" };
-  const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyards:"Square Yards", commonfloor:"CommonFloor", makaan:"Makaan", nobrokerage:"NoBrokerage", community:"Flatmates", reddit:"Reddit", "99acres":"99acres", housing:"Housing.com", owner:"Direct Owner", other:"Direct" };
+  const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyards:"Square Yards", commonfloor:"CommonFloor", makaan:"Makaan", nobrokerage:"NoBrokerage", community:"Flatmates", reddit:"Reddit", "99acres":"99acres", housing:"Housing.com", owner:"Direct Owner", nextflat:"NextFlat", dwelo:"Dwelo", nestaway:"NestAway", zolostays:"ZoloStays", other:"Direct" };
 
   function readJSON(k, fb) { try { return JSON.parse(localStorage.getItem(k) || "null") || fb; } catch { return fb; } }
   const savedInit = readJSON("mhf_s3", { ids:[], notes:{} });
@@ -518,7 +518,7 @@
         return (a.p || 9e9) - (b.p || 9e9);
       });
       const best = deduped[0];
-      best._v17MoreCount = Math.max(0, deduped.length - 1);
+      best._v17MoreCount = Math.max(0, deduped.length - 1); window.__v18MoreMap = window.__v18MoreMap || new Map(); window.__v18MoreMap.set(s.id, best._v17MoreCount);
       flats.push({ s, u: best, idx: 0 });
     }
 
@@ -1504,10 +1504,10 @@
 
 })();
 
-
 // === V17 MODULE ===
-(function initV17() {
+(function initV18() {
   window.__v17Flags = window.__v17Flags || {};
+  window.__v18MoreMap = window.__v18MoreMap || new Map();
 
   fetch("/api/flags").then(r => r.ok ? r.json() : null).then(d => {
     if (d && d.flags) {
@@ -1515,6 +1515,49 @@
       try { if (typeof renderList === "function") renderList(); } catch {}
     }
   }).catch(() => {});
+
+  const freshEl = document.getElementById("freshBadge");
+  const resSumEl = document.getElementById("resSum");
+
+  function cleanFreshText() {
+    if (!freshEl) return;
+    const raw = freshEl.textContent || "";
+    const mDate = raw.match(/(\d{1,2}\s+[A-Za-z]{3}\s+\d{4},\s*\d{1,2}:\d{2}\s*[AP]M)/);
+    let rel = "Updated today";
+    if (mDate) {
+      const parsed = Date.parse(mDate[1] + " GMT+0530");
+      if (isFinite(parsed)) {
+        const hrs = Math.max(0, Math.round((Date.now() - parsed) / 3600000));
+        rel = hrs < 1 ? "Updated just now" : (hrs < 24 ? ("Updated " + hrs + "h ago") : ("Updated " + Math.round(hrs / 24) + "d ago"));
+      }
+    }
+    const modeLbl = (typeof st !== "undefined" && st.mode === "buy") ? "For Sale" : "For Rent";
+    const target = "Mumbai " + modeLbl + " \u00b7 " + rel;
+    if (freshEl.textContent !== target) freshEl.textContent = target;
+  }
+
+  function cleanResSum() {
+    if (!resSumEl) return;
+    const txt = resSumEl.textContent || "";
+    if (txt.includes("exact pin") || txt.includes("homes")) {
+      const nMatch = txt.match(/([\d,]+)/);
+      const bldgs = nMatch ? nMatch[1] : (typeof filtered !== "undefined" ? filtered.length.toLocaleString("en-IN") : "0");
+      let totalFlats = 0;
+      if (typeof filtered !== "undefined" && typeof matchingUnits === "function") {
+        for (const s of filtered) totalFlats += matchingUnits(s).length;
+      }
+      const modeWord = (typeof st !== "undefined" && st.mode === "buy") ? "for sale" : "for rent";
+      const out = totalFlats > 0
+        ? (bldgs + " buildings \u00b7 " + totalFlats.toLocaleString("en-IN") + " flats " + modeWord)
+        : (bldgs + " buildings " + modeWord);
+      if (resSumEl.textContent !== out) resSumEl.textContent = out;
+    }
+    cleanFreshText();
+  }
+
+  if (freshEl) new MutationObserver(cleanFreshText).observe(freshEl, { childList: true, characterData: true, subtree: true });
+  if (resSumEl) new MutationObserver(cleanResSum).observe(resSumEl, { childList: true, characterData: true, subtree: true });
+  setTimeout(cleanResSum, 600);
 
   const sortEl = document.getElementById("v17Sort");
   const shareBtn = document.getElementById("v17ShareBtn");
@@ -1532,8 +1575,6 @@
       if (st.balcony) p.set("balcony", "1");
       if (st.seaview) p.set("seaview", "1");
       if (st.zb) p.set("zb", "1");
-      const activeView = document.querySelector("#viewToggle button.active")?.dataset?.v;
-      if (activeView === "community") p.set("view", "community");
       const qs = p.toString();
       history.replaceState(null, "", qs ? ("?" + qs) : location.pathname);
     } catch {}
@@ -1559,12 +1600,7 @@
           else st.locality = arr[0];
         }
       }
-      setTimeout(() => {
-        try { if (typeof applyFilters === "function") applyFilters(); } catch {}
-        if (p.get("view") === "community") {
-          document.querySelector('#viewToggle button[data-v="community"]')?.click();
-        }
-      }, 450);
+      setTimeout(() => { try { if (typeof applyFilters === "function") applyFilters(); } catch {} }, 450);
     } catch {}
   }
 
@@ -1575,7 +1611,6 @@
       syncUrlFromState();
     });
   }
-
   if (shareBtn) {
     shareBtn.addEventListener("click", async () => {
       syncUrlFromState();
@@ -1583,9 +1618,7 @@
         await navigator.clipboard.writeText(location.href);
         shareBtn.textContent = "Copied!";
         setTimeout(() => { shareBtn.textContent = "Share"; }, 1600);
-      } catch {
-        prompt("Copy this filtered Bombay Homes link:", location.href);
-      }
+      } catch { prompt("Copy link:", location.href); }
     });
   }
 
@@ -1594,69 +1627,166 @@
     const decorateCards = () => {
       const socById = new Map((typeof societies !== "undefined" ? societies : []).map(s => [s.id, s]));
       cardList.querySelectorAll("article.fc").forEach(card => {
-        if (card.dataset.v17Done) return;
-        card.dataset.v17Done = "1";
+        if (card.dataset.v18Done) return;
+        card.dataset.v18Done = "1";
         const sid = card.dataset.id;
         const url = card.dataset.url || "";
         const soc = socById.get(sid);
         const body = card.querySelector(".fc-body") || card;
-        if (soc && typeof matchingUnits === "function") {
-          const us = matchingUnits(soc);
-          const extra = Math.max(0, (us[0]?._v17MoreCount) || 0);
-          if (extra > 0) {
-            const pill = document.createElement("span");
-            pill.className = "v17-more-pill";
-            pill.textContent = "+" + extra + " more in " + (soc.name || "building").slice(0, 26);
-            body.appendChild(pill);
-          }
+
+        const cnt = card.querySelector(".fc-cnt");
+        if (cnt && /^\s*1\s*\/\s*(?:\+|1)\s*$/.test(cnt.textContent || "")) cnt.dataset.single = "1";
+
+        const extra = window.__v18MoreMap.get(sid) || 0;
+        if (extra > 0 && soc && !card.querySelector(".v17-more-pill")) {
+          const pill = document.createElement("span");
+          pill.className = "v17-more-pill";
+          pill.textContent = "+" + extra + " more in " + (soc.name || "building").slice(0, 24);
+          body.appendChild(pill);
         }
+
         const fl = window.__v17Flags?.[url] || window.__v17Flags?.[sid];
-        if (fl && fl.total > 0) {
+        if (fl && fl.total > 0 && !card.querySelector(".v17-flag-pill")) {
           const b = document.createElement("span");
           b.className = "v17-flag-pill";
           b.textContent = "Reported (" + fl.total + ")";
-          const priceRow = card.querySelector(".fc-price, .fc-top") || body;
-          priceRow.appendChild(b);
+          (card.querySelector(".fc-price, .fc-top") || body).appendChild(b);
         }
       });
+      cleanResSum();
       syncUrlFromState();
     };
     new MutationObserver(decorateCards).observe(cardList, { childList: true });
   }
 
-  const sheetBody = document.getElementById("sheetBody") || document.querySelector("#detailSheet .sheet-body, #detailModal .mcard");
-  if (sheetBody) {
+  const dBody = document.getElementById("dBody");
+  if (dBody) {
+    let galPhotos = [], galIdx = 0;
+
+    function updateGalView(wrap) {
+      const img = wrap.querySelector("img");
+      const cnt = wrap.querySelector(".v18-dgal-cnt");
+      const dots = wrap.querySelector(".v18-dgal-dots");
+      if (!img || !galPhotos.length) return;
+      galIdx = (galIdx + galPhotos.length) % galPhotos.length;
+      img.src = galPhotos[galIdx];
+      if (cnt) {
+        cnt.style.display = galPhotos.length > 1 ? "" : "none";
+        cnt.textContent = (galIdx + 1) + " / " + galPhotos.length;
+      }
+      wrap.querySelectorAll(".v18-dgal-btn").forEach(b => { b.style.display = galPhotos.length > 1 ? "flex" : "none"; });
+      if (dots) {
+        dots.innerHTML = galPhotos.length > 1
+          ? galPhotos.slice(0, 8).map((_, idx) => '<span class="v18-dgal-dot' + (idx === galIdx ? ' on' : '') + '"></span>').join("")
+          : "";
+      }
+    }
+
+    document.addEventListener("keydown", e => {
+      const wrap = dBody.querySelector(".v18-dgal");
+      if (!wrap || galPhotos.length < 2) return;
+      if (e.key === "ArrowLeft") { galIdx--; updateGalView(wrap); }
+      else if (e.key === "ArrowRight") { galIdx++; updateGalView(wrap); }
+    });
+
     new MutationObserver(() => {
-      if (sheetBody.querySelector(".v17-flag-bar")) return;
-      const activeId = sheetBody.querySelector("[data-id]")?.dataset?.id || window.__lastOpenSocId;
-      if (!activeId && !sheetBody.innerText.trim()) return;
-      const bar = document.createElement("div");
-      bar.className = "v17-flag-bar";
-      bar.innerHTML =
-        '<span>Spot an issue with this listing?</span>' +
-        '<div class="v17-flag-btns">' +
-        '<button type="button" class="v17-flag-btn" data-r="rented">Report Rented</button>' +
-        '<button type="button" class="v17-flag-btn" data-r="wrong_pin">Wrong Pin</button>' +
-        '<button type="button" class="v17-flag-btn" data-r="broker_bait">Fake / Bait</button>' +
-        '</div>';
-      bar.addEventListener("click", async e => {
-        const btn = e.target.closest(".v17-flag-btn");
-        if (!btn) return;
-        const reason = btn.dataset.r;
-        const unitUrl = sheetBody.querySelector('a[href^="http"]')?.href || null;
-        btn.textContent = "Saving...";
-        try {
-          const r = await fetch("/api/flags", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ society_id: activeId || "unknown", unit_url: unitUrl, reason })
+      if (dBody.dataset.v18Rendering || !dBody.innerHTML.trim()) return;
+      dBody.dataset.v18Rendering = "1";
+      try {
+        dBody.querySelectorAll("button").forEach(b => {
+          if (/^\s*sav(e|ed)\s*$/i.test(b.textContent || "")) b.style.display = "none";
+        });
+
+        const firstImg = dBody.querySelector("img");
+        if (firstImg && !dBody.querySelector(".v18-dgal")) {
+          const socId = (typeof st !== "undefined" && st.sel) || "";
+          const soc = (typeof societies !== "undefined" ? societies : []).find(x => x.id === socId);
+          const seed = [];
+          const addUrl = u => { if (u && typeof u === "string" && u.startsWith("http") && !seed.includes(u)) seed.push(u); };
+          addUrl(firstImg.src);
+          if (soc) {
+            addUrl(soc.thumb);
+            (soc.photos || []).forEach(addUrl);
+            const us = typeof matchingUnits === "function" ? matchingUnits(soc) : (soc.units || []);
+            us.forEach(u => { addUrl(u.img); (u.imgs || []).forEach(addUrl); });
+          }
+          galPhotos = seed;
+          galIdx = 0;
+
+          const wrap = document.createElement("div");
+          wrap.className = "v18-dgal";
+          wrap.innerHTML =
+            '<img src="' + (galPhotos[0] || "") + '" alt="Property photo" />' +
+            '<button type="button" class="v18-dgal-btn v18-dgal-prev" aria-label="Previous photo">?</button>' +
+            '<button type="button" class="v18-dgal-btn v18-dgal-next" aria-label="Next photo">?</button>' +
+            '<span class="v18-dgal-cnt"></span>' +
+            '<div class="v18-dgal-dots"></div>';
+
+          const oldWrap = firstImg.closest(".d-hero, .d-gal, .gallery, .hero-wrap") || firstImg;
+          oldWrap.replaceWith(wrap);
+          updateGalView(wrap);
+
+          wrap.querySelector(".v18-dgal-prev").addEventListener("click", () => { galIdx--; updateGalView(wrap); });
+          wrap.querySelector(".v18-dgal-next").addEventListener("click", () => { galIdx++; updateGalView(wrap); });
+
+          let startX = null;
+          wrap.addEventListener("pointerdown", e => { if (!e.target.closest("button")) startX = e.clientX; });
+          wrap.addEventListener("pointerup", e => {
+            if (startX === null) return;
+            const dx = e.clientX - startX;
+            startX = null;
+            if (Math.abs(dx) > 35 && galPhotos.length > 1) {
+              galIdx += (dx < 0 ? 1 : -1);
+              updateGalView(wrap);
+            }
           });
-          if (r.ok) bar.innerHTML = '<span style="color:#16a34a;font-weight:600;">Thanks! Flag logged to Bombay Homes DB.</span>';
-          else btn.textContent = "Retry";
-        } catch { btn.textContent = "Retry"; }
-      });
-      sheetBody.appendChild(bar);
-    }).observe(sheetBody, { childList: true });
+
+          const portalLink = dBody.querySelector('a[href*="magicbricks"], a[href*="nobroker"], a[href*="squareyards"], a[href*="makaan"], a[href*="commonfloor"], a[href*="99acres"], a[href*="housing.com"]')?.href;
+          if (portalLink) {
+            fetch("/api/photos?url=" + encodeURIComponent(portalLink))
+              .then(r => r.ok ? r.json() : null)
+              .then(d => {
+                if (d && Array.isArray(d.photos)) {
+                  let changed = false;
+                  d.photos.forEach(p => { if (p && !galPhotos.includes(p)) { galPhotos.push(p); changed = true; } });
+                  if (changed) updateGalView(wrap);
+                }
+              }).catch(() => {});
+          }
+        }
+
+        if (!dBody.querySelector(".v17-flag-bar")) {
+          const socId = (typeof st !== "undefined" && st.sel) || "unknown";
+          const bar = document.createElement("div");
+          bar.className = "v17-flag-bar";
+          bar.innerHTML =
+            '<span>Issue with this listing or map pin?</span>' +
+            '<div class="v17-flag-btns">' +
+            '<button type="button" class="v17-flag-btn" data-r="rented">Report Rented</button>' +
+            '<button type="button" class="v17-flag-btn" data-r="wrong_pin">Wrong Pin</button>' +
+            '<button type="button" class="v17-flag-btn" data-r="broker_bait">Fake / Bait</button>' +
+            '</div>';
+          bar.addEventListener("click", async e => {
+            const btn = e.target.closest(".v17-flag-btn");
+            if (!btn) return;
+            const unitUrl = dBody.querySelector('a[href^="http"]:not([href*="google.com/maps"]):not([href*="wa.me"])')?.href || null;
+            btn.textContent = "Saving...";
+            try {
+              const r = await fetch("/api/flags", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ society_id: socId, unit_url: unitUrl, reason: btn.dataset.r })
+              });
+              if (r.ok) bar.innerHTML = '<span style="color:#16a34a;font-weight:600;">Logged! Thank you for keeping Bombay Homes accurate.</span>';
+              else btn.textContent = "Retry";
+            } catch { btn.textContent = "Retry"; }
+          });
+          dBody.appendChild(bar);
+        }
+      } finally {
+        setTimeout(() => { delete dBody.dataset.v18Rendering; }, 30);
+      }
+    }).observe(dBody, { childList: true });
   }
 
   const waBtn = document.getElementById("v17WaParseBtn");
@@ -1669,7 +1799,7 @@
       "Colaba","Cuffe Parade","Malabar Hill","Worli","Lower Parel","Prabhadevi","Dadar West","Dadar East",
       "Mahim","Matunga West","Sion","Byculla","Parel","Tardeo","Wadala","Powai","Chandivali",
       "Ghatkopar West","Vikhroli","Kanjurmarg","Mulund West","Chembur","Kurla West","Thane West",
-      "Vashi","Nerul","Seawoods","Kharghar","Belapur","Airoli","Panvel"
+      "Vashi","Nerul","Seawoods","Kharghar","CBD Belapur","Airoli","Panvel"
     ];
     waBtn.addEventListener("click", () => {
       const t = waTxt.value.trim();
@@ -1680,10 +1810,7 @@
       const bhkEl = document.getElementById("pBhk");
       if (bhkEl) {
         if (/\b1\s*rk\b|\bstudio\b/i.test(t)) bhkEl.value = "0";
-        else {
-          const bm = t.match(/\b([1-4](?:\.5)?)\s*[-]?\s*bhk\b/i);
-          if (bm) bhkEl.value = bm[1];
-        }
+        else { const bm = t.match(/\b([1-4](?:\.5)?)\s*[-]?\s*bhk\b/i); if (bm) bhkEl.value = bm[1]; }
       }
       const pm = t.match(/(?:\u20b9|rs\.?|rent[:\s]*|price[:\s]*)\s*([\d,.]+)\s*(cr|crore|l|lac|lakh|k)?/i) || t.match(/\b(\d{2,3})\s*k\b/i);
       if (pm && document.getElementById("pPrice")) {
@@ -1707,149 +1834,91 @@
     });
   }
 
-  const viewToggle = document.getElementById("viewToggle");
-  const commPane = document.getElementById("communityPane");
-  const listPane = document.getElementById("listPane");
-  const mapPane = document.getElementById("mapPane");
-  let commCache = null;
+  function hookMapUpgrades() {
+    const m = (typeof map !== "undefined" && map && map.createPane) ? map : null;
+    if (!m || m._v18Upgraded) return;
+    m._v18Upgraded = true;
 
-  function activeAreaLabel() {
-    if (window.__v16Locs && window.__v16Locs.size) return [...window.__v16Locs].join(", ");
-    if (typeof st !== "undefined" && st.locality) return st.locality;
-    return "Mumbai";
-  }
+    if (!m.getPane("v18OverlayPane")) {
+      const op = m.createPane("v18OverlayPane");
+      op.style.zIndex = 520;
+      op.style.pointerEvents = "none";
+    }
+    if (!m.getPane("v18AreaPane")) {
+      const ap = m.createPane("v18AreaPane");
+      ap.style.zIndex = 690;
+      ap.style.pointerEvents = "none";
+    }
 
-  async function renderCommunity() {
-    if (!commPane) return;
-    const area = activeAreaLabel();
-    const qArea = encodeURIComponent(area === "Mumbai" ? "Mumbai flat rent" : area + " flat rent");
-    const launchers = [
-      { tag: "Facebook Group", name: "Flats & Flatmates Mumbai", hint: "Pre-searched for " + area, url: "https://www.facebook.com/search/posts/?q=" + encodeURIComponent("Flats and Flatmates " + area + " Mumbai") },
-      { tag: "YouTube Tours", name: "Area Flat Walkthroughs", hint: "Recent video tours in " + area, url: "https://www.youtube.com/results?search_query=" + encodeURIComponent(area + " Mumbai apartment tour rent") + "&sp=CAI%253D" },
-      { tag: "Instagram Reels", name: "Mumbai Apartment Reels", hint: "Search Reels for " + area, url: "https://www.google.com/search?q=" + encodeURIComponent('site:instagram.com/reel "' + area + '" Mumbai flat rent') },
-      { tag: "Reddit Live", name: "r/FlatmatesinMumbai", hint: "Direct zero-brokerage threads", url: "https://www.reddit.com/r/FlatmatesinMumbai/search/?q=" + qArea + "&sort=new" }
+    const AREA_LABELS = [
+      ["Colaba",18.9067,72.8147],["Malabar Hill",18.9548,72.8017],["Worli",19.0176,72.8162],
+      ["Lower Parel",18.9977,72.8290],["Dadar",19.0213,72.8424],["Wadala",19.0169,72.8636],
+      ["Bandra West",19.0596,72.8295],["Bandra East / BKC",19.0658,72.8620],["Khar West",19.0715,72.8339],
+      ["Santacruz",19.0825,72.8410],["Juhu",19.1075,72.8263],["Versova",19.1314,72.8152],
+      ["Andheri West",19.1364,72.8296],["Andheri East",19.1136,72.8697],["Powai",19.1197,72.9051],
+      ["Chembur",19.0522,72.9005],["Ghatkopar",19.0860,72.9080],["Goregaon West",19.1663,72.8426],
+      ["Goregaon East",19.1653,72.8645],["Malad West",19.1864,72.8358],["Malad East",19.1872,72.8582],
+      ["Kandivali",19.2084,72.8490],["Borivali",19.2288,72.8520],["Mulund",19.1726,72.9425],
+      ["Thane West",19.2183,72.9781],["Vashi",19.0771,72.9986],["Nerul",19.0330,73.0297],
+      ["Kharghar",19.0473,73.0699],["Airoli",19.1590,72.9986]
     ];
+    const lblLayer = L.layerGroup();
+    AREA_LABELS.forEach(([name, lat, lng]) => {
+      L.marker([lat, lng], {
+        pane: "v18AreaPane", interactive: false,
+        icon: L.divIcon({ className: "", html: '<div class="v18-area-lbl">' + name + '</div>', iconSize: [0, 0] })
+      }).addTo(lblLayer);
+    });
+    lblLayer.addTo(m);
 
-    commPane.innerHTML =
-      '<div class="v17-comm-wrap">' +
-      '<div class="v17-comm-hdr"><div><h2>Mumbai Community & Video Feeds</h2>' +
-      '<p class="v17-comm-sub">Filtered for <strong>' + area + '</strong> ? Live Reddit flatmate threads + 1-click social launchers</p></div></div>' +
-      '<div class="v17-launchers">' +
-      launchers.map(l =>
-        '<a class="v17-lcard" href="' + l.url + '" target="_blank" rel="noopener">' +
-        '<div class="v17-lcard-top"><span>' + l.tag + '</span><span>?</span></div>' +
-        '<div class="v17-lcard-name">' + l.name + '</div>' +
-        '<div class="v17-lcard-hint">' + l.hint + '</div></a>'
-      ).join("") +
-      '</div>' +
-      '<div id="v17CommPosts" class="v17-posts"><p style="opacity:.7;font-size:13px;">Loading live Mumbai community posts...</p></div>' +
-      '</div>';
+    const METRO_LINES = [
+      { color: "#38bdf8", pts: [[19.1314,72.8213],[19.1243,72.8315],[19.1197,72.8464],[19.1155,72.8562],[19.1103,72.8750],[19.1079,72.8834],[19.1045,72.8886],[19.0868,72.9082]] },
+      { color: "#facc15", pts: [[19.2502,72.8593],[19.2292,72.8452],[19.2059,72.8364],[19.1864,72.8360],[19.1665,72.8366],[19.1415,72.8330],[19.1243,72.8315]] },
+      { color: "#fb7185", pts: [[19.2502,72.8593],[19.2296,72.8631],[19.2050,72.8650],[19.1865,72.8615],[19.1650,72.8565],[19.1370,72.8560],[19.1155,72.8562]] },
+      { color: "#2dd4bf", pts: [[18.9128,72.8214],[18.9322,72.8264],[18.9520,72.8220],[18.9830,72.8210],[19.0055,72.8235],[19.0215,72.8390],[19.0655,72.8655],[19.0890,72.8680],[19.1100,72.8760],[19.1410,72.8780]] }
+    ];
+    const boldMetro = L.layerGroup();
+    METRO_LINES.forEach(line => {
+      L.polyline(line.pts, { pane: "v18OverlayPane", color: "#000000", weight: 8, opacity: 0.55 }).addTo(boldMetro);
+      L.polyline(line.pts, { pane: "v18OverlayPane", color: line.color, weight: 4.5, opacity: 0.96 }).addTo(boldMetro);
+      line.pts.forEach(pt => L.circleMarker(pt, { pane: "v18OverlayPane", radius: 4.5, color: "#000", weight: 1.5, fillColor: line.color, fillOpacity: 1 }).addTo(boldMetro));
+    });
 
-    if (!commCache) {
-      try {
-        const r = await fetch("/api/community");
-        const d = await r.json();
-        commCache = d.posts || [];
-      } catch { commCache = []; }
-    }
+    const FLOOD_ZONES = [
+      [19.0075, 72.8422, 650],[19.0385, 72.8605, 750],[19.0725, 72.8790, 800],[19.0885, 72.8435, 600],
+      [19.1180, 72.8440, 620],[19.1865, 72.8475, 620],[18.9990, 72.8330, 580],[19.0480, 72.8880, 700],
+      [19.1390, 72.9330, 750],[19.2420, 72.8580, 620]
+    ];
+    const boldFlood = L.layerGroup();
+    FLOOD_ZONES.forEach(([lat, lng, rad]) => {
+      L.circle([lat, lng], {
+        pane: "v18OverlayPane", radius: rad, color: "#ef4444", weight: 2.5,
+        dashArray: "6 4", fillColor: "#dc2626", fillOpacity: 0.36
+      }).addTo(boldFlood);
+    });
 
-    const box = document.getElementById("v17CommPosts");
-    if (!box) return;
-    const locs = (window.__v16Locs && window.__v16Locs.size) ? [...window.__v16Locs].map(x => x.toLowerCase()) :
-                 ((typeof st !== "undefined" && st.locality) ? [st.locality.toLowerCase()] : []);
-    let items = commCache;
-    if (locs.length) {
-      const matched = commCache.filter(p => {
-        const hay = (p.title + " " + p.snippet + " " + (p.areas || []).join(" ")).toLowerCase();
-        return locs.some(l => hay.includes(l) || hay.includes(l.split(" ")[0]));
-      });
-      if (matched.length) items = matched;
-    }
-
-    if (!items.length) {
-      box.innerHTML = '<p style="opacity:.7;font-size:13px;">No recent Reddit posts matched right now. Use the 1-click launchers above!</p>';
-      return;
-    }
-
-    box.innerHTML = items.slice(0, 36).map(p => {
-      const priceStr = p.price ? ("\u20b9" + (p.price >= 100000 ? (p.price / 100000).toFixed(1) + "L" : Math.round(p.price / 1000) + "k")) : "";
-      return '<a class="v17-post" href="' + p.url + '" target="_blank" rel="noopener">' +
-        '<div class="v17-post-meta">' +
-        '<span class="v17-tag gold">' + (p.kind || "Post") + '</span>' +
-        '<span class="v17-tag">' + p.source + '</span>' +
-        (p.bhk ? '<span class="v17-tag">' + p.bhk + '</span>' : '') +
-        (priceStr ? '<span class="v17-tag">' + priceStr + '</span>' : '') +
-        '</div>' +
-        '<div class="v17-post-title">' + p.title.replace(/</g, "<") + '</div>' +
-        (p.snippet ? '<div class="v17-post-snip">' + p.snippet.replace(/</g, "<") + '</div>' : '') +
-        '</a>';
-    }).join("");
-  }
-
-  if (viewToggle && commPane) {
-    viewToggle.addEventListener("click", e => {
-      const btn = e.target.closest("button[data-v]");
-      if (!btn) return;
-      const v = btn.dataset.v;
-      if (v === "community") {
-        viewToggle.querySelectorAll("button").forEach(b => b.classList.toggle("active", b === btn));
-        if (listPane) listPane.style.display = "none";
-        if (mapPane) mapPane.style.display = "none";
-        commPane.style.display = "block";
-        renderCommunity();
-        syncUrlFromState();
-      } else {
-        commPane.style.display = "none";
-        if (listPane) listPane.style.display = "";
-        if (mapPane && v === "split") mapPane.style.display = "";
+    const syncOverlayButtons = () => {
+      const mBtn = [...document.querySelectorAll("button")].find(b => /^\s*metro\s*$/i.test(b.textContent || ""));
+      const fBtn = [...document.querySelectorAll("button")].find(b => /^\s*flood\s*$/i.test(b.textContent || ""));
+      if (mBtn) {
+        const on = mBtn.classList.contains("active") || mBtn.classList.contains("on");
+        if (on && !m.hasLayer(boldMetro)) boldMetro.addTo(m);
+        else if (!on && m.hasLayer(boldMetro)) m.removeLayer(boldMetro);
+      }
+      if (fBtn) {
+        const on = fBtn.classList.contains("active") || fBtn.classList.contains("on");
+        if (on && !m.hasLayer(boldFlood)) boldFlood.addTo(m);
+        else if (!on && m.hasLayer(boldFlood)) m.removeLayer(boldFlood);
+      }
+    };
+    document.addEventListener("click", e => {
+      if (e.target.closest("button") && /^\s*(metro|flood)\s*$/i.test(e.target.closest("button").textContent || "")) {
+        setTimeout(syncOverlayButtons, 40);
       }
     });
+    setTimeout(syncOverlayButtons, 500);
   }
 
-  document.addEventListener("click", e => {
-    if (!e.target.closest("#savedBtn, [data-open-saved]")) return;
-    setTimeout(() => {
-      const modal = [...document.querySelectorAll(".modal-bg")].find(m => m.id !== "postModal" && /shortlist|saved/i.test(m.innerText || ""));
-      if (!modal || modal.querySelector(".v17-cmp-wrap")) return;
-      const card = modal.querySelector(".mcard");
-      if (!card) return;
-      const wrap = document.createElement("div");
-      wrap.className = "v17-cmp-wrap";
-      wrap.innerHTML =
-        '<div class="v17-cmp-acts">' +
-        '<button type="button" class="v17-share-btn" id="v17CmpBtn">Compare Top 3 Saved</button>' +
-        '<button type="button" class="v17-wa-btn" id="v17WaShareSaved">Share Shortlist on WhatsApp</button>' +
-        '</div><div id="v17CmpOut"></div>';
-      card.appendChild(wrap);
-
-      const getSavedSocs = () => {
-        try {
-          const ids = JSON.parse(localStorage.getItem("bh_saved") || localStorage.getItem("saved") || "[]");
-          const all = typeof societies !== "undefined" ? societies : [];
-          return all.filter(s => ids.includes(s.id)).slice(0, 3);
-        } catch { return []; }
-      };
-
-      wrap.querySelector("#v17CmpBtn").addEventListener("click", () => {
-        const list = getSavedSocs();
-        const out = wrap.querySelector("#v17CmpOut");
-        if (!list.length) { out.innerHTML = '<p style="font-size:12px;opacity:.7;">Heart at least 1 flat first to compare.</p>'; return; }
-        out.innerHTML =
-          '<table class="v17-cmp-tbl"><tr><th>Metric</th>' + list.map(s => '<th>' + (s.name || "").slice(0, 22) + '</th>').join("") + '</tr>' +
-          '<tr><td>Locality</td>' + list.map(s => '<td>' + (s.locality || "-") + '</td>').join("") + '</tr>' +
-          '<tr><td>Min Price</td>' + list.map(s => '<td>\u20b9' + ((s.min_rent || s.min_buy || 0).toLocaleString("en-IN")) + '</td>').join("") + '</tr>' +
-          '<tr><td>Metro Walk</td>' + list.map(s => '<td>' + (s.mumbai_context?.nearest_metro?.walk_min ? s.mumbai_context.nearest_metro.walk_min + " min" : "-") + '</td>').join("") + '</tr>' +
-          '<tr><td>Rating</td>' + list.map(s => '<td>' + (s.google?.rating ? s.google.rating + " *" : "-") + '</td>').join("") + '</tr></table>';
-      });
-
-      wrap.querySelector("#v17WaShareSaved").addEventListener("click", () => {
-        const list = getSavedSocs();
-        const lines = list.map((s, i) => (i + 1) + ". " + s.name + " (" + s.locality + ") - Rs " + (s.min_rent || s.min_buy || 0).toLocaleString("en-IN"));
-        const msg = "My Bombay Homes Shortlist:\n" + (lines.length ? lines.join("\n") : location.href) + "\n" + location.href;
-        window.open("https://wa.me/?text=" + encodeURIComponent(msg), "_blank");
-      });
-    }, 120);
-  });
-
+  setTimeout(hookMapUpgrades, 650);
   applyUrlStateOnBoot();
 })();
