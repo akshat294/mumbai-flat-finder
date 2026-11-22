@@ -40,6 +40,7 @@ jobs:
       - name: Cloud Vision AI Photo Scan (ONNX SigLIP 2)
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          APIFY_TOKEN: ${{ secrets.APIFY_TOKEN }}
         run: |
           pip install -q onnxruntime huggingface_hub tokenizers numpy pillow
           python pipeline/vision_scanner.py --limit 800 --max-seconds 240
