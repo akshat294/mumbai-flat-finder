@@ -495,15 +495,35 @@
     };
     const socMap = new Map();
     const flats = [];
+    const flagsMap = window.__v17Flags || {};
     for (const s of filtered) {
       socMap.set(s.id, s);
-      const us = matchingUnits(s);
-      for (let i = 0; i < us.length; i++) {
-        flats.push({ s, u: us[i], idx: i });
+      const rawUs = matchingUnits(s);
+      const deduped = [];
+      for (const u of rawUs) {
+        const isClone = deduped.some(x =>
+          x.bhk === u.bhk &&
+          Math.abs((x.p || 0) - (u.p || 0)) <= Math.max(1500, (x.p || 0) * 0.05) &&
+          (!x.sq || !u.sq || Math.abs(x.sq - u.sq) <= Math.max(40, x.sq * 0.05))
+        );
+        if (!isClone) deduped.push(u);
       }
+      if (!deduped.length) continue;
+      deduped.sort((a, b) => {
+        const fA = (flagsMap[a.url]?.total || 0) > 0 ? 1 : 0;
+        const fB = (flagsMap[b.url]?.total || 0) > 0 ? 1 : 0;
+        if (fA !== fB) return fA - fB;
+        const iA = a.img ? 1 : 0, iB = b.img ? 1 : 0;
+        if (iB !== iA) return iB - iA;
+        return (a.p || 9e9) - (b.p || 9e9);
+      });
+      const best = deduped[0];
+      best._v17MoreCount = Math.max(0, deduped.length - 1);
+      flats.push({ s, u: best, idx: 0 });
     }
 
     if (st.sort === "price_asc") flats.sort((a, b) => a.u.p - b.u.p);
+    else if (st.sort === "savings") flats.sort((a, b) => ((b.s.price_drop_pct || 0) + (b.s.deal_score || 0)) - ((a.s.price_drop_pct || 0) + (a.s.deal_score || 0)));
     else if (st.sort === "price_desc") flats.sort((a, b) => b.u.p - a.u.p);
     else if (st.sort === "metro") flats.sort((a, b) => (a.s.mumbai_context?.nearest_metro?.walk_min ?? 99) - (b.s.mumbai_context?.nearest_metro?.walk_min ?? 99));
     else if (st.sort === "rating") flats.sort((a, b) => (b.s.google?.rating || 0) - (a.s.google?.rating || 0));
@@ -1482,4 +1502,354 @@
   }
   /* === END V16 === */
 
+})();
+
+
+// === V17 MODULE ===
+(function initV17() {
+  window.__v17Flags = window.__v17Flags || {};
+
+  fetch("/api/flags").then(r => r.ok ? r.json() : null).then(d => {
+    if (d && d.flags) {
+      window.__v17Flags = d.flags;
+      try { if (typeof renderList === "function") renderList(); } catch {}
+    }
+  }).catch(() => {});
+
+  const sortEl = document.getElementById("v17Sort");
+  const shareBtn = document.getElementById("v17ShareBtn");
+
+  function syncUrlFromState() {
+    try {
+      const p = new URLSearchParams();
+      if (typeof st === "undefined") return;
+      if (st.mode && st.mode !== "rent") p.set("mode", st.mode);
+      if (st.sort && st.sort !== "rec") p.set("sort", st.sort);
+      if (st.lister && st.lister !== "all") p.set("lister", st.lister);
+      const locs = (window.__v16Locs && window.__v16Locs.size) ? [...window.__v16Locs] : (st.locality ? [st.locality] : []);
+      if (locs.length) p.set("locs", locs.join(","));
+      if (st.bhk && st.bhk.size) p.set("bhk", [...st.bhk].join(","));
+      if (st.balcony) p.set("balcony", "1");
+      if (st.seaview) p.set("seaview", "1");
+      if (st.zb) p.set("zb", "1");
+      const activeView = document.querySelector("#viewToggle button.active")?.dataset?.v;
+      if (activeView === "community") p.set("view", "community");
+      const qs = p.toString();
+      history.replaceState(null, "", qs ? ("?" + qs) : location.pathname);
+    } catch {}
+  }
+
+  function applyUrlStateOnBoot() {
+    try {
+      const p = new URLSearchParams(location.search);
+      if (![...p.keys()].length || typeof st === "undefined") return;
+      if (p.get("mode") === "buy") st.mode = "buy";
+      if (p.get("sort")) { st.sort = p.get("sort"); if (sortEl) sortEl.value = st.sort; }
+      if (p.get("lister")) st.lister = p.get("lister");
+      if (p.get("balcony") === "1") st.balcony = true;
+      if (p.get("seaview") === "1") st.seaview = true;
+      if (p.get("zb") === "1") st.zb = true;
+      if (p.get("bhk") && st.bhk && st.bhk.add) {
+        p.get("bhk").split(",").forEach(v => { const n = parseFloat(v); if (isFinite(n)) st.bhk.add(n); });
+      }
+      if (p.get("locs")) {
+        const arr = p.get("locs").split(",").map(x => x.trim()).filter(Boolean).slice(0, 5);
+        if (arr.length) {
+          if (window.__v16Locs && window.__v16Locs.add) arr.forEach(l => window.__v16Locs.add(l));
+          else st.locality = arr[0];
+        }
+      }
+      setTimeout(() => {
+        try { if (typeof applyFilters === "function") applyFilters(); } catch {}
+        if (p.get("view") === "community") {
+          document.querySelector('#viewToggle button[data-v="community"]')?.click();
+        }
+      }, 450);
+    } catch {}
+  }
+
+  if (sortEl) {
+    sortEl.addEventListener("change", () => {
+      if (typeof st !== "undefined") st.sort = sortEl.value;
+      try { if (typeof renderList === "function") renderList(); } catch {}
+      syncUrlFromState();
+    });
+  }
+
+  if (shareBtn) {
+    shareBtn.addEventListener("click", async () => {
+      syncUrlFromState();
+      try {
+        await navigator.clipboard.writeText(location.href);
+        shareBtn.textContent = "Copied!";
+        setTimeout(() => { shareBtn.textContent = "Share"; }, 1600);
+      } catch {
+        prompt("Copy this filtered Bombay Homes link:", location.href);
+      }
+    });
+  }
+
+  const cardList = document.getElementById("cardList");
+  if (cardList) {
+    const decorateCards = () => {
+      const socById = new Map((typeof societies !== "undefined" ? societies : []).map(s => [s.id, s]));
+      cardList.querySelectorAll("article.fc").forEach(card => {
+        if (card.dataset.v17Done) return;
+        card.dataset.v17Done = "1";
+        const sid = card.dataset.id;
+        const url = card.dataset.url || "";
+        const soc = socById.get(sid);
+        const body = card.querySelector(".fc-body") || card;
+        if (soc && typeof matchingUnits === "function") {
+          const us = matchingUnits(soc);
+          const extra = Math.max(0, (us[0]?._v17MoreCount) || 0);
+          if (extra > 0) {
+            const pill = document.createElement("span");
+            pill.className = "v17-more-pill";
+            pill.textContent = "+" + extra + " more in " + (soc.name || "building").slice(0, 26);
+            body.appendChild(pill);
+          }
+        }
+        const fl = window.__v17Flags?.[url] || window.__v17Flags?.[sid];
+        if (fl && fl.total > 0) {
+          const b = document.createElement("span");
+          b.className = "v17-flag-pill";
+          b.textContent = "Reported (" + fl.total + ")";
+          const priceRow = card.querySelector(".fc-price, .fc-top") || body;
+          priceRow.appendChild(b);
+        }
+      });
+      syncUrlFromState();
+    };
+    new MutationObserver(decorateCards).observe(cardList, { childList: true });
+  }
+
+  const sheetBody = document.getElementById("sheetBody") || document.querySelector("#detailSheet .sheet-body, #detailModal .mcard");
+  if (sheetBody) {
+    new MutationObserver(() => {
+      if (sheetBody.querySelector(".v17-flag-bar")) return;
+      const activeId = sheetBody.querySelector("[data-id]")?.dataset?.id || window.__lastOpenSocId;
+      if (!activeId && !sheetBody.innerText.trim()) return;
+      const bar = document.createElement("div");
+      bar.className = "v17-flag-bar";
+      bar.innerHTML =
+        '<span>Spot an issue with this listing?</span>' +
+        '<div class="v17-flag-btns">' +
+        '<button type="button" class="v17-flag-btn" data-r="rented">Report Rented</button>' +
+        '<button type="button" class="v17-flag-btn" data-r="wrong_pin">Wrong Pin</button>' +
+        '<button type="button" class="v17-flag-btn" data-r="broker_bait">Fake / Bait</button>' +
+        '</div>';
+      bar.addEventListener("click", async e => {
+        const btn = e.target.closest(".v17-flag-btn");
+        if (!btn) return;
+        const reason = btn.dataset.r;
+        const unitUrl = sheetBody.querySelector('a[href^="http"]')?.href || null;
+        btn.textContent = "Saving...";
+        try {
+          const r = await fetch("/api/flags", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ society_id: activeId || "unknown", unit_url: unitUrl, reason })
+          });
+          if (r.ok) bar.innerHTML = '<span style="color:#16a34a;font-weight:600;">Thanks! Flag logged to Bombay Homes DB.</span>';
+          else btn.textContent = "Retry";
+        } catch { btn.textContent = "Retry"; }
+      });
+      sheetBody.appendChild(bar);
+    }).observe(sheetBody, { childList: true });
+  }
+
+  const waBtn = document.getElementById("v17WaParseBtn");
+  const waTxt = document.getElementById("v17WaPaste");
+  if (waBtn && waTxt) {
+    const LOC_LIST = [
+      "Bandra West","Bandra East","Pali Hill","Khar West","Khar East","Santacruz West","Santacruz East",
+      "Vile Parle West","Vile Parle East","Juhu","Versova","Lokhandwala","Andheri West","Andheri East",
+      "Goregaon West","Goregaon East","Malad West","Malad East","Kandivali West","Borivali West",
+      "Colaba","Cuffe Parade","Malabar Hill","Worli","Lower Parel","Prabhadevi","Dadar West","Dadar East",
+      "Mahim","Matunga West","Sion","Byculla","Parel","Tardeo","Wadala","Powai","Chandivali",
+      "Ghatkopar West","Vikhroli","Kanjurmarg","Mulund West","Chembur","Kurla West","Thane West",
+      "Vashi","Nerul","Seawoods","Kharghar","Belapur","Airoli","Panvel"
+    ];
+    waBtn.addEventListener("click", () => {
+      const t = waTxt.value.trim();
+      if (!t) return;
+      const low = t.toLowerCase();
+      const hitLoc = LOC_LIST.find(l => low.includes(l.toLowerCase())) || "";
+      if (hitLoc && document.getElementById("pLoc")) document.getElementById("pLoc").value = hitLoc;
+      const bhkEl = document.getElementById("pBhk");
+      if (bhkEl) {
+        if (/\b1\s*rk\b|\bstudio\b/i.test(t)) bhkEl.value = "0";
+        else {
+          const bm = t.match(/\b([1-4](?:\.5)?)\s*[-]?\s*bhk\b/i);
+          if (bm) bhkEl.value = bm[1];
+        }
+      }
+      const pm = t.match(/(?:\u20b9|rs\.?|rent[:\s]*|price[:\s]*)\s*([\d,.]+)\s*(cr|crore|l|lac|lakh|k)?/i) || t.match(/\b(\d{2,3})\s*k\b/i);
+      if (pm && document.getElementById("pPrice")) {
+        let v = parseFloat(pm[1].replace(/,/g, ""));
+        const u = (pm[2] || (pm[0].toLowerCase().includes("k") ? "k" : "")).toLowerCase();
+        if (u.startsWith("cr")) v *= 1e7;
+        else if (u.startsWith("l")) v *= 1e5;
+        else if (u === "k") v *= 1e3;
+        if (isFinite(v) && v >= 5000) {
+          document.getElementById("pPrice").value = Math.round(v);
+          const modeEl = document.getElementById("pMode");
+          if (modeEl) modeEl.value = v >= 2000000 ? "buy" : "rent";
+        }
+      }
+      const nm = t.match(/(?:in|at|building|society|tower)[:\s]+([A-Z][A-Za-z0-9\s&'-]{3,38})/);
+      if (nm && document.getElementById("pName") && !document.getElementById("pName").value) {
+        document.getElementById("pName").value = nm[1].trim();
+      }
+      waBtn.textContent = "Auto-Filled!";
+      setTimeout(() => { waBtn.textContent = "Auto-Fill Form"; }, 1500);
+    });
+  }
+
+  const viewToggle = document.getElementById("viewToggle");
+  const commPane = document.getElementById("communityPane");
+  const listPane = document.getElementById("listPane");
+  const mapPane = document.getElementById("mapPane");
+  let commCache = null;
+
+  function activeAreaLabel() {
+    if (window.__v16Locs && window.__v16Locs.size) return [...window.__v16Locs].join(", ");
+    if (typeof st !== "undefined" && st.locality) return st.locality;
+    return "Mumbai";
+  }
+
+  async function renderCommunity() {
+    if (!commPane) return;
+    const area = activeAreaLabel();
+    const qArea = encodeURIComponent(area === "Mumbai" ? "Mumbai flat rent" : area + " flat rent");
+    const launchers = [
+      { tag: "Facebook Group", name: "Flats & Flatmates Mumbai", hint: "Pre-searched for " + area, url: "https://www.facebook.com/search/posts/?q=" + encodeURIComponent("Flats and Flatmates " + area + " Mumbai") },
+      { tag: "YouTube Tours", name: "Area Flat Walkthroughs", hint: "Recent video tours in " + area, url: "https://www.youtube.com/results?search_query=" + encodeURIComponent(area + " Mumbai apartment tour rent") + "&sp=CAI%253D" },
+      { tag: "Instagram Reels", name: "Mumbai Apartment Reels", hint: "Search Reels for " + area, url: "https://www.google.com/search?q=" + encodeURIComponent('site:instagram.com/reel "' + area + '" Mumbai flat rent') },
+      { tag: "Reddit Live", name: "r/FlatmatesinMumbai", hint: "Direct zero-brokerage threads", url: "https://www.reddit.com/r/FlatmatesinMumbai/search/?q=" + qArea + "&sort=new" }
+    ];
+
+    commPane.innerHTML =
+      '<div class="v17-comm-wrap">' +
+      '<div class="v17-comm-hdr"><div><h2>Mumbai Community & Video Feeds</h2>' +
+      '<p class="v17-comm-sub">Filtered for <strong>' + area + '</strong> ? Live Reddit flatmate threads + 1-click social launchers</p></div></div>' +
+      '<div class="v17-launchers">' +
+      launchers.map(l =>
+        '<a class="v17-lcard" href="' + l.url + '" target="_blank" rel="noopener">' +
+        '<div class="v17-lcard-top"><span>' + l.tag + '</span><span>?</span></div>' +
+        '<div class="v17-lcard-name">' + l.name + '</div>' +
+        '<div class="v17-lcard-hint">' + l.hint + '</div></a>'
+      ).join("") +
+      '</div>' +
+      '<div id="v17CommPosts" class="v17-posts"><p style="opacity:.7;font-size:13px;">Loading live Mumbai community posts...</p></div>' +
+      '</div>';
+
+    if (!commCache) {
+      try {
+        const r = await fetch("/api/community");
+        const d = await r.json();
+        commCache = d.posts || [];
+      } catch { commCache = []; }
+    }
+
+    const box = document.getElementById("v17CommPosts");
+    if (!box) return;
+    const locs = (window.__v16Locs && window.__v16Locs.size) ? [...window.__v16Locs].map(x => x.toLowerCase()) :
+                 ((typeof st !== "undefined" && st.locality) ? [st.locality.toLowerCase()] : []);
+    let items = commCache;
+    if (locs.length) {
+      const matched = commCache.filter(p => {
+        const hay = (p.title + " " + p.snippet + " " + (p.areas || []).join(" ")).toLowerCase();
+        return locs.some(l => hay.includes(l) || hay.includes(l.split(" ")[0]));
+      });
+      if (matched.length) items = matched;
+    }
+
+    if (!items.length) {
+      box.innerHTML = '<p style="opacity:.7;font-size:13px;">No recent Reddit posts matched right now. Use the 1-click launchers above!</p>';
+      return;
+    }
+
+    box.innerHTML = items.slice(0, 36).map(p => {
+      const priceStr = p.price ? ("\u20b9" + (p.price >= 100000 ? (p.price / 100000).toFixed(1) + "L" : Math.round(p.price / 1000) + "k")) : "";
+      return '<a class="v17-post" href="' + p.url + '" target="_blank" rel="noopener">' +
+        '<div class="v17-post-meta">' +
+        '<span class="v17-tag gold">' + (p.kind || "Post") + '</span>' +
+        '<span class="v17-tag">' + p.source + '</span>' +
+        (p.bhk ? '<span class="v17-tag">' + p.bhk + '</span>' : '') +
+        (priceStr ? '<span class="v17-tag">' + priceStr + '</span>' : '') +
+        '</div>' +
+        '<div class="v17-post-title">' + p.title.replace(/</g, "<") + '</div>' +
+        (p.snippet ? '<div class="v17-post-snip">' + p.snippet.replace(/</g, "<") + '</div>' : '') +
+        '</a>';
+    }).join("");
+  }
+
+  if (viewToggle && commPane) {
+    viewToggle.addEventListener("click", e => {
+      const btn = e.target.closest("button[data-v]");
+      if (!btn) return;
+      const v = btn.dataset.v;
+      if (v === "community") {
+        viewToggle.querySelectorAll("button").forEach(b => b.classList.toggle("active", b === btn));
+        if (listPane) listPane.style.display = "none";
+        if (mapPane) mapPane.style.display = "none";
+        commPane.style.display = "block";
+        renderCommunity();
+        syncUrlFromState();
+      } else {
+        commPane.style.display = "none";
+        if (listPane) listPane.style.display = "";
+        if (mapPane && v === "split") mapPane.style.display = "";
+      }
+    });
+  }
+
+  document.addEventListener("click", e => {
+    if (!e.target.closest("#savedBtn, [data-open-saved]")) return;
+    setTimeout(() => {
+      const modal = [...document.querySelectorAll(".modal-bg")].find(m => m.id !== "postModal" && /shortlist|saved/i.test(m.innerText || ""));
+      if (!modal || modal.querySelector(".v17-cmp-wrap")) return;
+      const card = modal.querySelector(".mcard");
+      if (!card) return;
+      const wrap = document.createElement("div");
+      wrap.className = "v17-cmp-wrap";
+      wrap.innerHTML =
+        '<div class="v17-cmp-acts">' +
+        '<button type="button" class="v17-share-btn" id="v17CmpBtn">Compare Top 3 Saved</button>' +
+        '<button type="button" class="v17-wa-btn" id="v17WaShareSaved">Share Shortlist on WhatsApp</button>' +
+        '</div><div id="v17CmpOut"></div>';
+      card.appendChild(wrap);
+
+      const getSavedSocs = () => {
+        try {
+          const ids = JSON.parse(localStorage.getItem("bh_saved") || localStorage.getItem("saved") || "[]");
+          const all = typeof societies !== "undefined" ? societies : [];
+          return all.filter(s => ids.includes(s.id)).slice(0, 3);
+        } catch { return []; }
+      };
+
+      wrap.querySelector("#v17CmpBtn").addEventListener("click", () => {
+        const list = getSavedSocs();
+        const out = wrap.querySelector("#v17CmpOut");
+        if (!list.length) { out.innerHTML = '<p style="font-size:12px;opacity:.7;">Heart at least 1 flat first to compare.</p>'; return; }
+        out.innerHTML =
+          '<table class="v17-cmp-tbl"><tr><th>Metric</th>' + list.map(s => '<th>' + (s.name || "").slice(0, 22) + '</th>').join("") + '</tr>' +
+          '<tr><td>Locality</td>' + list.map(s => '<td>' + (s.locality || "-") + '</td>').join("") + '</tr>' +
+          '<tr><td>Min Price</td>' + list.map(s => '<td>\u20b9' + ((s.min_rent || s.min_buy || 0).toLocaleString("en-IN")) + '</td>').join("") + '</tr>' +
+          '<tr><td>Metro Walk</td>' + list.map(s => '<td>' + (s.mumbai_context?.nearest_metro?.walk_min ? s.mumbai_context.nearest_metro.walk_min + " min" : "-") + '</td>').join("") + '</tr>' +
+          '<tr><td>Rating</td>' + list.map(s => '<td>' + (s.google?.rating ? s.google.rating + " *" : "-") + '</td>').join("") + '</tr></table>';
+      });
+
+      wrap.querySelector("#v17WaShareSaved").addEventListener("click", () => {
+        const list = getSavedSocs();
+        const lines = list.map((s, i) => (i + 1) + ". " + s.name + " (" + s.locality + ") - Rs " + (s.min_rent || s.min_buy || 0).toLocaleString("en-IN"));
+        const msg = "My Bombay Homes Shortlist:\n" + (lines.length ? lines.join("\n") : location.href) + "\n" + location.href;
+        window.open("https://wa.me/?text=" + encodeURIComponent(msg), "_blank");
+      });
+    }, 120);
+  });
+
+  applyUrlStateOnBoot();
 })();

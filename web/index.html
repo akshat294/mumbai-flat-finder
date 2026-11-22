@@ -73,7 +73,7 @@
       <button class="chip" data-q="rated">4★+</button>
     </div>
     <div id="listerToggle" class="view-seg" role="group" aria-label="Posted by"><button class="active" data-lt="ALL">All</button><button data-lt="owner">Owner</button><button data-lt="broker">Broker</button><button data-lt="shared">Shared</button></div>
-    <div id="viewToggle" class="view-seg" role="group" aria-label="View mode"><button class="active" data-v="split">Map</button><button data-v="gallery">Gallery</button></div>
+    <div id="viewToggle" class="view-seg" role="group" aria-label="View mode"><button class="active" data-v="split">Map</button><button data-v="gallery">Gallery</button><button data-v="community">Community</button></div>
     <select id="sortSelect" class="sort-sel" aria-label="Sort results" style="display:none">
       <option value="rec">Best Match</option>
       <option value="deal">Best Value</option>
@@ -87,7 +87,7 @@
   <main class="ws">
     <aside id="listPane">
       <div class="list-head">
-        <span id="resSum">0 homes</span>
+        <span id="resSum">0 homes</span><div class="v17-head-acts"><select id="v17Sort" class="v17-sort" aria-label="Sort flats"><option value="rec">Best Match</option><option value="price_asc">Price: Low to High</option><option value="price_desc">Price: High to Low</option><option value="savings">Biggest Savings</option><option value="metro">Nearest Metro</option><option value="rating">Top Rated</option></select><button id="v17ShareBtn" class="v17-share-btn" type="button" title="Copy shareable filtered link">Share</button></div>
         <button id="resetMiniBtn" class="txt-btn" style="display:none;">Reset filters</button>
       </div>
       <div id="activeBar"></div>
@@ -115,6 +115,7 @@
       <svg class="ic" id="mobTogIc" viewBox="0 0 24 24"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
       <span id="mobTogTxt">Map</span>
     </button>
+    <section id="communityPane" class="v17-comm" style="display:none;"></section>
   </main>
 
   <div id="filterBackdrop" class="backdrop"></div>
@@ -256,7 +257,7 @@
       <div class="m-head"><h2>List a Flat or Flatmate</h2><button class="btn icon" id="closePost">✕</button></div>
       <p class="help-txt" style="margin:8px 0 14px;">Direct owner & flatmate posts go live immediately and auto-expire after 14 days.</p>
       <div style="display:flex;flex-direction:column;gap:10px;">
-        <div class="f-sec"><label>Society / Building Name</label><input id="pName" type="text" placeholder="e.g. Pali Hill Terrace" /></div>
+        <div class="v17-wa-box"><label for="v17WaPaste">Quick Auto-Fill: Paste WhatsApp / Flatmates message</label><textarea id="v17WaPaste" rows="2" placeholder="Paste any WhatsApp flat message here (e.g. 2 BHK in Bandra West, Pali Hill, 85k rent, semi-furnished)..."></textarea><button type="button" id="v17WaParseBtn" class="v17-wa-btn">Auto-Fill Form</button></div><div class="f-sec"><label>Society / Building Name</label><input id="pName" type="text" placeholder="e.g. Pali Hill Terrace" /></div>
         <div class="g2">
           <div class="f-sec"><label>Locality</label><input id="pLoc" type="text" placeholder="e.g. Bandra West" /></div>
           <div class="f-sec"><label>Type</label><select id="pMode"><option value="rent">For Rent</option><option value="buy">For Sale</option></select></div>
