@@ -1,54 +1,80 @@
 name: Daily Mumbai MMR Sync & Deploy
+
 on:
   schedule:
     - cron: '30 21 * * *'
   workflow_dispatch:
+
 concurrency:
   group: mumbai-mmr-daily-sync
   cancel-in-progress: false
+
 permissions:
   contents: write
+
 jobs:
   crawl-and-deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-python@v5
-        with: { python-version: '3.12', cache: 'pip' }
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
       - uses: actions/setup-node@v4
-        with: { node-version: '22' }
-      - run: pip install -r requirements.txt
-      - name: Crawl all 53 Mumbai, Thane & Navi Mumbai localities
+        with:
+          node-version: '22'
+
+      - name: Install Python dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install -q curl_cffi
+
+      - name: Crawl core portals (MagicBricks, NoBroker, SquareYards, Makaan, CommonFloor, Community)
         env:
           PYTHONUNBUFFERED: "1"
           GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLEPLACESAPI }}
           PROXY_URL: ${{ secrets.PROXY_URL }}
-        run: python -u run_pipeline.py --all-mmr --sources magicbricks,nobroker,squareyards,commonfloor,makaan,nobrokerage,community --limit 90 --fresh-hours 1 --max-google-calls 25
- python pipeline/post_build_v18.py
-      - run: python -u pipeline/verify_build.py
-      - name: Deploy fresh site to Cloudflare Pages
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: npx --yes wrangler@latest pages deploy web --project-name=mumbai-flat-finder --branch=production
+        run: |
+          python -u run_pipeline.py --all-mmr --sources magicbricks,nobroker,squareyards,commonfloor,makaan,nobrokerage,community --limit 90 --fresh-hours 1 --max-google-calls 25
+
       - name: Cache Hugging Face ONNX Model
         uses: actions/cache@v4
         with:
           path: ~/.cache/huggingface
           key: hf-siglip2-onnx-v2
+
       - name: Cloud Vision AI Photo Scan (ONNX SigLIP 2)
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-          APIFY_TOKEN: ${{ secrets.APIFY_TOKEN }}
         run: |
           pip install -q onnxruntime huggingface_hub tokenizers numpy pillow
           python pipeline/vision_scanner.py --limit 800 --max-seconds 240
           python -c "from pipeline.build_city import build_mumbai; print(build_mumbai(max_google_calls=0, max_osm_calls=0))"
 
-      - name: Save updated caches & data
+      - name: Run Native Boost (NoBroker 24-hubs, SquareYards, Co-Living), Weekly Apify (99acres + Housing), 3.8km Geo-Fence & Freshness
+        env:
+          PYTHONUNBUFFERED: "1"
+          APIFY_TOKEN: ${{ secrets.APIFY_TOKEN }}
+        run: |
+          python -u pipeline/post_build_v18.py
+          python -u pipeline/inventory_report.py
+
+      - name: Verify final build integrity
+        run: python -u pipeline/verify_build.py
+
+      - name: Deploy fresh site to Cloudflare Pages (bombayhomes)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx --yes wrangler@latest pages deploy web --project-name=bombayhomes --branch=production --commit-dirty=true
+
+      - name: Save updated caches & index to Git
         run: |
           git config user.name "mumbai-flat-finder-bot"
           git config user.email "bot@users.noreply.github.com"
-          git add data/google_places_cache.json data/osm_geo_cache.json data/osm_civic_cache.json data/mumbai_osm_buildings.json data/vision_tags_cache.json data/price_history.json web/public/data/mumbai-index.json web/public/data/mumbai-societies.csv
+          git add data/google_places_cache.json data/osm_geo_cache.json data/osm_civic_cache.json data/mumbai_osm_buildings.json data/vision_tags_cache.json data/price_history.json data/apify_cache.json data/seen_timestamps.json web/public/data/mumbai-index.json web/public/data/mumbai-societies.csv
           git diff --staged --quiet || (git commit -m "chore: daily Mumbai MMR sync" && git pull --rebase && git push)

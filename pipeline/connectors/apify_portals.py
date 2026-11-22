@@ -12,12 +12,26 @@ def _api_get(url, timeout=45):
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return json.loads(r.read().decode("utf-8", errors="ignore"))
 
-def _call_apify_actor(actor_id, payload, token, timeout=240):
-    url = f"https://api.apify.com/v2/actors/{actor_id}/run-sync-get-dataset-items?token={urllib.parse.quote(token)}&format=json&clean=true"
+def _call_apify_actor(actor_id, payload, token, timeout=600):
+    start_url = f"https://api.apify.com/v2/actors/{actor_id}/runs?token={urllib.parse.quote(token)}"
     body = json.dumps(payload).encode("utf-8")
-    req = urllib.request.Request(url, data=body, headers={"Content-Type": "application/json"}, method="POST")
-    with urllib.request.urlopen(req, timeout=timeout) as r:
-        return json.loads(r.read().decode("utf-8", errors="ignore"))
+    req = urllib.request.Request(start_url, data=body, headers={"Content-Type": "application/json"}, method="POST")
+    with urllib.request.urlopen(req, timeout=45) as r:
+        run_data = json.loads(r.read().decode("utf-8", errors="ignore")).get("data") or {}
+    rid = run_data.get("id")
+    ds_id = run_data.get("defaultDatasetId")
+    if not rid or not ds_id:
+        raise RuntimeError(f"Apify run did not start cleanly: {run_data}")
+    t0 = time.time()
+    while time.time() - t0 < timeout:
+        time.sleep(6)
+        st_data = _api_get(f"https://api.apify.com/v2/actor-runs/{rid}?token={urllib.parse.quote(token)}", timeout=30).get("data") or {}
+        status = st_data.get("status")
+        if status == "SUCCEEDED":
+            return _api_get(f"https://api.apify.com/v2/datasets/{ds_id}/items?token={urllib.parse.quote(token)}&clean=true&limit=2500", timeout=90)
+        if status in ("FAILED", "ABORTED", "TIMED-OUT"):
+            raise RuntimeError(f"Apify run {rid} ended with status={status}")
+    raise TimeoutError(f"Apify run {rid} timed out after {timeout}s")
 
 def _first_str(obj, keys):
     for k in keys:
@@ -204,7 +218,7 @@ def recover_recent_runs():
         if not ds_id:
             continue
         try:
-            items = _api_get(f"https://api.apify.com/v2/datasets/{ds_id}/items?token={urllib.parse.quote(token)}&clean=true&limit=600")
+            items = _api_get(f"https://api.apify.com/v2/datasets/{ds_id}/items?token={urllib.parse.quote(token)}&clean=true&limit=2500")
         except Exception as e:
             print(f"    Run {rid} read error: {e}")
             continue
@@ -224,7 +238,7 @@ def recover_recent_runs():
         return merged
     return load_cached_apify()
 
-def sync_apify(rent_limit=300, buy_limit=200, sources=("housing", "99acres"), force=False):
+def sync_apify(rent_limit=250, buy_limit=125, sources=("housing", "99acres"), force=False):
     token = os.environ.get("APIFY_TOKEN", "").strip()
     existing = load_cached_apify()
     if not token:
