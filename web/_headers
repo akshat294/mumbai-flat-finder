@@ -1,2 +1,16 @@
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(self), interest-cohort=()
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Content-Security-Policy: upgrade-insecure-requests; frame-ancestors 'none'; object-src 'none'; base-uri 'self'
+
 /public/data/*
+  Cache-Control: public, max-age=900, stale-while-revalidate=3600
+
+/js/*
+  Cache-Control: public, max-age=300, must-revalidate
+
+/css/*
   Cache-Control: public, max-age=300, must-revalidate

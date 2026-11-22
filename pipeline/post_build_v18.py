@@ -7,6 +7,7 @@ sys.path.insert(0, str(ROOT))
 from pipeline.connectors.v19_common import haversine_km, clean_soc_name, merge_records_into_societies, extract_rera_ids
 from pipeline.connectors.native_boost import run_native_boost, backfill_nobroker_photos
 from pipeline.connectors.apify_portals import sync_apify, load_cached_apify
+from pipeline.compact_index import save_compacted_index
 from pipeline.connectors.maharera_enricher import enrich_societies as enrich_maharera
 
 SEEN_PATH = ROOT / "data/seen_timestamps.json"
@@ -160,7 +161,7 @@ def run():
     data["generated_ts"] = int(now_ist.timestamp())
     data["count"] = len(socs)
     data["societies"] = socs
-    idx_p.write_text(json.dumps(data, separators=(",", ":"), ensure_ascii=False), encoding="utf-8")
+    save_compacted_index(idx_p, data)
 
     print(f"[v20 DONE] Pins fixed: {fixed_pins} | Names cleaned: {fixed_names} | Native +{n_u} ({n_s} bldgs) | Apify +{a_u} | NB photos +{nb_photos} | Multi-photo bldgs: {multi_photo_socs} | RERA bldgs: {rera_total} (+{rera_hits} matched)")
 

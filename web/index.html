@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="./vendor/leaflet.min.css" />
   <link rel="stylesheet" href="./styles.css" />
   <script src="./vendor/leaflet.min.js"></script>
+  <link rel="stylesheet" href="css/enhancements.css?v=24" />
 </head>
 <body class="view-split">
   <header class="topbar">
@@ -79,7 +80,7 @@
   <main class="ws">
     <aside id="listPane">
       <div class="list-head">
-        <span id="resSum">0 homes</span><div class="v17-head-acts"><select id="v17Sort" class="v17-sort" aria-label="Sort flats"><option value="rec">Best Match</option><option value="price_asc">Price: Low to High</option><option value="price_desc">Price: High to Low</option><option value="savings">Biggest Savings</option><option value="metro">Nearest Metro</option><option value="rating">Top Rated</option></select><button id="v17ShareBtn" class="v17-share-btn" type="button" title="Copy shareable filtered link">Share</button></div>
+        <span id="resSum">0 homes</span><div class="bh-head-acts"><select id="v17Sort" class="bh-sort" aria-label="Sort flats"><option value="rec">Best Match</option><option value="price_asc">Price: Low to High</option><option value="price_desc">Price: High to Low</option><option value="savings">Biggest Savings</option><option value="metro">Nearest Metro</option><option value="rating">Top Rated</option></select><button id="v17ShareBtn" class="bh-share-btn" type="button" title="Copy shareable filtered link">Share</button></div>
         <button id="resetMiniBtn" class="txt-btn" style="display:none;">Reset filters</button>
       </div>
       <div id="activeBar"></div>
@@ -269,5 +270,6 @@
   <div id="toast" class="toast"></div>
   <script src="./app.js"></script>
   <button id="v20MobToggle" class="v20-mob-toggle" type="button" aria-label="Switch between Map and List">Show Map</button>
+  <script src="js/enhancements.js?v=24"></script>
 </body>
 </html>

@@ -86,3 +86,7 @@ v15_1_smoke.py
 v15_2_fix.py
 v15_3_deploy.py
 bombayhomes_status.txt
+.env
+.env.*
+*.env
+bombayhomes_v24_audit.txt
