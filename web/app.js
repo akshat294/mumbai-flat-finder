@@ -550,6 +550,33 @@
       return;
     }
 
+    // v18SourceDiversify: interleave portals on Best Match so Grid shows all sources
+    if (!st.sort || st.sort === "rec") {
+      const buckets = new Map();
+      for (const f of flats) {
+        const k = String(f.u.src || f.u.s || f.u.source || "other").toLowerCase();
+        if (!buckets.has(k)) buckets.set(k, []);
+        buckets.get(k).push(f);
+      }
+      if (buckets.size > 1) {
+        const mixed = [];
+        const keys = [...buckets.keys()];
+        let more = true;
+        while (more) {
+          more = false;
+          for (const k of keys) {
+            const arr = buckets.get(k);
+            if (arr && arr.length) {
+              mixed.push(arr.shift());
+              if (arr.length && k === "magicbricks") mixed.push(arr.shift());
+              more = true;
+            }
+          }
+        }
+        flats.length = 0;
+        flats.push(...mixed);
+      }
+    }
     const slice = flats.slice(0, st.page);
     const archSvg = `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 20V11a8 8 0 0 1 16 0v9"/><path d="M8 20v-7a4 4 0 0 1 8 0v7"/><path d="M2 20h20"/></svg>`;
 
