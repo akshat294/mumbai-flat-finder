@@ -2,6 +2,8 @@
 (function initBombayHomesEnhancements() {
   "use strict";
 
+  function bh() { return (typeof window.__bh === "function" ? window.__bh() : {}) || {}; }
+
   window.__v17Flags = window.__v17Flags || {};
   window.__v18MoreMap = window.__v18MoreMap || new Map();
 
@@ -40,7 +42,7 @@
     .then(d => {
       if (d && d.flags) {
         window.__v17Flags = d.flags;
-        try { if (typeof renderList === "function") renderList(); } catch {}
+        try { if (bh().renderList) bh().renderList(); } catch {}
       }
     })
     .catch(() => {});
@@ -60,7 +62,7 @@
           rel = hrs < 1 ? "Updated just now" : (hrs < 24 ? ("Updated " + hrs + "h ago") : ("Updated " + Math.round(hrs / 24) + "d ago"));
         }
       }
-      const modeLbl = (typeof st !== "undefined" && st.mode === "buy") ? "For Sale" : "For Rent";
+      const modeLbl = (bh().st && bh().st.mode === "buy") ? "For Sale" : "For Rent";
       const target = "Mumbai " + modeLbl + " \u00b7 " + rel;
       if (freshEl.textContent !== target) freshEl.textContent = target;
     }
@@ -69,12 +71,12 @@
       const txt = resSumEl.textContent || "";
       if (txt.includes("exact pin") || txt.includes("homes")) {
         const nMatch = txt.match(/([\d,]+)/);
-        const bldgs = nMatch ? nMatch[1] : (typeof filtered !== "undefined" ? filtered.length.toLocaleString("en-IN") : "0");
+        const bldgs = nMatch ? nMatch[1] : (bh().filtered ? bh().filtered.length.toLocaleString("en-IN") : "0");
         let totalFlats = 0;
-        if (typeof filtered !== "undefined" && typeof matchingUnits === "function") {
-          for (const s of filtered) totalFlats += matchingUnits(s).length;
+        if (bh().filtered && bh().matchingUnits) {
+          for (const s of bh().filtered) totalFlats += bh().matchingUnits(s).length;
         }
-        const modeWord = (typeof st !== "undefined" && st.mode === "buy") ? "for sale" : "for rent";
+        const modeWord = (bh().st && bh().st.mode === "buy") ? "for sale" : "for rent";
         const out = totalFlats > 0
           ? (bldgs + " buildings \u00b7 " + totalFlats.toLocaleString("en-IN") + " flats " + modeWord)
           : (bldgs + " buildings " + modeWord);
@@ -93,7 +95,7 @@
 
   function syncUrlFromState() {
     try {
-      if (typeof st === "undefined") return;
+      const st = bh().st; if (!st) return;
       const p = new URLSearchParams();
       if (st.mode && st.mode !== "rent") p.set("mode", st.mode);
       if (st.sort && st.sort !== "rec") p.set("sort", st.sort);
@@ -112,7 +114,7 @@
   function applyUrlStateOnBoot() {
     try {
       const p = new URLSearchParams(location.search);
-      if (![...p.keys()].length || typeof st === "undefined") return;
+      const st = bh().st; if (![...p.keys()].length || !st) return;
       if (p.get("mode") === "buy") { st.mode = "buy"; document.getElementById("modeBuy")?.click(); }
       if (p.get("sort")) { st.sort = p.get("sort"); if (sortEl) sortEl.value = st.sort; }
       if (p.get("lister")) {
@@ -132,14 +134,14 @@
           else st.locality = arr[0];
         }
       }
-      setTimeout(() => { try { if (typeof applyFilters === "function") applyFilters(); } catch {} }, 450);
+      setTimeout(() => { try { if (bh().applyFilters) bh().applyFilters(); } catch {} }, 450);
     } catch {}
   }
 
   if (sortEl) {
     sortEl.addEventListener("change", () => {
-      if (typeof st !== "undefined") st.sort = sortEl.value;
-      try { if (typeof renderList === "function") renderList(); } catch {}
+      if (bh().st) bh().st.sort = sortEl.value;
+      try { if (bh().renderList) bh().renderList(); } catch {}
       syncUrlFromState();
     });
   }
@@ -158,7 +160,7 @@
   const cardList = document.getElementById("cardList");
   if (cardList) {
     const decorateCards = rafDebounce(() => {
-      const socById = new Map((typeof societies !== "undefined" ? societies : []).map(s => [s.id, s]));
+      const socById = new Map((bh().societies || []).map(s => [s.id, s]));
       cardList.querySelectorAll("article.fc").forEach(card => {
         if (card.dataset.bhDone) return;
         card.dataset.bhDone = "1";
@@ -291,8 +293,8 @@
           if (/^\s*sav(e|ed)\s*$/i.test(b.textContent || "")) b.style.display = "none";
         });
 
-        const socId = (typeof st !== "undefined" && st.sel) || "";
-        const soc = (typeof societies !== "undefined" ? societies : []).find(x => x.id === socId);
+        const socId = (bh().st && bh().st.sel) || "";
+        const soc = (bh().societies || []).find(x => x.id === socId);
 
         const firstImg = dBody.querySelector("img");
         if (firstImg && !dBody.querySelector(".bh-dgal")) {
@@ -302,7 +304,7 @@
           if (soc) {
             addUrl(soc.thumb);
             (soc.photos || []).forEach(addUrl);
-            const us = typeof matchingUnits === "function" ? matchingUnits(soc) : (soc.units_rent || []);
+            const us = bh().matchingUnits ? bh().matchingUnits(soc) : (soc.units_rent || []);
             us.forEach(u => { addUrl(u.img); (u.imgs || []).forEach(addUrl); });
           }
           galPhotos = seed;
@@ -350,7 +352,7 @@
 
         if (soc && !dBody.querySelector(".bh-rera-card")) {
           const hasRera = Array.isArray(soc.rera_ids) && soc.rera_ids.length > 0;
-          const isBuy = (typeof st !== "undefined" && st.mode === "buy");
+          const isBuy = (bh().st && bh().st.mode === "buy");
           if (hasRera || isBuy) {
             const card = document.createElement("div");
             card.className = "bh-rera-card";
@@ -464,7 +466,7 @@
   }
 
   function hookMapUpgrades() {
-    const m = (typeof map !== "undefined" && map && map.createPane) ? map : null;
+    const m = (bh().map && bh().map.createPane) ? bh().map : null;
     if (!m || m._bhUpgraded) return;
     m._bhUpgraded = true;
 
@@ -553,12 +555,12 @@
     mobBtn.addEventListener("click", () => {
       const showingMap = document.body.classList.toggle("bh-mob-map");
       mobBtn.textContent = showingMap ? "Show List" : "Show Map";
-      if (showingMap && typeof map !== "undefined" && map && map.invalidateSize) {
-        setTimeout(() => map.invalidateSize(), 120);
+      if (showingMap && bh().map && bh().map.invalidateSize) {
+        setTimeout(() => bh().map.invalidateSize(), 120);
       }
     });
   }
 
-  setTimeout(hookMapUpgrades, 650);
+  let _mapTries = 0; const _mapIv = setInterval(() => { hookMapUpgrades(); if ((bh().map && bh().map._bhUpgraded) || ++_mapTries > 15) clearInterval(_mapIv); }, 300);
   applyUrlStateOnBoot();
 })();

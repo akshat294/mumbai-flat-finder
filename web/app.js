@@ -351,8 +351,8 @@
       <div class="mp-row"><strong class="mp-price">${getPriceLabel(s)}</strong>${deal?.label === "Great Value" ? `<span class="tag good">${Math.abs(deal.pct)}% below avg</span>` : ""}</div>
       <div class="mp-foot"><span class="mp-meta">${(s.bhks || []).map(fmtBhk).join(", ") || "Home"}${ctx.nearest_metro ? ` · ${ctx.nearest_metro.walk_min}m Metro` : ""}</span><button class="btn pri xs" id="openMpDetail">View</button></div>`;
     box.style.display = "flex";
-    $("closeMp").onclick = () => { box.style.display = "none"; };
-    $("openMpDetail").onclick = () => { box.style.display = "none"; openDetail(s); };
+    if ($("closeMp")) $("closeMp").onclick = () => { box.style.display = "none"; };
+    if ($("openMpDetail")) $("openMpDetail").onclick = () => { box.style.display = "none"; openDetail(s); };
   }
 
   function renderActiveBar() {
@@ -383,7 +383,7 @@
     const q = $("searchBox").value.trim().toLowerCase();
     const z = $("fZone").value, loc = $("fLoc").value, srcF = $("fSource").value, ceil = priceMax();
     const maxM = Number($("fMetro").value || 0), hub = $("fHub").value, hubMax = Number($("fHubMin").value || 0);
-    const furn = $("fFurn").value, ten = $("fTen").value, minRate = Number($("fRate").value || 0), srt = $("sortSelect").value;
+    const furn = $("fFurn").value, ten = $("fTen").value, minRate = Number($("fRate").value || 0), srt = ($("sortSelect")?.value || "rec");
     const bounds = st.mapBounds ? map.getBounds() : null;
 
     filtered = societies.filter(s => {
@@ -745,8 +745,8 @@
       </div>`;
 
     $("detailBackdrop").style.display = "block"; $("detailSheet").style.display = "flex";
-    $("dSv").onclick = () => toggleSave(s.id);
-    $("dNote").oninput = e => { st.saved.notes[s.id] = e.target.value; syncCounts(); };
+    if ($("dSv")) $("dSv").onclick = () => toggleSave(s.id);
+    if ($("dNote")) $("dNote").oninput = e => { st.saved.notes[s.id] = e.target.value; syncCounts(); };
     renderMap();
   }
 
@@ -813,7 +813,7 @@
 
   function resetAll() {
     $("searchBox").value = ""; ["fZone","fLoc","fSource","fFurn","fTen"].forEach(id => $(id).value = "ALL");
-    $("fHub").value = ""; ["fHubMin","fMetro","fRate"].forEach(id => $(id).value = "0"); $("sortSelect").value = "rec";
+    $("fHub").value = ""; ["fHubMin","fMetro","fRate"].forEach(id => $(id).value = "0"); if ($("sortSelect")) $("sortSelect").value = "rec";
     $("sMin").value = 0; $("sMax").value = SQFT_MAX; syncSqftSlider(); resetPriceScale();
     st.bhks.clear(); document.querySelectorAll(".bhk-opt").forEach(b => b.classList.remove("active"));
     st.zero = st.dealOnly = st.flood = st.exactOnly = st.showEst = st.mapBounds = false; st.page = 36;
@@ -897,7 +897,7 @@
   });
 
   $("fZone").addEventListener("change", () => { document.querySelectorAll(".n-chip").forEach(x => x.classList.toggle("active", x.dataset.nb === $("fZone").value)); populateLocalities(); st.page = 36; renderAll(); });
-  $("sortSelect").addEventListener("change", () => { st.page = 36; renderAll(); });
+  $("sortSelect")?.addEventListener("change", () => { st.page = 36; renderAll(); });
   ["mpMin","mpMax"].forEach(id => $(id).addEventListener("input", () => { syncPriceSliders(Number($("mpMin").value), Number($("mpMax").value)); st.page = 36; scheduleRender(); }));
   ["sMin","sMax"].forEach(id => $(id).addEventListener("input", () => { syncSqftSlider(); st.page = 36; scheduleRender(); }));
   document.querySelectorAll(".bhk-opt").forEach(btn => {
@@ -1530,5 +1530,17 @@
     });
   }
   /* === END V16 === */
+  // v24.2 Clean Bridge for web/js/enhancements.js
+  window.__bh = () => ({
+    map: typeof map !== "undefined" ? map : null,
+    st: typeof st !== "undefined" ? st : null,
+    societies: typeof societies !== "undefined" ? societies : (typeof baseSocieties !== "undefined" ? baseSocieties : []),
+    filtered: typeof filtered !== "undefined" ? filtered : [],
+    matchingUnits: typeof matchingUnits === "function" ? matchingUnits : null,
+    renderList: typeof renderList === "function" ? renderList : null,
+    applyFilters: typeof applyFilters === "function" ? applyFilters : null,
+    renderMap: typeof renderMap === "function" ? renderMap : null,
+  });
+
 
 })();
