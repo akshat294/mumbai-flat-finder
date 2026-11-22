@@ -74,14 +74,6 @@
     </div>
     <div id="listerToggle" class="view-seg" role="group" aria-label="Posted by"><button class="active" data-lt="ALL">All</button><button data-lt="owner">Owner</button><button data-lt="broker">Broker</button><button data-lt="shared">Shared</button></div>
     <div id="viewToggle" class="view-seg" role="group" aria-label="View mode"><button class="active" data-v="split">Map</button><button data-v="gallery">Grid</button></div>
-    <select id="sortSelect" class="sort-sel" aria-label="Sort results" style="display:none">
-      <option value="rec">Best Match</option>
-      <option value="deal">Best Value</option>
-      <option value="p_asc">Price: Low → High</option>
-      <option value="p_desc">Price: High → Low</option>
-      <option value="metro">Closest to Metro</option>
-      <option value="rate">Top Rated</option>
-    </select>
   </section>
 
   <main class="ws">
@@ -276,5 +268,6 @@
 
   <div id="toast" class="toast"></div>
   <script src="./app.js"></script>
+  <button id="v20MobToggle" class="v20-mob-toggle" type="button" aria-label="Switch between Map and List">Show Map</button>
 </body>
 </html>

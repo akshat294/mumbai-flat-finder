@@ -12,79 +12,64 @@ def _get(url, headers=None, timeout=14):
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return r.read().decode("utf-8", errors="ignore")
 
-def fetch_makaan_rent(pages=8):
-    out = []
-    urls = [
-        f"https://www.makaan.com/mumbai-property/flats-for-rent-in-mumbai-city?page={p}" for p in range(1, pages + 1)
-    ] + [
-        "https://www.makaan.com/mumbai-property/bandra-west-flats-for-rent-50165",
-        "https://www.makaan.com/mumbai-property/andheri-west-flats-for-rent-50154",
-        "https://www.makaan.com/mumbai-property/powai-flats-for-rent-50234",
-        "https://www.makaan.com/mumbai-property/worli-flats-for-rent-50279",
-        "https://www.makaan.com/thane-property/flats-for-rent-in-thane-city",
-        "https://www.makaan.com/navi-mumbai-property/flats-for-rent-in-navi-mumbai-city",
-    ]
-    seen = set()
-    for url in urls:
+def fetch_telegram_public():
+    channels = ["mumbaihousing", "Mumbaiflats2", "mumbairooms2", "Mumbairooms3", "Navimumbaiflatsrooms"]
+    out, seen = [], set()
+    for ch in channels:
         try:
-            html = _get(url, timeout=12)
+            html = _get(f"https://t.me/s/{ch}", timeout=12)
         except Exception:
             continue
-        for m in re.finditer(r'<script[^>]+type=["\']text/x-config["\'][^>]*>([\s\S]*?)</script>', html):
-            try:
-                cfg = json.loads(m.group(1))
-            except Exception:
+        for blk in html.split("tgme_widget_message_wrap")[1:]:
+            pm = re.search(r'data-post="([^"]+)"', blk)
+            if not pm:
                 continue
-            if not isinstance(cfg, dict) or not cfg.get("price"):
+            u = f"https://t.me/{pm.group(1)}"
+            if u in seen:
                 continue
-            full_u = cfg.get("fullUrl") or cfg.get("listingUrl") or ""
-            if full_u.startswith("/"):
-                full_u = "https://www.makaan.com" + full_u
-            if not full_u.startswith("http") or full_u in seen:
+            tm = re.search(r'class="tgme_widget_message_text[^"]*"[^>]*>([\s\S]*?)</div>', blk)
+            if not tm:
                 continue
-            loc_raw = cfg.get("localityName") or cfg.get("suburbName") or ""
-            det = detect_locality(f"{loc_raw} {full_u}")
-            if not det:
+            txt = re.sub(r"<br\s*/?>", "\n", tm.group(1), flags=re.I)
+            txt = re.sub(r"<[^>]+>", " ", txt)
+            txt = re.sub(r"\s+", " ", txt).strip()
+            if len(txt) < 25:
                 continue
-            price = parse_price(cfg.get("price"), mode="rent")
-            if not price:
+            if re.search(r"\b(looking for|searching for|wanted|need a flat|need room|budget is)\b", txt[:120], re.I):
                 continue
-            seen.add(full_u)
-            seller_t = str(cfg.get("sellerType") or cfg.get("companyType") or "").lower()
-            is_owner = "owner" in seller_t
-            img = cfg.get("mainImageURL") or cfg.get("imageUrl")
-            if isinstance(img, str) and img.startswith("//"):
-                img = "https:" + img
-            sq_m = re.search(r"(\d{3,4})", str(cfg.get("size") or cfg.get("squareFeet") or ""))
+            det = detect_locality(txt)
+            price = parse_price(txt, mode="rent")
+            if not det or not price:
+                continue
+            seen.add(u)
+            imgs = []
+            for im in re.finditer(r"background-image:url\(['\"]?(https://[^'\")]+)['\"]?\)", blk):
+                iu = im.group(1)
+                if "emoji" not in iu and iu not in imgs:
+                    imgs.append(iu)
+            is_shared = bool(re.search(r"\b(flatmate|roommate|sharing|single occupancy|double occupancy|triple|pg\b|bed available|replacement)\b", txt, re.I))
+            bhk = parse_bhk(txt)
+            nm = re.search(r"(?:society|building|tower|complex|residency|heights|apartments?)[:\s-]+([A-Z][A-Za-z0-9\s&'-]{3,34})", txt, re.I)
+            title = nm.group(1).strip() if nm else f"{'Shared Room' if is_shared else 'Direct Flat'} - {det[0]}"
             out.append({
-                "name": clean_soc_name(cfg.get("projectName") or cfg.get("fullName") or f"{det[0]} Flat", det[0]),
+                "name": clean_soc_name(title, det[0]),
                 "locality": det[0], "mode": "rent", "p": price,
-                "b": parse_bhk(cfg.get("bedrooms") or cfg.get("propertyType")),
-                "sq": int(sq_m.group(1)) if sq_m else None,
-                "s": "makaan", "u": full_u, "zb": is_owner,
-                "lt": "owner" if is_owner else "broker",
-                "f": norm_furnishing(cfg.get("furnished") or cfg.get("furnishing")),
-                "img": img if (isinstance(img, str) and img.startswith("http")) else None,
-                "lat": cfg.get("latitude"), "lng": cfg.get("longitude"),
+                "b": bhk if bhk is not None else 1, "sq": None,
+                "s": "telegram", "u": u, "zb": True,
+                "lt": "shared" if is_shared else "owner",
+                "f": norm_furnishing(txt),
+                "img": imgs[0] if imgs else None, "imgs": imgs[:5],
             })
-    return out
+    return out[:140]
 
-def fetch_squareyards_rent():
-    out = []
-    slugs = [
-        "https://www.squareyards.com/rent/property-for-rent-in-mumbai",
-        "https://www.squareyards.com/rent/property-for-rent-in-bandra-west-mumbai",
-        "https://www.squareyards.com/rent/property-for-rent-in-andheri-west-mumbai",
-        "https://www.squareyards.com/rent/property-for-rent-in-powai-mumbai",
-        "https://www.squareyards.com/rent/property-for-rent-in-worli-mumbai",
-        "https://www.squareyards.com/rent/property-for-rent-in-lower-parel-mumbai",
-        "https://www.squareyards.com/rent/property-for-rent-in-goregaon-west-mumbai",
-        "https://www.squareyards.com/rent/property-for-rent-in-malad-west-mumbai",
-        "https://www.squareyards.com/rent/property-for-rent-in-thane-west-thane",
-        "https://www.squareyards.com/rent/property-for-rent-in-navi-mumbai",
+def fetch_stanza_zolo_ssr():
+    out, seen = [], set()
+    pages = [
+        ("stanza", "https://www.stanzaliving.com/mumbai"),
+        ("stanza", "https://www.stanzaliving.com/unisex-paying-guest-pg-hostel-near-mumbai"),
+        ("zolostays", "https://zolostays.com/pgs-in-mumbai"),
     ]
-    seen = set()
-    for url in slugs:
+    for src, url in pages:
         try:
             html = _get(url, timeout=14)
         except Exception:
@@ -99,30 +84,92 @@ def fetch_squareyards_rent():
                 obj = it.get("item") if isinstance(it, dict) and isinstance(it.get("item"), dict) else it
                 if not isinstance(obj, dict):
                     continue
-                u = obj.get("url") or ""
-                if not u.startswith("http") or u in seen:
-                    continue
                 txt = json.dumps(obj, ensure_ascii=False)
-                det = detect_locality(txt + " " + url)
+                det = detect_locality(txt)
                 if not det:
                     continue
                 offers = obj.get("offers") if isinstance(obj.get("offers"), dict) else {}
-                price = parse_price(offers.get("price") or txt, mode="rent")
+                price = parse_price(offers.get("price") or offers.get("lowPrice") or txt, mode="rent")
                 if not price:
                     continue
+                u = str(obj.get("url") or url).split("?")[0]
+                if u in seen:
+                    continue
                 seen.add(u)
-                img = obj.get("image")
-                if isinstance(img, list):
-                    img = img[0] if img else None
-                sq_m = re.search(r"(\d{3,4})\s*(?:sq\.?\s*ft|sqft)", txt, re.I)
+                raw_img = obj.get("image")
+                imgs = [raw_img] if isinstance(raw_img, str) else (list(raw_img) if isinstance(raw_img, list) else [])
+                imgs = [x for x in imgs if isinstance(x, str) and x.startswith("http")][:5]
                 out.append({
-                    "name": clean_soc_name(obj.get("name") or f"{det[0]} Flat", det[0]),
+                    "name": clean_soc_name(obj.get("name") or f"{src.title()} {det[0]}", det[0]),
                     "locality": det[0], "mode": "rent", "p": price,
-                    "b": parse_bhk(txt), "sq": int(sq_m.group(1)) if sq_m else None,
-                    "s": "squareyards", "u": u, "zb": False, "lt": "broker",
-                    "f": norm_furnishing(txt),
-                    "img": img if (isinstance(img, str) and img.startswith("http")) else None,
+                    "b": 0, "sq": None, "s": src, "u": u, "zb": True, "lt": "shared",
+                    "f": "furnished", "img": imgs[0] if imgs else None, "imgs": imgs,
                 })
+        m_nd = re.search(r'<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)</script>', html)
+        if m_nd:
+            try:
+                nd = json.loads(m_nd.group(1))
+                found = []
+                def walk(o):
+                    if isinstance(o, dict):
+                        if any(k in o for k in ("startingPrice", "minRent", "rent", "price")) and any(k in o for k in ("residenceName", "name", "propertyName", "title")):
+                            found.append(o)
+                        for v in o.values(): walk(v)
+                    elif isinstance(o, list):
+                        for x in o: walk(x)
+                walk(nd)
+                for b in found[:80]:
+                    raw_s = json.dumps(b, ensure_ascii=False)
+                    det = detect_locality(raw_s)
+                    price = parse_price(b.get("startingPrice") or b.get("minRent") or b.get("rent") or b.get("price"), mode="rent")
+                    if not det or not price:
+                        continue
+                    slug = b.get("slug") or b.get("seoUrl") or b.get("url") or ""
+                    u = slug if str(slug).startswith("http") else (f"{url.rstrip('/')}/{str(slug).lstrip('/')}" if slug else f"{url}#{abs(hash(raw_s))%100000}")
+                    if u in seen:
+                        continue
+                    seen.add(u)
+                    imgs = []
+                    for ik in ("images", "photos", "gallery", "imageUrls"):
+                        arr = b.get(ik)
+                        if isinstance(arr, list):
+                            for it2 in arr[:5]:
+                                iu = it2 if isinstance(it2, str) else (it2.get("url") or it2.get("imageUrl") if isinstance(it2, dict) else None)
+                                if isinstance(iu, str) and iu.startswith("http") and iu not in imgs:
+                                    imgs.append(iu)
+                    name = b.get("residenceName") or b.get("propertyName") or b.get("name") or f"{src.title()} {det[0]}"
+                    out.append({
+                        "name": clean_soc_name(name, det[0]),
+                        "locality": det[0], "mode": "rent", "p": price,
+                        "b": 0, "sq": None, "s": src, "u": u, "zb": True, "lt": "shared",
+                        "f": "furnished", "img": imgs[0] if imgs else None, "imgs": imgs[:5],
+                        "lat": b.get("latitude") or b.get("lat"), "lng": b.get("longitude") or b.get("lng"),
+                    })
+            except Exception:
+                pass
+    return out[:120]
+
+def fetch_squareyards_rent():
+    out, seen = [], set()
+    slugs = [
+        "https://www.squareyards.com/rent/property-for-rent-in-mumbai",
+        "https://www.squareyards.com/rent/property-for-rent-in-bandra-west-mumbai",
+        "https://www.squareyards.com/rent/property-for-rent-in-andheri-west-mumbai",
+        "https://www.squareyards.com/rent/property-for-rent-in-powai-mumbai",
+        "https://www.squareyards.com/rent/property-for-rent-in-worli-mumbai",
+        "https://www.squareyards.com/rent/property-for-rent-in-lower-parel-mumbai",
+        "https://www.squareyards.com/rent/property-for-rent-in-goregaon-west-mumbai",
+        "https://www.squareyards.com/rent/property-for-rent-in-malad-west-mumbai",
+        "https://www.squareyards.com/rent/property-for-rent-in-chembur-mumbai",
+        "https://www.squareyards.com/rent/property-for-rent-in-dadar-west-mumbai",
+        "https://www.squareyards.com/rent/property-for-rent-in-thane-west-thane",
+        "https://www.squareyards.com/rent/property-for-rent-in-navi-mumbai",
+    ]
+    for url in slugs:
+        try:
+            html = _get(url, timeout=14)
+        except Exception:
+            continue
         for am in re.finditer(r'href="(https://www\.squareyards\.com/[^"]*(?:for-rent|rental)[^"]+)"', html):
             u = am.group(1).split("?")[0]
             if u in seen:
@@ -134,7 +181,7 @@ def fetch_squareyards_rent():
             if not det or not price:
                 continue
             seen.add(u)
-            im = re.search(r'https://img\.squareyards\.com/[^"\'\s>]+?\.(?:jpg|jpeg|webp|png)', ctx, re.I)
+            imgs = re.findall(r'https://img\.squareyards\.com/[^"\'\s>]+?\.(?:jpg|jpeg|webp|png)', ctx, re.I)[:5]
             sq_m = re.search(r"(\d{3,4})\s*(?:sq\.?\s*ft|sqft)", plain, re.I)
             nm = re.search(r"(?:in|at)\s+([A-Z][A-Za-z0-9\s&'-]{3,36})", plain)
             out.append({
@@ -142,39 +189,38 @@ def fetch_squareyards_rent():
                 "locality": det[0], "mode": "rent", "p": price,
                 "b": parse_bhk(plain + " " + u), "sq": int(sq_m.group(1)) if sq_m else None,
                 "s": "squareyards", "u": u, "zb": False, "lt": "broker",
-                "f": norm_furnishing(plain),
-                "img": im.group(0) if im else None,
+                "f": norm_furnishing(plain), "img": imgs[0] if imgs else None, "imgs": imgs,
             })
     return out
 
-def _extract_nb_img(prop):
+def _extract_nb_imgs(prop):
     photos = prop.get("photos") or []
     pid = prop.get("id") or ""
-    for ph in photos:
+    imgs = []
+    for ph in photos[:6]:
         if not isinstance(ph, dict):
             continue
         im = ph.get("imagesMap") or {}
         for k in ("large", "original", "medium", "thumbnail"):
             fn = im.get(k)
             if fn:
-                if str(fn).startswith("http"):
-                    return fn
-                return f"https://images.nobroker.in/images/{pid}/{fn}"
-    return None
+                url = fn if str(fn).startswith("http") else f"https://images.nobroker.in/images/{pid}/{fn}"
+                if url not in imgs:
+                    imgs.append(url)
+                break
+    return imgs[:5]
 
 def fetch_nobroker_with_photos():
-    out = []
+    out, seen = [], set()
     pockets = [
-        ("Bandra West", 19.0596, 72.8295),
-        ("Andheri West", 19.1364, 72.8296),
-        ("Powai", 19.1197, 72.9051),
-        ("Worli", 19.0176, 72.8162),
-        ("Goregaon West", 19.1663, 72.8426),
-        ("Malad West", 19.1864, 72.8358),
-        ("Thane West", 19.2183, 72.9781),
-        ("Vashi", 19.0771, 72.9986),
+        ("Bandra West", 19.0596, 72.8295), ("Khar West", 19.0700, 72.8339),
+        ("Juhu", 19.1075, 72.8263), ("Andheri West", 19.1364, 72.8296),
+        ("Powai", 19.1197, 72.9051), ("Worli", 19.0176, 72.8162),
+        ("Lower Parel", 18.9977, 72.8290), ("Dadar West", 19.0213, 72.8376),
+        ("Chembur", 19.0522, 72.9005), ("Goregaon West", 19.1663, 72.8426),
+        ("Malad West", 19.1864, 72.8358), ("Kandivali West", 19.2084, 72.8364),
+        ("Thane West", 19.2183, 72.9781), ("Vashi", 19.0771, 72.9986),
     ]
-    seen = set()
     for api_type, lt_val in (("RENT", "owner"), ("SHARED_ACCOMMODATION", "shared")):
         for loc_name, lat, lng in pockets:
             sp = json.dumps([{"type": "place", "placeId": "", "lat": lat, "lon": lng, "placeName": loc_name, "showMap": False}])
@@ -200,6 +246,7 @@ def fetch_nobroker_with_photos():
                 if not det:
                     continue
                 seen.add(detail)
+                imgs = _extract_nb_imgs(prop)
                 bhk_str = str(prop.get("typeDesc") or prop.get("type") or "")
                 out.append({
                     "name": clean_soc_name(prop.get("society") or prop.get("propertyTitle") or f"{det[0]} Flat", det[0]),
@@ -207,12 +254,12 @@ def fetch_nobroker_with_photos():
                     "b": parse_bhk(bhk_str), "sq": prop.get("propertySize"),
                     "s": "nobroker", "u": detail, "zb": True, "lt": lt_val,
                     "f": norm_furnishing(prop.get("furnishingDesc") or prop.get("furnishing")),
-                    "img": _extract_nb_img(prop),
+                    "img": imgs[0] if imgs else None, "imgs": imgs,
                     "lat": prop.get("latitude"), "lng": prop.get("longitude"),
                 })
     return out
 
-def backfill_nobroker_photos(socs, max_fetch=55):
+def backfill_nobroker_photos(socs, max_fetch=150):
     filled_local = 0
     for s in socs:
         thumb = s.get("thumb")
@@ -238,34 +285,40 @@ def backfill_nobroker_photos(socs, max_fetch=55):
     if not targets:
         return filled_local
 
-    def _grab_og(pair):
+    def _grab_imgs(pair):
         s, u = pair
         try:
             html = _get(u["u"], timeout=8)
-            m = re.search(r'<meta[^>]+property=["\']og:image["\'][^>]+content=["\'](https?://[^"\']+)["\']', html, re.I)
-            if m and "logo" not in m.group(1).lower():
-                return s, u, m.group(1)
-            m2 = re.search(r'https://images\.nobroker\.in/images/[^"\'\s>]+?\.(?:jpg|jpeg|webp|png)', html, re.I)
-            if m2:
-                return s, u, m2.group(0)
+            imgs = []
+            for m in re.finditer(r'https://images\.nobroker\.in/images/[^"\'\s>]+?_(?:large|medium|original)\.(?:jpg|jpeg|webp|png)', html, re.I):
+                iu = m.group(0)
+                if iu not in imgs:
+                    imgs.append(iu)
+                if len(imgs) >= 5:
+                    break
+            if not imgs:
+                m = re.search(r'<meta[^>]+property=["\']og:image["\'][^>]+content=["\'](https?://[^"\']+)["\']', html, re.I)
+                if m and "logo" not in m.group(1).lower():
+                    imgs.append(m.group(1))
+            return s, u, imgs
         except Exception:
-            pass
-        return s, u, None
+            return s, u, []
 
     fetched = 0
-    with ThreadPoolExecutor(max_workers=8) as ex:
-        for fut in as_completed([ex.submit(_grab_og, t) for t in targets]):
-            s, u, img = fut.result()
-            if img:
-                u["img"] = img
+    with ThreadPoolExecutor(max_workers=10) as ex:
+        for fut in as_completed([ex.submit(_grab_imgs, t) for t in targets]):
+            s, u, imgs = fut.result()
+            if imgs:
+                u["img"] = imgs[0]
+                if len(imgs) > 1:
+                    u["imgs"] = imgs
                 if not s.get("thumb"):
-                    s["thumb"] = img
+                    s["thumb"] = imgs[0]
                 fetched += 1
     return filled_local + fetched
 
 def fetch_dwelo_clean():
-    out = []
-    seen = set()
+    out, seen = [], set()
     for page_url, is_shared in (("https://dwelo.in/mumbai/flatmates", True), ("https://dwelo.in/mumbai/flats", False)):
         try:
             html = _get(page_url, timeout=12)
@@ -281,15 +334,14 @@ def fetch_dwelo_clean():
             if not det or not price:
                 continue
             seen.add(u)
-            im = re.search(r'https?://[^"\'\s>]+?\.(?:jpg|jpeg|webp|png)', m.group(2), re.I)
+            imgs = re.findall(r'https?://[^"\'\s>]+?\.(?:jpg|jpeg|webp|png)', m.group(2), re.I)[:4]
             out.append({
                 "name": f"{'Shared Room' if is_shared else 'Direct Flat'} in {det[0]}",
                 "locality": det[0], "mode": "rent", "p": price,
                 "b": parse_bhk(ctx) or 1, "sq": None,
                 "s": "dwelo", "u": u, "zb": True,
                 "lt": "shared" if is_shared else "owner",
-                "f": norm_furnishing(ctx),
-                "img": im.group(0) if im else None,
+                "f": norm_furnishing(ctx), "img": imgs[0] if imgs else None, "imgs": imgs,
             })
     return out[:120]
 
@@ -298,31 +350,39 @@ def fetch_playwright_coliving():
         from playwright.sync_api import sync_playwright
     except Exception:
         return []
-    out = []
+    out, seen = [], set()
     targets = [
-        ("nextflat", "https://nextflat.in/flatmates/flatmates-in-mumbai", "shared"),
-        ("nestaway", "https://www.nestaway.com/mumbai", "shared"),
+        ("nextflat", "https://nextflat.in/flatmates/flatmates-in-mumbai", "shared", True),
+        ("nextflat", "https://nextflat.in/flats/flats-for-rent-in-mumbai", "owner", True),
+        ("nestaway", "https://www.nestaway.com/mumbai", "shared", True),
+        ("zolostays", "https://zolostays.com/pgs-in-mumbai", "shared", True),
+        ("stanza", "https://www.stanzaliving.com/mumbai", "shared", True),
+        ("makaan", "https://www.makaan.com/mumbai-property/flats-for-rent-in-mumbai-city", "broker", False),
     ]
-    seen = set()
+    eval_js = (
+        "() => {"
+        "  const out = [];"
+        "  for (const a of document.querySelectorAll('a[href]')) {"
+        "    const txt = (a.innerText || '').replace(/\\s+/g, ' ').trim();"
+        "    if (txt.length < 18 || txt.length > 650) continue;"
+        "    if (!/(?:\\u20b9|Rs|k\\b|000|lac|lakh)/i.test(txt)) continue;"
+        "    const imgs = [...a.querySelectorAll('img')].map(i => i.src || (i.dataset && i.dataset.src) || '').filter(u => u.startsWith('http'));"
+        "    out.push({ href: a.href, txt, imgs: imgs.slice(0, 4) });"
+        "  }"
+        "  return out.slice(0, 100);"
+        "}"
+    )
     try:
         with sync_playwright() as pw:
             browser = pw.chromium.launch(headless=True)
             page = browser.new_page(user_agent=UA)
-            for src, url, lt in targets:
+            for src, url, lt, is_zb in targets:
                 try:
                     page.goto(url, wait_until="domcontentloaded", timeout=18000)
-                    page.wait_for_timeout(2800)
-                    cards = page.evaluate('''() => {
-                        const out = [];
-                        for (const a of document.querySelectorAll('a[href]')) {
-                            const txt = (a.innerText || '').replace(/\\s+/g, ' ').trim();
-                            if (txt.length < 20 || txt.length > 600) continue;
-                            if (!/(?:\u20b9|Rs|k\\b|000)/i.test(txt)) continue;
-                            const img = a.querySelector('img')?.src || '';
-                            out.push({ href: a.href, txt, img });
-                        }
-                        return out.slice(0, 80);
-                    }''')
+                    page.wait_for_timeout(3200)
+                    page.evaluate("window.scrollTo(0, 1400)")
+                    page.wait_for_timeout(1000)
+                    cards = page.evaluate(eval_js)
                     for c in cards:
                         u = (c.get("href") or "").split("?")[0]
                         if not u.startswith("http") or u in seen:
@@ -332,13 +392,14 @@ def fetch_playwright_coliving():
                         if not det or not price:
                             continue
                         seen.add(u)
-                        img = c.get("img") if str(c.get("img", "")).startswith("http") else None
+                        imgs = c.get("imgs") or []
                         out.append({
                             "name": f"{src.title()} {det[0]}",
                             "locality": det[0], "mode": "rent", "p": price,
-                            "b": parse_bhk(c["txt"]) or 1, "sq": None,
-                            "s": src, "u": u, "zb": True, "lt": lt,
-                            "f": norm_furnishing(c["txt"]), "img": img,
+                            "b": parse_bhk(c["txt"]) or (0 if src in ("zolostays", "stanza") else 1),
+                            "sq": None, "s": src, "u": u, "zb": is_zb, "lt": lt,
+                            "f": norm_furnishing(c["txt"]) or ("furnished" if src in ("zolostays", "stanza") else None),
+                            "img": imgs[0] if imgs else None, "imgs": imgs,
                         })
                 except Exception:
                     continue
@@ -350,11 +411,12 @@ def fetch_playwright_coliving():
 def run_native_boost():
     all_recs = []
     for name, fn in (
-        ("makaan_rent", fetch_makaan_rent),
+        ("telegram_public", fetch_telegram_public),
+        ("stanza_zolo_ssr", fetch_stanza_zolo_ssr),
         ("squareyards_rent", fetch_squareyards_rent),
         ("nobroker_api", fetch_nobroker_with_photos),
         ("dwelo", fetch_dwelo_clean),
-        ("playwright_coliving", fetch_playwright_coliving),
+        ("playwright_coliving_makaan", fetch_playwright_coliving),
     ):
         try:
             res = fn()

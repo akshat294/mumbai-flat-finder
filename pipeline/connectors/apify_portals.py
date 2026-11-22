@@ -48,6 +48,28 @@ def _find_first_url(obj):
         return f"https://housing.com/in/rent/page/{lid}"
     return ""
 
+def _find_imgs(obj):
+    out = []
+    def _add(u):
+        if isinstance(u, str) and u.startswith("http") and "logo" not in u.lower() and u not in out:
+            out.append(u)
+    for k in ("coverImage", "cover_image", "mainImage", "main_image", "imageUrl", "image_url", "photo_url", "thumbnail", "thumbnail_url", "image", "photo"):
+        v = obj.get(k)
+        if isinstance(v, str): _add(v)
+        elif isinstance(v, dict): _add(_first_str(v, ("url", "src", "large", "original")))
+    for k in ("images", "photos", "image_urls", "photo_urls", "gallery", "media"):
+        arr = obj.get(k)
+        if isinstance(arr, list):
+            for item in arr[:8]:
+                if isinstance(item, str): _add(item)
+                elif isinstance(item, dict): _add(_first_str(item, ("url", "src", "large", "original", "imageUrl")))
+    if not out:
+        for v in obj.values():
+            if isinstance(v, str):
+                m = re.search(r"https?://[^\"'\s]+?\.(?:jpg|jpeg|webp|png)", v, re.I)
+                if m: _add(m.group(0))
+    return out[:5]
+
 def _find_img(obj):
     for k in ("coverImage", "cover_image", "mainImage", "main_image", "imageUrl", "image_url", "photo_url", "thumbnail", "thumbnail_url", "image", "photo"):
         v = obj.get(k)
@@ -141,7 +163,7 @@ def _norm_any_item(it, source_hint="", mode_hint="rent"):
         "s": src, "u": u.split("?")[0], "zb": is_owner,
         "lt": "owner" if is_owner else "broker",
         "f": norm_furnishing(it.get("furnishing") or it.get("furnishing_type") or it.get("furnishingType") or it.get("furnished")),
-        "img": _find_img(it),
+        "img": (_find_imgs(it)[0] if _find_imgs(it) else None), "imgs": _find_imgs(it),
         "lat": lat, "lng": lng,
         "rera_ids": rera_list,
     }

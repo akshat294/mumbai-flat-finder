@@ -171,8 +171,13 @@ def norm_key(name, locality):
     l = re.sub(r"[^a-z0-9]+", "", (locality or "").lower())
     return f"{n}::{l}"
 
-def build_unit(p, b, sq, src, url, zb=False, lt="broker", furn=None, img=None):
-    return {
+def build_unit(p, b, sq, src, url, zb=False, lt="broker", furn=None, img=None, imgs=None):
+    clean_imgs = []
+    for x in ([img] + (list(imgs) if isinstance(imgs, (list, tuple)) else [])):
+        if isinstance(x, str) and x.startswith("http") and x not in clean_imgs:
+            clean_imgs.append(x)
+    clean_imgs = clean_imgs[:5]
+    out = {
         "p": int(p),
         "b": b if b is not None else 1,
         "sq": int(sq) if (sq and 150 <= int(sq) <= 15000) else None,
@@ -181,8 +186,11 @@ def build_unit(p, b, sq, src, url, zb=False, lt="broker", furn=None, img=None):
         "zb": bool(zb),
         "lt": lt if lt in ("owner", "broker", "shared") else ("owner" if zb else "broker"),
         "f": norm_furnishing(furn),
-        "img": img if (isinstance(img, str) and img.startswith("http")) else None,
+        "img": clean_imgs[0] if clean_imgs else None,
     }
+    if len(clean_imgs) > 1:
+        out["imgs"] = clean_imgs
+    return out
 
 def _add_source_entry(soc, field, src_name, url, template_val):
     cur = soc.get(field)
@@ -239,7 +247,7 @@ def merge_records_into_societies(socs, records):
         unit = build_unit(
             p=p, b=parse_bhk(rec.get("b")), sq=rec.get("sq"), src=rec.get("s"),
             url=u_url, zb=rec.get("zb", False), lt=rec.get("lt", "broker"),
-            furn=rec.get("f"), img=rec.get("img")
+            furn=rec.get("f"), img=rec.get("img"), imgs=rec.get("imgs")
         )
         seen_urls.add(u_url)
 
@@ -269,6 +277,11 @@ def merge_records_into_societies(socs, records):
             s.setdefault(list_k, []).append(unit)
             if unit["img"] and not s.get("thumb"):
                 s["thumb"] = unit["img"]
+            if rec.get("rera_ids"):
+                r_arr = s.setdefault("rera_ids", [])
+                for rid in rec["rera_ids"]:
+                    if rid and rid not in r_arr:
+                        r_arr.append(rid)
             for sk in ("sources", src_list_k):
                 _add_source_entry(s, sk, unit["s"], unit["u"], tmpl.get(sk))
             if unit["b"] is not None:
@@ -305,3 +318,11 @@ def merge_records_into_societies(socs, records):
             added_socs += 1
             added_units += 1
     return added_units, added_socs
+
+
+RERA_RE = re.compile(r"\bP5(?:1[7-9]|2[0-1])\d{8}\b", re.I)
+
+def extract_rera_ids(text):
+    if not text:
+        return []
+    return sorted({m.upper() for m in RERA_RE.findall(str(text))})

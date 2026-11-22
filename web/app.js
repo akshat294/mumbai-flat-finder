@@ -9,7 +9,7 @@
   const BUY_STOPS  = [0,4000000,6000000,8000000,10000000,12500000,15000000,17500000,20000000,25000000,30000000,35000000,40000000,50000000,60000000,75000000,100000000,125000000,150000000];
   const SQFT_MAX = 4000;
   const HUB_LABELS = { bkc:"BKC", lower_parel:"Lower Parel", andheri_seepz:"Andheri", powai:"Powai", goregaon_nesco:"Goregaon", nariman_point:"Nariman Pt" };
-  const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyards:"Square Yards", commonfloor:"CommonFloor", makaan:"Makaan", nobrokerage:"NoBrokerage", community:"Flatmates", reddit:"Reddit", "99acres":"99acres", housing:"Housing.com", owner:"Direct Owner", nextflat:"NextFlat", dwelo:"Dwelo", nestaway:"NestAway", zolostays:"ZoloStays", other:"Direct" };
+  const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyards:"Square Yards", commonfloor:"CommonFloor", makaan:"Makaan", nobrokerage:"NoBrokerage", community:"Flatmates", reddit:"Reddit", "99acres":"99acres", housing:"Housing.com", owner:"Direct Owner", nextflat:"NextFlat", dwelo:"Dwelo", nestaway:"NestAway", zolostays:"ZoloStays", telegram:"Telegram Direct", stanza:"Stanza Living", settl:"Settl.", other:"Direct" };
 
   function readJSON(k, fb) { try { return JSON.parse(localStorage.getItem(k) || "null") || fb; } catch { return fb; } }
   const savedInit = readJSON("mhf_s3", { ids:[], notes:{} });
@@ -1948,4 +1948,141 @@
 
   setTimeout(hookMapUpgrades, 650);
   applyUrlStateOnBoot();
+})();
+
+
+// === V20 MODULE ===
+(function initV20() {
+  const cardList = document.getElementById("cardList");
+  if (cardList) {
+    const enhanceCards = () => {
+      const socById = new Map((typeof societies !== "undefined" ? societies : []).map(s => [s.id, s]));
+      cardList.querySelectorAll("article.fc").forEach(card => {
+        if (card.dataset.v20Done) return;
+        card.dataset.v20Done = "1";
+        const sid = card.dataset.id;
+        const soc = socById.get(sid);
+        if (!soc) return;
+
+        const metaRow = card.querySelector(".fc-price, .fc-top, .fc-body");
+        if (metaRow && !card.querySelector(".v20-fresh") && typeof soc.age_days === "number") {
+          const fp = document.createElement("span");
+          fp.className = "v20-fresh " + (soc.age_days === 0 ? "new" : "act");
+          fp.textContent = soc.age_days === 0 ? "New today" : ("Active " + soc.age_days + "d");
+          metaRow.appendChild(fp);
+        }
+
+        if (typeof st !== "undefined" && st.mode === "buy" && soc.rera_ids && soc.rera_ids.length && metaRow && !card.querySelector(".v20-rera-chip")) {
+          const rc = document.createElement("span");
+          rc.className = "v20-rera-chip";
+          rc.textContent = "RERA";
+          metaRow.appendChild(rc);
+        }
+
+        const photos = [];
+        const addP = u => { if (typeof u === "string" && u.startsWith("http") && !photos.includes(u)) photos.push(u); };
+        const imgEl = card.querySelector("img");
+        if (imgEl) addP(imgEl.src);
+        (soc.photos || []).forEach(addP);
+        const us = (typeof st !== "undefined" && st.mode === "buy" ? soc.units_buy : soc.units_rent) || [];
+        us.forEach(u => { addP(u.img); (u.imgs || []).forEach(addP); });
+
+        if (imgEl && photos.length > 1) {
+          let idx = 0;
+          const cnt = card.querySelector(".fc-cnt");
+          const show = () => {
+            idx = (idx + photos.length) % photos.length;
+            imgEl.src = photos[idx];
+            if (cnt) {
+              delete cnt.dataset.single;
+              cnt.textContent = (idx + 1) + "/" + photos.length;
+            }
+          };
+          if (cnt) { delete cnt.dataset.single; cnt.textContent = "1/" + photos.length; }
+
+          const mediaBox = imgEl.parentElement || card;
+          mediaBox.querySelectorAll("button").forEach(btn => {
+            const t = (btn.textContent || "").trim();
+            const al = (btn.getAttribute("aria-label") || "").toLowerCase();
+            if (t === "<" || t === "\u2039" || al.includes("prev")) {
+              btn.addEventListener("click", e => { e.preventDefault(); e.stopImmediatePropagation(); idx--; show(); }, true);
+            } else if (t === ">" || t === "\u203a" || al.includes("next")) {
+              btn.addEventListener("click", e => { e.preventDefault(); e.stopImmediatePropagation(); idx++; show(); }, true);
+            }
+          });
+
+          let sx = null;
+          mediaBox.addEventListener("pointerdown", e => { if (!e.target.closest("button")) sx = e.clientX; }, { passive: true });
+          mediaBox.addEventListener("pointerup", e => {
+            if (sx === null) return;
+            const dx = e.clientX - sx;
+            sx = null;
+            if (Math.abs(dx) > 32) {
+              e.stopPropagation();
+              idx += (dx < 0 ? 1 : -1);
+              show();
+            }
+          });
+        }
+      });
+    };
+    new MutationObserver(enhanceCards).observe(cardList, { childList: true });
+    setTimeout(enhanceCards, 700);
+  }
+
+  const dBody = document.getElementById("dBody");
+  if (dBody) {
+    new MutationObserver(() => {
+      if (dBody.querySelector(".v20-rera-card") || !dBody.innerHTML.trim()) return;
+      const socId = (typeof st !== "undefined" && st.sel) || "";
+      const soc = (typeof societies !== "undefined" ? societies : []).find(x => x.id === socId);
+      if (!soc) return;
+      const hasRera = Array.isArray(soc.rera_ids) && soc.rera_ids.length > 0;
+      const isBuy = (typeof st !== "undefined" && st.mode === "buy");
+      if (!hasRera && !isBuy) return;
+
+      const card = document.createElement("div");
+      card.className = "v20-rera-card";
+      if (hasRera) {
+        const metaParts = [];
+        if (soc.rera_developer) metaParts.push("<span>Developer: <strong>" + soc.rera_developer.replace(/</g, "<") + "</strong></span>");
+        if (soc.rera_carpet_sqft) metaParts.push("<span>Carpet: <strong>" + soc.rera_carpet_sqft + " sq ft</strong></span>");
+        if (soc.rera_possession) metaParts.push("<span>Possession: <strong>" + soc.rera_possession.replace(/</g, "<") + "</strong></span>");
+        card.innerHTML =
+          '<div class="v20-rera-hdr"><span class="v20-rera-title">MahaRERA Verified Registry</span><span style="font-size:11px;opacity:.7;">Click ID to copy</span></div>' +
+          '<div class="v20-rera-ids">' + soc.rera_ids.map(r => '<button type="button" class="v20-rera-id" data-copy="' + r + '">' + r + '</button>').join("") + '</div>' +
+          (metaParts.length ? '<div class="v20-rera-meta">' + metaParts.join("") + '</div>' : '') +
+          '<a class="v20-rera-link" href="https://maharera.maharashtra.gov.in/" target="_blank" rel="noopener">Verify project on official MahaRERA portal ?</a>';
+      } else {
+        card.innerHTML =
+          '<div class="v20-rera-hdr"><span class="v20-rera-title">MahaRERA Check</span></div>' +
+          '<div class="v20-rera-meta"><span>RERA ID not listed on portal ad. Always verify registration before paying booking token.</span></div>' +
+          '<a class="v20-rera-link" href="https://maharera.maharashtra.gov.in/" target="_blank" rel="noopener">Search "' + (soc.name || "project").replace(/"/g, "") + '" on MahaRERA ?</a>';
+      }
+      card.addEventListener("click", async e => {
+        const btn = e.target.closest(".v20-rera-id");
+        if (!btn) return;
+        const val = btn.dataset.copy;
+        try {
+          await navigator.clipboard.writeText(val);
+          btn.textContent = val + " (Copied)";
+          setTimeout(() => { btn.textContent = val; }, 1400);
+        } catch {}
+      });
+      const flagBar = dBody.querySelector(".v17-flag-bar");
+      if (flagBar) dBody.insertBefore(card, flagBar);
+      else dBody.appendChild(card);
+    }).observe(dBody, { childList: true });
+  }
+
+  const mobBtn = document.getElementById("v20MobToggle");
+  if (mobBtn) {
+    mobBtn.addEventListener("click", () => {
+      const showingMap = document.body.classList.toggle("v20-mob-map");
+      mobBtn.textContent = showingMap ? "Show List" : "Show Map";
+      if (showingMap && typeof map !== "undefined" && map && map.invalidateSize) {
+        setTimeout(() => map.invalidateSize(), 120);
+      }
+    });
+  }
 })();
