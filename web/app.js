@@ -9,7 +9,7 @@
   const BUY_STOPS  = [0,4000000,6000000,8000000,10000000,12500000,15000000,17500000,20000000,25000000,30000000,35000000,40000000,50000000,60000000,75000000,100000000,125000000,150000000];
   const SQFT_MAX = 4000;
   const HUB_LABELS = { bkc:"BKC", lower_parel:"Lower Parel", andheri_seepz:"Andheri", powai:"Powai", goregaon_nesco:"Goregaon", nariman_point:"Nariman Pt" };
-  const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyards:"Square Yards", commonfloor:"CommonFloor", makaan:"Makaan", nobrokerage:"NoBrokerage", community:"Flatmates", reddit:"Reddit", "99acres":"99acres", housing:"Housing.com", owner:"Direct Owner", nextflat:"NextFlat", dwelo:"Dwelo", nestaway:"NestAway", zolostays:"ZoloStays", telegram:"Telegram Direct", stanza:"Stanza Living", settl:"Settl.", other:"Direct" };
+  const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyards:"Square Yards", commonfloor:"CommonFloor", makaan:"Makaan", nobrokerage:"NoBrokerage", community:"Flatmates", reddit:"Reddit", "99acres":"99acres", housing:"Housing.com", owner:"Direct Owner", nextflat:"NextFlat", dwelo:"Dwelo", nestaway:"NestAway", zolostays:"ZoloStays", telegram:"Telegram Direct", stanza:"Stanza Living", flatmate:"FlatMate.in", settl:"Settl.", other:"Direct" };
 
   function readJSON(k, fb) { try { return JSON.parse(localStorage.getItem(k) || "null") || fb; } catch { return fb; } }
   const savedInit = readJSON("mhf_s3", { ids:[], notes:{} });
@@ -508,7 +508,9 @@
         );
         if (!isClone) deduped.push(u);
       }
-      if (!deduped.length) continue;
+      const liveDeduped = deduped.filter(u => ((flagsMap[u.u || u.url]?.total) || 0) < 2);
+      if (!liveDeduped.length) continue;
+      deduped.length = 0; deduped.push(...liveDeduped);
       deduped.sort((a, b) => {
         const fA = (flagsMap[a.url]?.total || 0) > 0 ? 1 : 0;
         const fB = (flagsMap[b.url]?.total || 0) > 0 ? 1 : 0;
@@ -1611,7 +1613,8 @@
     try {
       const p = new URLSearchParams(location.search);
       if (![...p.keys()].length || typeof st === "undefined") return;
-      if (p.get("mode") === "buy") st.mode = "buy";
+      if (p.get("mode") === "buy") { st.mode = "buy"; document.getElementById("modeBuy")?.click(); }
+      if (p.get("lister")) { document.querySelector(`[data-lt="${p.get("lister")}"]`)?.click(); }
       if (p.get("sort")) { st.sort = p.get("sort"); if (sortEl) sortEl.value = st.sort; }
       if (p.get("lister")) st.lister = p.get("lister");
       if (p.get("balcony") === "1") st.balcony = true;

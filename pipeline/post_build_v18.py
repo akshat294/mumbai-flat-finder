@@ -7,6 +7,7 @@ sys.path.insert(0, str(ROOT))
 from pipeline.connectors.v19_common import haversine_km, clean_soc_name, merge_records_into_societies, extract_rera_ids
 from pipeline.connectors.native_boost import run_native_boost, backfill_nobroker_photos
 from pipeline.connectors.apify_portals import sync_apify, load_cached_apify
+from pipeline.connectors.maharera_enricher import enrich_societies as enrich_maharera
 
 SEEN_PATH = ROOT / "data/seen_timestamps.json"
 
@@ -137,7 +138,7 @@ def run():
             s["thumb"] = gal[0]
 
     rera_hits = _enrich_maharera_local(socs)
-    rera_total = sum(1 for s in socs if s.get("rera_ids"))
+    rera_total = enrich_maharera(socs, max_fetch=200)
 
     now_ts = int(time.time())
     first_seen = _load_first_seen()
