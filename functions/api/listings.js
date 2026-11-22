@@ -1,5 +1,41 @@
+// v24.1 Hardened CORS + Rate-Limit Guard
+function _bhAllowedOrigin(request) {
+  const origin = (request && request.headers && request.headers.get("Origin")) || "";
+  const ok =
+    !origin ||
+    origin === "https://bombayhomes.pages.dev" ||
+    /^https:\/\/[a-z0-9-]+\.bombayhomes\.pages\.dev$/i.test(origin) ||
+    /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin);
+  return { origin, ok, allow: ok ? (origin || "https://bombayhomes.pages.dev") : "https://bombayhomes.pages.dev" };
+}
+
+async function _bhIpHash(request) {
+  const ip = (request && request.headers && request.headers.get("CF-Connecting-IP")) || "anon";
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("bh-list:" + ip));
+  return [...new Uint8Array(buf)].slice(0, 12).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function _bhCheckPostRateLimit(db, ipHash, maxPerHour = 5) {
+  if (!db) return true;
+  await db.prepare(
+    "CREATE TABLE IF NOT EXISTS api_rate_limits (ip_hash TEXT NOT NULL, bucket TEXT NOT NULL, created_at INTEGER NOT NULL)"
+  ).run();
+  const now = Math.floor(Date.now() / 1000);
+  const row = await db.prepare(
+    "SELECT COUNT(*) as c FROM api_rate_limits WHERE ip_hash = ? AND bucket = 'listings' AND created_at > ?"
+  ).bind(ipHash, now - 3600).first();
+  if ((row?.c || 0) >= maxPerHour) return false;
+  await db.prepare(
+    "INSERT INTO api_rate_limits (ip_hash, bucket, created_at) VALUES (?, 'listings', ?)"
+  ).bind(ipHash, now).run();
+  try {
+    await db.prepare("DELETE FROM api_rate_limits WHERE created_at < ?").bind(now - 86400).run();
+  } catch {}
+  return true;
+}
+
 ﻿const CORS = {
-  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Origin": "https://bombayhomes.pages.dev",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, X-Ingest-Key",
 };
@@ -44,7 +80,10 @@ function normalizeListing(body) {
   return { name, locality, zone, mode, bhk, price, sqft, furn, zb, contact, url, lat, lng, source };
 }
 
-export async function onRequestOptions() {
+export async function onRequestOptions({ request }) {
+  const _orig = _bhAllowedOrigin(request);
+  return new Response(null, { status: 204, headers: { 'Access-Control-Allow-Origin': _orig.allow, 'Access-Control-Allow-Methods': 'GET, POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type', 'Vary': 'Origin' } });
+
   return new Response(null, { status: 204, headers: CORS });
 }
 
@@ -62,6 +101,14 @@ export async function onRequestGet({ env }) {
 }
 
 export async function onRequestPost({ request, env }) {
+  const _orig = _bhAllowedOrigin(request);
+  if (!_orig.ok) return new Response(JSON.stringify({ error: 'Forbidden origin' }), { status: 403, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': _orig.allow, 'X-Content-Type-Options': 'nosniff' } });
+  try {
+    const _ih = await _bhIpHash(request);
+    const _okRl = await _bhCheckPostRateLimit(env && env.DB, _ih, 5);
+    if (!_okRl) return new Response(JSON.stringify({ error: 'Too many submissions. Try again in an hour.' }), { status: 429, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': _orig.allow, 'X-Content-Type-Options': 'nosniff' } });
+  } catch {}
+
   if (!env.DB) return jsonRes({ error: "D1 database (DB) not bound in Cloudflare Pages" }, 503);
   let raw;
   try { raw = await request.json(); } catch { return jsonRes({ error: "Invalid JSON" }, 400); }
