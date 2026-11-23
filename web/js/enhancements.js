@@ -202,13 +202,18 @@
           }
 
           const photos = [];
-          const addP = u => { const su = safeUrl(u); if (su && !photos.includes(su)) photos.push(su); };
+          const _upImg = u => String(u || "").replace(/(imagecdn\.99acres\.com\/[^?#]*?\d+)T(-\d+\.)/i, "$1M$2");
+          const _imgKey = u => u.replace(/(imagecdn\.99acres\.com\/[^?#]*?\d+)[A-Z](-\d+\.)/i, "$1_$2");
+          const _seenK = new Set();
+          const addP = u => { const su = safeUrl(_upImg(u)); if (!su) return; const k = _imgKey(su); if (!_seenK.has(k)) { _seenK.add(k); photos.push(su); } };
           if (imgEl) addP(imgEl.src);
           addP(soc.thumb);
           (soc.photos || []).forEach(addP);
           const us = (typeof st !== "undefined" && st.mode === "buy" ? soc.units_buy : soc.units_rent) || [];
           us.forEach(u => { addP(u.img); (u.imgs || []).forEach(addP); });
 
+          if (imgEl && photos.length && imgEl.src !== photos[0]) imgEl.src = photos[0];
+          if (cnt) { if (photos.length > 1) { delete cnt.dataset.single; cnt.textContent = "1/" + photos.length; } else { cnt.dataset.single = "1"; cnt.textContent = ""; } }
           if (imgEl && photos.length > 1) {
             let idx = 0;
             const show = () => {
@@ -499,9 +504,10 @@
     const detailLbls = L.layerGroup();
     AREA_LABELS.forEach(([name, lat, lng]) => {
       const mk = L.marker([lat, lng], {
-        pane: "bhAreaPane", interactive: false,
-        icon: L.divIcon({ className: "", html: '<div class="bh-area-lbl">' + escHtml(name) + '</div>', iconSize: [0, 0] })
+        pane: "bhAreaPane", interactive: true,
+        icon: L.divIcon({ className: "", html: '<div class="bh-area-lbl bh-area-tap">' + escHtml(name) + '</div>', iconSize: [0, 0] })
       });
+      mk.on("click", () => { try { m.flyTo([lat, lng], 14, { duration: 0.65 }); } catch {} });
       if (MAJOR_NAMES.has(name)) mk.addTo(majorLbls);
       else mk.addTo(detailLbls);
     });

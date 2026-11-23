@@ -280,7 +280,7 @@
     const occupied = [];
 
     for (const s of exact) {
-      const pt = map.latLngToContainerPoint([s.lat, s.lng]);
+      const pt = map.project([s.lat, s.lng], z);
       const key = `${Math.floor(pt.x / cellW)}:${Math.floor(pt.y / cellH)}`;
       let b = buckets.get(key);
       if (!b) { b = { items: [], lat: 0, lng: 0, minP: Infinity, maxP: 0 }; buckets.set(key, b); }
@@ -296,9 +296,7 @@
         const ps = b.items.map(x => getP(x)).filter(v => v > 0).sort((a, c) => a - c);
         const medP = ps.length ? ps[Math.floor(ps.length / 2)] : 0;
         const medS = medP ? fmtPill(medP, st.mode === "buy") : "";
-        const pillHtml = (z <= 11)
-          ? `<div class="cluster-pill cluster-mini"><span>${b.items.length}</span></div>`
-          : `<div class="cluster-pill"><span>${medS || "Homes"}</span><span class="cluster-cnt">\u00b7 ${b.items.length}</span></div>`;
+        const pillHtml = `<div class="cluster-pill${z <= 11 ? " cluster-hero" : ""}"><span>${medS || "Homes"}</span><span class="cluster-cnt">\u00b7 ${b.items.length}</span></div>`;
         const ic = L.divIcon({ className: "cluster-wrap", html: pillHtml, iconSize: [0, 0] });
         L.marker([cla, cln], { icon: ic }).on("click", () => {
           const lats = b.items.map(x => x.lat), lngs = b.items.map(x => x.lng);
@@ -596,7 +594,8 @@
     const archSvg = `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 20V11a8 8 0 0 1 16 0v9"/><path d="M8 20v-7a4 4 0 0 1 8 0v7"/><path d="M2 20h20"/></svg>`;
 
     listEl.innerHTML = slice.map(({ s, u }) => {
-      const img = u.img || s.thumb || "";
+      const _rawImg = u.img || s.thumb || "";
+      const img = _rawImg.replace(/(imagecdn\.99acres\.com\/[^?#]*?\d+)T(-\d+\.)/i, "$1M$2");
       const bhkTxt = u.b === 0 ? "1 RK" : (u.b ? `${u.b} BHK` : "");
       const sq = u.sq || s.rera_carpet_sqft;
       const specTxt = [bhkTxt, sq ? `${sq} sq ft` : ""].filter(Boolean).join(" · ");
