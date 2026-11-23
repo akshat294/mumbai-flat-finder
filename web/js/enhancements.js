@@ -562,13 +562,21 @@
     setTimeout(syncOverlayButtons, 500);
   }
 
+  function syncMobTopOffset() {
+    const h1 = document.querySelector("header.topbar")?.getBoundingClientRect().height || 0;
+    const h2 = document.getElementById("bhAiBar")?.getBoundingClientRect().height || 0;
+    const tot = Math.round(h1 + h2);
+    if (tot > 40) document.documentElement.style.setProperty("--bh-mob-top", tot + "px");
+  }
+  window.addEventListener("resize", syncMobTopOffset);
   const mobBtn = document.getElementById("v20MobToggle");
   if (mobBtn) {
     mobBtn.addEventListener("click", () => {
+      syncMobTopOffset();
       const showingMap = document.body.classList.toggle("bh-mob-map");
       mobBtn.textContent = showingMap ? "Show List" : "Show Map";
       if (showingMap && bh().map && bh().map.invalidateSize) {
-        setTimeout(() => bh().map.invalidateSize(), 120);
+        setTimeout(() => { syncMobTopOffset(); bh().map.invalidateSize(); }, 120);
       }
     });
   }
@@ -578,8 +586,8 @@
 })();
 
 
-// === V36 AI VIBE (BRIGHT & MODERN) & LLM ASK-THE-MAP CONCIERGE ===
-(function initV36Features() {
+// === V38 AI VIBE (BRIGHT & MODERN) & JOBS-MINIMAL ASK-THE-MAP ===
+(function initV38Features() {
   "use strict";
   function bh() { return (typeof window.__bh === "function" ? window.__bh() : {}) || {}; }
 
@@ -629,7 +637,7 @@
     btn.type = "button";
     btn.className = "bh-vibe-chip";
     btn.textContent = "Bright & Modern";
-    btn.title = "Filter map & list for sunlit, modern flats (ONNX vibe >= 74, hides dark & 3D render ads)";
+    btn.title = "Filter for sunlit, modern flats (ONNX vibe >= 74, hides dark & 3D render ads)";
     btn.addEventListener("click", () => {
       const api = bh();
       if (!api.st) return;
@@ -683,7 +691,6 @@
   function localFallbackParse(query, knownLocs) {
     const low = String(query || "").toLowerCase();
     const f = {};
-
     if (/\b(buy|sale|purchase|invest|resale|cr\b|crore)\b/i.test(low)) f.mode = "buy";
     else if (/\b(rent|lease|flatmate|sharing|pg|k\b|\/mo)\b/i.test(low)) f.mode = "rent";
 
@@ -748,95 +755,41 @@
     return f;
   }
 
-  function fmtInrShort(v, isBuy) {
-    if (!v) return "";
-    if (isBuy) return v >= 1e7 ? ("\u20b9" + (v / 1e7).toFixed(2) + "Cr") : ("\u20b9" + Math.round(v / 1e5) + "L");
-    return v >= 1e5 ? ("\u20b9" + (v / 1e5).toFixed(2) + "L") : ("\u20b9" + Math.round(v / 1000) + "k");
-  }
-
-  function getOrCreateAnswerBox() {
-    let box = document.getElementById("bhAiAnswer");
-    if (!box) {
-      const bar = document.getElementById("bhAiBar");
-      if (!bar) return null;
-      box = document.createElement("div");
-      box.id = "bhAiAnswer";
-      box.className = "bh-ai-answer";
-      box.style.display = "none";
-      bar.insertAdjacentElement("afterend", box);
-    }
-    return box;
-  }
-
-  function renderAnswerPanel(summaryText, engine, topSocs, isBuy) {
-    const box = getOrCreateAnswerBox();
-    if (!box) return;
-    box.style.display = "block";
-    const engLbl = engine === "gemini" ? "Gemini AI" : (engine === "workers-ai" ? "Workers AI" : "Smart Map");
-    box.innerHTML = "";
-
-    const head = document.createElement("div");
-    head.className = "bh-ai-answer-head";
-    const badge = document.createElement("span");
-    badge.className = "bh-ai-engine";
-    badge.textContent = engLbl;
-    const txt = document.createElement("div");
-    txt.className = "bh-ai-answer-text";
-    txt.textContent = summaryText;
-    const closeBtn = document.createElement("button");
-    closeBtn.type = "button";
-    closeBtn.className = "bh-ai-close";
-    closeBtn.textContent = "\u00d7";
-    closeBtn.title = "Hide AI summary";
-    closeBtn.onclick = () => { box.style.display = "none"; };
-    head.appendChild(badge);
-    head.appendChild(txt);
-    head.appendChild(closeBtn);
-    box.appendChild(head);
-
-    if (topSocs && topSocs.length) {
-      const chips = document.createElement("div");
-      chips.className = "bh-ai-chips";
-      topSocs.slice(0, 6).forEach(item => {
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "bh-ai-chip";
-        const pStr = fmtInrShort(item.p, isBuy);
-        btn.textContent = item.name + " \u00b7 " + item.locality + (pStr ? (" \u00b7 " + pStr) : "");
-        btn.addEventListener("click", () => {
-          const api = bh();
-          const soc = (api.societies || []).find(s => s.id === item.id);
-          if (!soc) return;
-          if (api.map && soc.lat && soc.lng) {
-            try { api.map.flyTo([soc.lat, soc.lng], 16, { duration: 0.65 }); } catch {}
-          }
-          if (api.openDetail) {
-            try { api.openDetail(soc); } catch {}
-          }
-        });
-        chips.appendChild(btn);
-      });
-      box.appendChild(chips);
-    }
-  }
-
   let _askSeq = 0;
+  let _aiActive = false;
+
+  function resetAskMapAll() {
+    _askSeq++;
+    _aiActive = false;
+    const api = bh();
+    const statusEl = document.getElementById("bhAiStatus");
+    const clrBtn = document.getElementById("bhAiClear");
+    if (statusEl) statusEl.textContent = "";
+    if (clrBtn) clrBtn.style.display = "none";
+    if (api.resetAskFilters) api.resetAskFilters();
+    syncBrightBtnUi();
+    if (api.renderAll) api.renderAll();
+  }
 
   async function runTalkToMap(query) {
     const q = String(query || "").trim();
     const api = bh();
     const statusEl = document.getElementById("bhAiStatus");
     const goBtn = document.getElementById("bhAiGo");
-    if (!q || !api.st) return;
+    if (!q) {
+      if (_aiActive) resetAskMapAll();
+      return;
+    }
+    if (!api.st) return;
 
     const mySeq = ++_askSeq;
-    if (goBtn) { goBtn.disabled = true; goBtn.textContent = "Thinking..."; }
-    if (statusEl) statusEl.textContent = "Understanding your Mumbai query...";
+    _aiActive = true;
+    if (goBtn) { goBtn.disabled = true; goBtn.textContent = "..."; }
+    if (statusEl) statusEl.textContent = "Filtering...";
 
     const knownLocs = getKnownLocalities();
     const localF = localFallbackParse(q, knownLocs);
     let llmF = {};
-    let parseEngine = "local-nlp";
 
     try {
       const r = await fetch("/api/ask", {
@@ -851,10 +804,7 @@
       });
       if (r.ok) {
         const d = await r.json();
-        if (d && d.ok && d.filters && typeof d.filters === "object") {
-          llmF = d.filters;
-          parseEngine = d.engine || "workers-ai";
-        }
+        if (d && d.ok && d.filters && typeof d.filters === "object") llmF = d.filters;
       }
     } catch {}
 
@@ -865,41 +815,30 @@
     if ((!f.bhks || !f.bhks.length) && localF.bhks) f.bhks = localF.bhks;
 
     const targetMode = f.mode || api.st.mode || "rent";
-    if (api.setMode) {
-      if (targetMode === "buy" && statusEl) statusEl.textContent = "Loading Buy shards...";
-      await api.setMode(targetMode);
-    }
+    if (api.setMode) await api.setMode(targetMode);
     if (mySeq !== _askSeq) return;
 
     const api2 = bh();
     const st = api2.st;
     if (api2.resetAskFilters) api2.resetAskFilters();
 
-    const applied = [targetMode === "buy" ? "Buy" : "Rent"];
-    const isBuy = targetMode === "buy";
-
+    const applied = [];
     if (Array.isArray(f.bhks) && f.bhks.length && st.bhks && st.bhks.add) {
       f.bhks.forEach(b => {
         st.bhks.add(Number(b));
         applied.push(Number(b) === 0 ? "1RK" : (Number(b) === 4 ? "4+BHK" : (b + "BHK")));
       });
     }
-    if (f.minPrice && isFinite(f.minPrice)) {
-      st.pLo = Number(f.minPrice);
-      applied.push("Min " + fmtInrShort(st.pLo, isBuy));
-    }
-    if (f.maxPrice && isFinite(f.maxPrice)) {
-      st.pHi = Number(f.maxPrice);
-      applied.push("Under " + fmtInrShort(st.pHi, isBuy));
-    }
+    if (f.minPrice && isFinite(f.minPrice)) st.pLo = Number(f.minPrice);
+    if (f.maxPrice && isFinite(f.maxPrice)) st.pHi = Number(f.maxPrice);
     if (Array.isArray(f.localities) && f.localities.length) {
       st.multiLocs = f.localities.slice(0, 5);
       if (api2.renderLocChips) api2.renderLocChips();
-      applied.push(st.multiLocs.slice(0, 3).join(" + "));
+      applied.push(st.multiLocs.slice(0, 2).join(" + "));
     }
-    if (f.zero) { st.zero = true; applied.push("Zero Brokerage"); }
-    if (f.lister === "shared") { st.lister = "shared"; applied.push("Shared / Flatmate"); }
-    else if (f.lister === "owner") { st.lister = "owner"; st.zero = true; if (!applied.includes("Zero Brokerage")) applied.push("Owner Direct"); }
+    if (f.zero) { st.zero = true; applied.push("Zero Brok"); }
+    if (f.lister === "shared") { st.lister = "shared"; applied.push("Shared"); }
+    else if (f.lister === "owner") { st.lister = "owner"; st.zero = true; }
 
     function setSelectSmart(id, wanted, numericCeil) {
       const el = document.getElementById(id);
@@ -920,21 +859,16 @@
       return false;
     }
 
-    if (f.furn && setSelectSmart("fFurn", f.furn, false)) applied.push(f.furn);
-    if (f.balcony) { st.balcony = true; applied.push("Balcony"); }
-    if (f.seaview) { st.seaview = true; applied.push("Sea View"); }
-    if (f.terrace) { st.terrace = true; applied.push("Terrace"); }
-    if (f.drop) { st.drop = true; applied.push("Price Drop"); }
-    if (f.floodSafe) { st.flood = true; applied.push("Low Flood Risk"); }
-    if (f.brightOnly) { st.brightOnly = true; applied.push("Bright & Modern"); }
-    if (f.reraOnly) { st.reraOnly = true; applied.push("MahaRERA"); }
-    if (f.maxMetroWalk && setSelectSmart("fMetro", f.maxMetroWalk, true)) {
-      applied.push("<=" + (document.getElementById("fMetro")?.value || f.maxMetroWalk) + "m Metro");
-    }
-    if (f.hub && setSelectSmart("fHub", f.hub, false)) {
-      if (f.maxHubMin) setSelectSmart("fHubMin", f.maxHubMin, true);
-      applied.push("Commute: " + f.hub.toUpperCase());
-    }
+    if (f.furn) setSelectSmart("fFurn", f.furn, false);
+    if (f.balcony) st.balcony = true;
+    if (f.seaview) st.seaview = true;
+    if (f.terrace) st.terrace = true;
+    if (f.drop) st.drop = true;
+    if (f.floodSafe) st.flood = true;
+    if (f.brightOnly) { st.brightOnly = true; applied.push("Bright"); }
+    if (f.reraOnly) st.reraOnly = true;
+    if (f.maxMetroWalk) setSelectSmart("fMetro", f.maxMetroWalk, true);
+    if (f.hub && setSelectSmart("fHub", f.hub, false) && f.maxHubMin) setSelectSmart("fHubMin", f.maxHubMin, true);
     if (f.sort) {
       const se = document.getElementById("sortSelect");
       if (se) se.value = f.sort;
@@ -942,7 +876,6 @@
     if (f.keywords && !st.multiLocs.length) {
       const sb = document.getElementById("searchBox");
       if (sb) sb.value = f.keywords;
-      applied.push('"' + f.keywords + '"');
     }
 
     syncBrightBtnUi();
@@ -960,86 +893,13 @@
       try { api3.fitToSelectedLocalities(); } catch {}
     }
 
-    let totalFlats = 0;
-    const topMatches = [];
-    for (let i = 0; i < matchedSocs.length; i++) {
-      const s = matchedSocs[i];
-      const mu = api3.matchingUnits ? api3.matchingUnits(s) : ((isBuy ? s.units_buy : s.units_rent) || []);
-      totalFlats += mu.length;
-      if (topMatches.length < 12) {
-        const prices = mu.map(u => u.p).filter(Boolean);
-        const minP = prices.length ? Math.min(...prices) : (isBuy ? s.pricing?.buy_min : s.pricing?.rent_min);
-        topMatches.push({
-          id: s.id,
-          name: s.name,
-          locality: s.locality,
-          p: minP || 0,
-          bhks: (s.bhks || []).slice(0, 4),
-          units: mu.length,
-          zb: !!(s.pricing?.has_zero_brokerage || mu.some(u => u.zb)),
-          vs: typeof s.vs === "number" ? s.vs : 50,
-          vr: !!s.vr,
-          metro: s.mumbai_context?.nearest_metro?.name || null,
-          metroWalk: s.mumbai_context?.nearest_metro?.walk_min || null,
-          flood: s.mumbai_context?.monsoon_flood_risk || null,
-          drop: !!(s.price_drop && s.price_drop[targetMode]),
-          rera: !!(s.rera || s.rera_id || (Array.isArray(s.rera_ids) && s.rera_ids.length)),
-          rating: s.google?.rating || null,
-        });
-      }
-    }
-
-    setTimeout(stampVibeBadgesOnDom, 110);
+    setTimeout(stampVibeBadgesOnDom, 100);
     if (statusEl) {
-      statusEl.textContent = `${matchedSocs.length.toLocaleString("en-IN")} buildings (${totalFlats.toLocaleString("en-IN")} flats) \u00b7 ${applied.join(" \u00b7 ")}`;
+      statusEl.textContent = matchedSocs.length
+        ? `${matchedSocs.length.toLocaleString("en-IN")} matches` + (applied.length ? (" \u00b7 " + applied.slice(0, 3).join(" \u00b7 ")) : "")
+        : "No exact matches";
     }
-
-    let summaryText = "";
-    let sumEngine = parseEngine;
-    try {
-      const sr = await fetch("/api/ask", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "summarize",
-          query: q,
-          mode: targetMode,
-          totalBuildings: matchedSocs.length,
-          totalFlats,
-          appliedLabels: applied,
-          topMatches,
-        }),
-      });
-      if (sr.ok) {
-        const sd = await sr.json();
-        if (sd && sd.ok && sd.summary) {
-          summaryText = sd.summary;
-          sumEngine = sd.engine || parseEngine;
-        }
-      }
-    } catch {}
-
-    if (mySeq !== _askSeq) return;
-    if (!summaryText) {
-      summaryText = topMatches.length
-        ? `Matched ${totalFlats.toLocaleString("en-IN")} live flats across ${matchedSocs.length.toLocaleString("en-IN")} Mumbai buildings. Click any society chip below to jump straight to it on the map.`
-        : "No exact matches for that combination. Try broadening the budget or removing one constraint.";
-    }
-    renderAnswerPanel(summaryText, sumEngine, topMatches, isBuy);
     if (goBtn) { goBtn.disabled = false; goBtn.textContent = "Ask Map"; }
-  }
-
-  function resetAskMapAll() {
-    const api = bh();
-    const inp = document.getElementById("bhAiInput");
-    const statusEl = document.getElementById("bhAiStatus");
-    const box = document.getElementById("bhAiAnswer");
-    if (inp) inp.value = "";
-    if (statusEl) statusEl.textContent = "";
-    if (box) box.style.display = "none";
-    if (api.resetAskFilters) api.resetAskFilters();
-    syncBrightBtnUi();
-    if (api.renderAll) api.renderAll();
   }
 
   function injectTalkToMapBar() {
@@ -1050,27 +910,29 @@
     bar.id = "bhAiBar";
     bar.className = "bh-ai-bar";
     bar.innerHTML =
-      '<input id="bhAiInput" class="bh-ai-input" type="text" placeholder="Ask the Map AI: e.g. Sunlit 2BHK under 85k in Bandra or Khar zero brokerage near metro" />' +
+      '<div class="bh-ai-wrap">' +
+        '<input id="bhAiInput" class="bh-ai-input" type="text" placeholder="Ask Map AI: e.g. Sunlit 2BHK under 85k Bandra or Khar zero brokerage" />' +
+        '<button id="bhAiClear" class="bh-ai-clear" type="button" aria-label="Clear search" style="display:none">\u00d7</button>' +
+      '</div>' +
       '<button id="bhAiGo" class="bh-ai-go" type="button">Ask Map</button>' +
-      '<button id="bhAiReset" class="bh-ai-reset" type="button" title="Reset AI filters">Reset</button>' +
-      '<button type="button" class="bh-ai-preset" data-q="Sunlit 2BHK under 85k Bandra or Khar zero brokerage">2BHK Bandra <85k</button>' +
-      '<button type="button" class="bh-ai-preset" data-q="Bright 1BHK under 50k Andheri or Powai zero brokerage">1BHK Powai/Andheri</button>' +
-      '<button type="button" class="bh-ai-preset" data-q="Buy 3BHK under 4cr Worli or Lower Parel">Buy 3BHK SoBo</button>' +
       '<span id="bhAiStatus" class="bh-ai-status"></span>';
 
     header.insertAdjacentElement("afterend", bar);
 
     const inp = document.getElementById("bhAiInput");
+    const clr = document.getElementById("bhAiClear");
     document.getElementById("bhAiGo").addEventListener("click", () => runTalkToMap(inp.value));
-    document.getElementById("bhAiReset").addEventListener("click", resetAskMapAll);
-    inp.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); runTalkToMap(inp.value); } });
-    bar.querySelectorAll(".bh-ai-preset").forEach(b => {
-      b.addEventListener("click", () => { inp.value = b.dataset.q; runTalkToMap(b.dataset.q); });
+    clr.addEventListener("click", () => { inp.value = ""; resetAskMapAll(); inp.focus(); });
+    inp.addEventListener("input", () => {
+      const empty = !inp.value.trim();
+      clr.style.display = empty ? "none" : "inline-flex";
+      if (empty && _aiActive) resetAskMapAll();
     });
+    inp.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); runTalkToMap(inp.value); } });
   }
 
   const cl = document.getElementById("cardList");
   if (cl) new MutationObserver(() => requestAnimationFrame(stampVibeBadgesOnDom)).observe(cl, { childList: true });
 
-  setTimeout(() => { injectBrightChip(); injectTalkToMapBar(); stampVibeBadgesOnDom(); }, 500);
+  setTimeout(() => { injectBrightChip(); injectTalkToMapBar(); stampVibeBadgesOnDom(); }, 450);
 })();

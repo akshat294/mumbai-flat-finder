@@ -5,7 +5,7 @@ function corsHeaders(request) {
   const allowed =
     !origin ||
     origin === "https://bombayhomes.pages.dev" ||
-    /^https:\/\/[a-z0-9-]+\.bombayhomes\.pages\.dev$/i.test(origin) ||
+    /^https:\/\/([a-z0-9-]+\.)?(bombayhomes|thikana[a-z0-9-]*)\.pages\.dev$/i.test(origin) || /^https:\/\/(www\.)?thikana\.(in|com|homes)$/i.test(origin) ||
     /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin);
   return {
     "Access-Control-Allow-Origin": allowed ? (origin || "https://bombayhomes.pages.dev") : "https://bombayhomes.pages.dev",

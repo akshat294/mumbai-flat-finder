@@ -273,8 +273,9 @@
     if (!inView.length) return;
 
     const exact = inView.filter(s => !s.coords_approx), approx = inView.filter(s => s.coords_approx);
-    const cellW = z <= 11 ? 118 : (z <= 13 ? 98 : (z >= 17 ? 64 : 80));
-    const cellH = z <= 11 ? 52 : (z <= 13 ? 46 : (z >= 17 ? 32 : 38));
+    const _mob = window.innerWidth <= 820;
+    const cellW = _mob ? (z <= 11 ? 84 : (z <= 13 ? 74 : (z >= 17 ? 50 : 62))) : (z <= 11 ? 124 : (z <= 13 ? 104 : (z >= 17 ? 66 : 84)));
+    const cellH = _mob ? (z <= 11 ? 46 : (z <= 13 ? 40 : (z >= 17 ? 28 : 34))) : (z <= 11 ? 54 : (z <= 13 ? 48 : (z >= 17 ? 34 : 40)));
     const buckets = new Map();
     const occupied = [];
 
@@ -292,10 +293,13 @@
       occupied.push(map.latLngToContainerPoint([cla, cln]));
       if (b.items.length === 1) { addPricePill(b.items[0]); }
       else {
-        const loS = b.minP < Infinity ? fmtPill(b.minP, st.mode === "buy") : "";
-        const hiS = b.maxP > 0 ? fmtPill(b.maxP, st.mode === "buy").replace(/^₹/, "") : "";
-        const label = !loS ? "Homes" : (hiS && b.maxP > b.minP * 1.15 ? `${loS}–${hiS}` : loS);
-        const ic = L.divIcon({ className: "cluster-wrap", html: `<div class="cluster-pill"><span>${label}</span><span class="cluster-cnt">· ${b.items.length}</span></div>`, iconSize: [0, 0] });
+        const ps = b.items.map(x => getP(x)).filter(v => v > 0).sort((a, c) => a - c);
+        const medP = ps.length ? ps[Math.floor(ps.length / 2)] : 0;
+        const medS = medP ? fmtPill(medP, st.mode === "buy") : "";
+        const pillHtml = (z <= 11)
+          ? `<div class="cluster-pill cluster-mini"><span>${b.items.length}</span></div>`
+          : `<div class="cluster-pill"><span>${medS || "Homes"}</span><span class="cluster-cnt">\u00b7 ${b.items.length}</span></div>`;
+        const ic = L.divIcon({ className: "cluster-wrap", html: pillHtml, iconSize: [0, 0] });
         L.marker([cla, cln], { icon: ic }).on("click", () => {
           const lats = b.items.map(x => x.lat), lngs = b.items.map(x => x.lng);
           const span = Math.max(Math.max(...lats) - Math.min(...lats), Math.max(...lngs) - Math.min(...lngs));
@@ -436,7 +440,7 @@
         const ca = a.mumbai_context?.commute_hubs_min?.[hub] || 999, cb = b.mumbai_context?.commute_hubs_min?.[hub] || 999;
         if (Math.abs(ca - cb) >= 5) return ca - cb;
       }
-      const sc = x => (x._clipped ? 25 : 0) + (!x.coords_approx ? 10 : 0) + (getDeal(x)?.label === "Great Value" ? 8 : 0) + (x.google?.rating || 0) * 3 + (x.pricing?.has_zero_brokerage ? 6 : 0) + matchingUnits(x).length * 2 - Math.min(20, (x.mumbai_context?.nearest_metro?.walk_min || 20) * 0.25);
+      const sc = x => (x._clipped ? 25 : 0) + (x.thumb || (x.photos && x.photos.length) ? 18 : -16) + ((st.lister === "ALL" && !(x.units_rent || []).some(u => u.lt !== "shared") && st.mode === "rent") ? -14 : 0) + (!x.coords_approx ? 10 : 0) + (getDeal(x)?.label === "Great Value" ? 8 : 0) + (x.google?.rating || 0) * 3 + (x.pricing?.has_zero_brokerage ? 6 : 0) + Math.min(8, matchingUnits(x).length * 2) - Math.min(20, (x.mumbai_context?.nearest_metro?.walk_min || 20) * 0.25);
       return sc(b) - sc(a);
     });
 
