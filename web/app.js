@@ -102,6 +102,14 @@
       const cm = s.commutes?.[st.hub];
       if (!cm || cm > st.hubMin) return false;
     }
+    if (st.brightOnly) {
+      const _vs = typeof s.vs === "number" ? s.vs : 50;
+      if (_vs < 74 || s.vr) return false;
+    }
+    if (st.reraOnly) {
+      const _hasRera = !!(s.rera || s.rera_id || (Array.isArray(s.rera_ids) && s.rera_ids.length) || (s.units_buy || []).some(u => u && u.rera));
+      if (!_hasRera) return false;
+    }
     return true;
   }
 
@@ -432,11 +440,12 @@
       return sc(b) - sc(a);
     });
 
+    filtered = filtered.filter(passesV15SocietyFilter); /* v15_filter_hook */
     const exactCnt = filtered.filter(s => !s.coords_approx).length;
-    $("resSum").textContent = `${filtered.length.toLocaleString("en-IN")} homes · ${exactCnt.toLocaleString("en-IN")} exact pins`;
+    $("resSum").textContent = `${filtered.length.toLocaleString("en-IN")} homes \u00b7 ${exactCnt.toLocaleString("en-IN")} exact pins`;
     $("applyFiltersBtn").textContent = `Show ${filtered.length.toLocaleString("en-IN")} Homes`;
-    renderActiveBar(); filtered = filtered.filter(passesV15SocietyFilter); /* v15_filter_hook */
- renderMap(); renderList();
+    renderActiveBar();
+    renderMap(); renderList();
   }
 
   function renderCardHtml(s, hub) {
@@ -1579,7 +1588,7 @@
     });
   }
   /* === END V16 === */
-  // v24.2 Clean Bridge for web/js/enhancements.js
+  // v36 Full Bridge for web/js/enhancements.js (Ask Map AI + Bright & Modern)
   window.__bh = () => ({
     map: typeof map !== "undefined" ? map : null,
     st: typeof st !== "undefined" ? st : null,
@@ -1587,8 +1596,59 @@
     filtered: typeof filtered !== "undefined" ? filtered : [],
     matchingUnits: typeof matchingUnits === "function" ? matchingUnits : null,
     renderList: typeof renderList === "function" ? renderList : null,
-    applyFilters: typeof applyFilters === "function" ? applyFilters : null,
+    renderAll: typeof renderAll === "function" ? renderAll : null,
+    applyFilters: typeof renderAll === "function" ? renderAll : null,
     renderMap: typeof renderMap === "function" ? renderMap : null,
+    renderLocChips: typeof renderLocChips === "function" ? renderLocChips : null,
+    fitToSelectedLocalities: typeof fitToSelectedLocalities === "function" ? fitToSelectedLocalities : null,
+    ensureBuy: typeof ensureBuyShardsLoaded === "function" ? ensureBuyShardsLoaded : null,
+    openDetail: typeof openDetail === "function" ? openDetail : null,
+    priceMax: typeof priceMax === "function" ? priceMax : null,
+    setMode: async (want) => {
+      const target = want === "buy" ? "buy" : "rent";
+      if (st.mode !== target) {
+        const btn = document.querySelector(`[data-mode="${target}"]`) || document.getElementById(target === "buy" ? "modeBuy" : "modeRent");
+        if (btn) {
+          btn.click();
+        } else {
+          st.mode = target;
+          st.pLo = 0;
+          st.pHi = priceMax();
+        }
+      }
+      if (target === "buy" && typeof ensureBuyShardsLoaded === "function") {
+        await ensureBuyShardsLoaded();
+      }
+    },
+    resetAskFilters: () => {
+      if (st.bhks && st.bhks.clear) st.bhks.clear();
+      st.pLo = 0;
+      st.pHi = priceMax();
+      st.sLo = 0;
+      st.sHi = SQFT_MAX;
+      st.zero = false;
+      st.community = false;
+      st.lister = "ALL";
+      st.balcony = false;
+      st.seaview = false;
+      st.terrace = false;
+      st.drop = false;
+      st.flood = false;
+      st.dealOnly = false;
+      st.brightOnly = false;
+      st.reraOnly = false;
+      st.hub = "ALL";
+      st.hubMin = 45;
+      st.multiLocs = [];
+      st.mapBounds = false;
+      st.page = 36;
+      for (const [id, val] of [["searchBox", ""], ["fZone", "ALL"], ["fLoc", "ALL"], ["fSource", "ALL"], ["fFurn", "ALL"], ["fTen", "ALL"], ["fMetro", "0"], ["fHub", ""], ["fHubMin", "0"], ["fRate", "0"], ["sortSelect", "rec"]]) {
+        const el = document.getElementById(id);
+        if (el) el.value = val;
+      }
+      document.querySelectorAll(".bhk-btn, [data-bhk], #bhBrightBtn").forEach(b => b.classList.remove("active"));
+      if (typeof renderLocChips === "function") renderLocChips();
+    }
   });
 
 

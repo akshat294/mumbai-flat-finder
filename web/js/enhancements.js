@@ -578,26 +578,28 @@
 })();
 
 
-// === V25 AI VIBE & TALK-TO-MAP ===
-(function initV25Features() {
+// === V36 AI VIBE (BRIGHT & MODERN) & LLM ASK-THE-MAP CONCIERGE ===
+(function initV36Features() {
   "use strict";
   function bh() { return (typeof window.__bh === "function" ? window.__bh() : {}) || {}; }
 
-  let brightOnly = false;
-
-  function applyBrightFilterToDom() {
+  function stampVibeBadgesOnDom() {
     const cl = document.getElementById("cardList");
     if (!cl) return;
     const socById = new Map((bh().societies || []).map(s => [s.id, s]));
-    cl.querySelectorAll("article.fc").forEach(card => {
+    cl.querySelectorAll("article.fc, .fc[data-id]").forEach(card => {
       const soc = socById.get(card.dataset.id);
       if (!soc) return;
       const vs = typeof soc.vs === "number" ? soc.vs : 50;
       const isRender = !!soc.vr;
-      card.style.display = (brightOnly && (vs < 74 || isRender)) ? "none" : "";
-
       let metaRow = card.querySelector(".bh-badge-row");
-      if (!metaRow) { metaRow = document.createElement("div"); metaRow.className = "bh-badge-row"; const anchor = card.querySelector(".fc-price, .fc-top"); if (anchor) anchor.insertAdjacentElement("afterend", metaRow); else (card.querySelector(".fc-body") || card).appendChild(metaRow); }
+      if (!metaRow) {
+        metaRow = document.createElement("div");
+        metaRow.className = "bh-badge-row";
+        const anchor = card.querySelector(".fc-price, .fc-top");
+        if (anchor) anchor.insertAdjacentElement("afterend", metaRow);
+        else (card.querySelector(".fc-body") || card).appendChild(metaRow);
+      }
       if (vs >= 78 && !isRender && !card.querySelector(".bh-vibe-badge")) {
         const vb = document.createElement("span");
         vb.className = "bh-vibe-badge";
@@ -612,6 +614,12 @@
     });
   }
 
+  function syncBrightBtnUi() {
+    const btn = document.getElementById("bhBrightBtn");
+    const st = bh().st;
+    if (btn && st) btn.classList.toggle("active", !!st.brightOnly);
+  }
+
   function injectBrightChip() {
     if (document.getElementById("bhBrightBtn")) return;
     const anchor = [...document.querySelectorAll("button")].find(b => /Zero Brokerage|Sea View|Balcony/i.test(b.textContent || ""));
@@ -621,54 +629,71 @@
     btn.type = "button";
     btn.className = "bh-vibe-chip";
     btn.textContent = "Bright & Modern";
-    btn.title = "Filter for sunlit, modern, multi-photo flats (hides dark & 3D render ads)";
+    btn.title = "Filter map & list for sunlit, modern flats (ONNX vibe >= 74, hides dark & 3D render ads)";
     btn.addEventListener("click", () => {
-      brightOnly = !brightOnly;
-      btn.classList.toggle("active", brightOnly);
-      applyBrightFilterToDom();
+      const api = bh();
+      if (!api.st) return;
+      api.st.brightOnly = !api.st.brightOnly;
+      api.st.page = 36;
+      syncBrightBtnUi();
+      if (api.renderAll) api.renderAll();
+      setTimeout(stampVibeBadgesOnDom, 90);
     });
     anchor.parentElement.insertBefore(btn, anchor);
+    syncBrightBtnUi();
   }
 
-  const KNOWN_LOCS = [
-    "Bandra West","Bandra East","Khar West","Khar East","Santacruz West","Santacruz East",
-    "Vile Parle West","Juhu","Versova","Andheri West","Andheri East","Powai","Chandivali",
-    "Colaba","Malabar Hill","Worli","Lower Parel","Prabhadevi","Dadar West","Mahim","Wadala",
-    "Chembur","Ghatkopar West","Vikhroli","Mulund West","Goregaon West","Goregaon East",
-    "Malad West","Kandivali West","Borivali West","Mira Road","Thane West","Ghodbunder Road",
-    "Vashi","Nerul","Kharghar","Airoli","Panvel"
-  ];
   const LOC_ALIASES = {
-    "bandra": "Bandra West", "bkc": "Bandra East", "khar": "Khar West",
-    "santacruz": "Santacruz West", "andheri": "Andheri West", "dadar": "Dadar West",
-    "goregaon": "Goregaon West", "malad": "Malad West", "kandivali": "Kandivali West",
-    "borivali": "Borivali West", "thane": "Thane West", "mulund": "Mulund West",
-    "ghatkopar": "Ghatkopar West", "aqua line": "Worli"
+    "sobo": ["Worli", "Lower Parel", "Prabhadevi", "Colaba", "Malabar Hill"],
+    "south mumbai": ["Worli", "Lower Parel", "Prabhadevi", "Colaba", "Malabar Hill"],
+    "south bombay": ["Worli", "Lower Parel", "Prabhadevi", "Colaba", "Malabar Hill"],
+    "bandra": ["Bandra West"],
+    "bkc": ["Bandra East", "Bandra West", "Santacruz East"],
+    "khar": ["Khar West"],
+    "santacruz": ["Santacruz West"],
+    "andheri": ["Andheri West", "Andheri East"],
+    "dadar": ["Dadar West"],
+    "goregaon": ["Goregaon West", "Goregaon East"],
+    "malad": ["Malad West"],
+    "kandivali": ["Kandivali West"],
+    "borivali": ["Borivali West"],
+    "thane": ["Thane West"],
+    "mulund": ["Mulund West"],
+    "ghatkopar": ["Ghatkopar West"],
+    "navi mumbai": ["Vashi", "Kharghar", "Nerul", "Seawoods", "Airoli"],
+    "aqua line": ["Worli", "Lower Parel", "Dadar West", "Bandra East", "Santacruz East"]
   };
 
-  function runTalkToMap(query) {
-    const q = String(query || "").trim();
-    const st = bh().st;
-    const statusEl = document.getElementById("bhAiStatus");
-    if (!q || !st) return;
-    const low = q.toLowerCase();
-    const applied = [];
-
-    if (/\b(buy|sale|purchase|invest|cr|crore)\b/i.test(low)) {
-      if (st.mode !== "buy") document.getElementById("modeBuy")?.click();
-      applied.push("Buy");
-    } else if (/\b(rent|lease|flatmate|sharing|pg|k\b)\b/i.test(low)) {
-      if (st.mode !== "rent") document.getElementById("modeRent")?.click();
-      applied.push("Rent");
+  function getKnownLocalities() {
+    const set = new Set();
+    (bh().societies || []).forEach(s => { if (s && s.locality) set.add(s.locality); });
+    if (set.size < 5) {
+      [
+        "Bandra West","Bandra East","Khar West","Khar East","Santacruz West","Santacruz East",
+        "Vile Parle West","Juhu","Versova","Andheri West","Andheri East","Powai","Chandivali",
+        "Colaba","Malabar Hill","Worli","Lower Parel","Prabhadevi","Dadar West","Mahim","Wadala",
+        "Chembur","Ghatkopar West","Vikhroli","Mulund West","Goregaon West","Goregaon East",
+        "Malad West","Kandivali West","Borivali West","Mira Road","Thane West","Ghodbunder Road",
+        "Vashi","Nerul","Seawoods","Kharghar","Airoli","Panvel"
+      ].forEach(l => set.add(l));
     }
+    return [...set].sort();
+  }
 
-    if (st.bhk && st.bhk.clear) st.bhk.clear();
-    if (/\b1\s*rk\b|\bstudio\b/i.test(low)) {
-      st.bhk?.add(0); applied.push("1RK");
-    } else {
-      const bm = [...low.matchAll(/\b([1-4])\s*[-]?\s*bhk\b/gi)];
-      bm.forEach(m => { st.bhk?.add(Number(m[1])); applied.push(m[1] + "BHK"); });
+  function localFallbackParse(query, knownLocs) {
+    const low = String(query || "").toLowerCase();
+    const f = {};
+
+    if (/\b(buy|sale|purchase|invest|resale|cr\b|crore)\b/i.test(low)) f.mode = "buy";
+    else if (/\b(rent|lease|flatmate|sharing|pg|k\b|\/mo)\b/i.test(low)) f.mode = "rent";
+
+    const bhks = [];
+    if (/\b1\s*rk\b|\bstudio\b/i.test(low)) bhks.push(0);
+    for (const m of low.matchAll(/\b([1-4])\s*[-]?\s*bhk\b/gi)) {
+      const n = Number(m[1]);
+      if (!bhks.includes(n)) bhks.push(n);
     }
+    if (bhks.length) f.bhks = bhks;
 
     const pm = low.match(/(?:under|below|max|upto|up to|<)\s*(?:\u20b9|rs\.?)?\s*([\d,.]+)\s*(cr|crore|l|lac|lakh|k)?/i);
     if (pm) {
@@ -677,49 +702,344 @@
       if (u.startsWith("cr")) val *= 1e7;
       else if (u.startsWith("l")) val *= 1e5;
       else if (u === "k") val *= 1e3;
-      if (isFinite(val) && val >= 5000) {
-        st.maxPrice = Math.round(val);
-        applied.push("Under " + pm[1] + (pm[2] || ""));
+      else if (val > 0 && val < 500 && f.mode !== "buy") val *= 1e3;
+      if (isFinite(val) && val >= 5000) f.maxPrice = Math.round(val);
+    }
+
+    const pmin = low.match(/(?:above|over|min|from|>)\s*(?:\u20b9|rs\.?)?\s*([\d,.]+)\s*(cr|crore|l|lac|lakh|k)?/i);
+    if (pmin) {
+      let val = parseFloat(pmin[1].replace(/,/g, ""));
+      const u = (pmin[2] || "").toLowerCase();
+      if (u.startsWith("cr")) val *= 1e7;
+      else if (u.startsWith("l")) val *= 1e5;
+      else if (u === "k") val *= 1e3;
+      if (isFinite(val) && val >= 5000) f.minPrice = Math.round(val);
+    }
+
+    const locs = [];
+    for (const loc of knownLocs) {
+      if (low.includes(loc.toLowerCase()) && !locs.includes(loc)) locs.push(loc);
+    }
+    if (!locs.length) {
+      for (const [al, arr] of Object.entries(LOC_ALIASES)) {
+        if (new RegExp("\\b" + al + "\\b", "i").test(low)) {
+          arr.forEach(t => { if (knownLocs.includes(t) && !locs.includes(t)) locs.push(t); });
+        }
+      }
+    }
+    if (locs.length) f.localities = locs.slice(0, 5);
+
+    if (/\b(zero brokerage|no broker|no brokerage|owner|direct)\b/i.test(low)) f.zero = true;
+    if (/\b(flatmate|roommate|shared|sharing|\bpg\b)\b/i.test(low)) f.lister = "shared";
+    if (/\bsemi[\s-]*furnished\b/i.test(low)) f.furn = "Semi-Furnished";
+    else if (/\bunfurnished\b/i.test(low)) f.furn = "Unfurnished";
+    else if (/\bfurnished\b/i.test(low)) f.furn = "Furnished";
+    if (/\bbalcony\b/i.test(low)) f.balcony = true;
+    if (/\b(sea view|ocean|seaview)\b/i.test(low)) f.seaview = true;
+    if (/\b(terrace|garden)\b/i.test(low)) f.terrace = true;
+    if (/\b(price drop|dropped|discount|reduced)\b/i.test(low)) f.drop = true;
+    if (/\b(monsoon|flood[\s-]*safe|no flood|no waterlogging|low flood)\b/i.test(low)) f.floodSafe = true;
+    if (/\b(bright|sunlit|modern|daylight|good interior|airy)\b/i.test(low)) f.brightOnly = true;
+    if (/\b(rera|maharera)\b/i.test(low)) f.reraOnly = true;
+    if (/\b(aqua line|near metro|walk to metro|metro)\b/i.test(low)) f.maxMetroWalk = 15;
+    if (/\bcheapest|lowest price|budget\b/i.test(low)) f.sort = "p_asc";
+    else if (/\bbest deal|great value|value\b/i.test(low)) f.sort = "deal";
+    else if (/\bclosest metro|nearest metro\b/i.test(low)) f.sort = "metro";
+    return f;
+  }
+
+  function fmtInrShort(v, isBuy) {
+    if (!v) return "";
+    if (isBuy) return v >= 1e7 ? ("\u20b9" + (v / 1e7).toFixed(2) + "Cr") : ("\u20b9" + Math.round(v / 1e5) + "L");
+    return v >= 1e5 ? ("\u20b9" + (v / 1e5).toFixed(2) + "L") : ("\u20b9" + Math.round(v / 1000) + "k");
+  }
+
+  function getOrCreateAnswerBox() {
+    let box = document.getElementById("bhAiAnswer");
+    if (!box) {
+      const bar = document.getElementById("bhAiBar");
+      if (!bar) return null;
+      box = document.createElement("div");
+      box.id = "bhAiAnswer";
+      box.className = "bh-ai-answer";
+      box.style.display = "none";
+      bar.insertAdjacentElement("afterend", box);
+    }
+    return box;
+  }
+
+  function renderAnswerPanel(summaryText, engine, topSocs, isBuy) {
+    const box = getOrCreateAnswerBox();
+    if (!box) return;
+    box.style.display = "block";
+    const engLbl = engine === "gemini" ? "Gemini AI" : (engine === "workers-ai" ? "Workers AI" : "Smart Map");
+    box.innerHTML = "";
+
+    const head = document.createElement("div");
+    head.className = "bh-ai-answer-head";
+    const badge = document.createElement("span");
+    badge.className = "bh-ai-engine";
+    badge.textContent = engLbl;
+    const txt = document.createElement("div");
+    txt.className = "bh-ai-answer-text";
+    txt.textContent = summaryText;
+    const closeBtn = document.createElement("button");
+    closeBtn.type = "button";
+    closeBtn.className = "bh-ai-close";
+    closeBtn.textContent = "\u00d7";
+    closeBtn.title = "Hide AI summary";
+    closeBtn.onclick = () => { box.style.display = "none"; };
+    head.appendChild(badge);
+    head.appendChild(txt);
+    head.appendChild(closeBtn);
+    box.appendChild(head);
+
+    if (topSocs && topSocs.length) {
+      const chips = document.createElement("div");
+      chips.className = "bh-ai-chips";
+      topSocs.slice(0, 6).forEach(item => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "bh-ai-chip";
+        const pStr = fmtInrShort(item.p, isBuy);
+        btn.textContent = item.name + " \u00b7 " + item.locality + (pStr ? (" \u00b7 " + pStr) : "");
+        btn.addEventListener("click", () => {
+          const api = bh();
+          const soc = (api.societies || []).find(s => s.id === item.id);
+          if (!soc) return;
+          if (api.map && soc.lat && soc.lng) {
+            try { api.map.flyTo([soc.lat, soc.lng], 16, { duration: 0.65 }); } catch {}
+          }
+          if (api.openDetail) {
+            try { api.openDetail(soc); } catch {}
+          }
+        });
+        chips.appendChild(btn);
+      });
+      box.appendChild(chips);
+    }
+  }
+
+  let _askSeq = 0;
+
+  async function runTalkToMap(query) {
+    const q = String(query || "").trim();
+    const api = bh();
+    const statusEl = document.getElementById("bhAiStatus");
+    const goBtn = document.getElementById("bhAiGo");
+    if (!q || !api.st) return;
+
+    const mySeq = ++_askSeq;
+    if (goBtn) { goBtn.disabled = true; goBtn.textContent = "Thinking..."; }
+    if (statusEl) statusEl.textContent = "Understanding your Mumbai query...";
+
+    const knownLocs = getKnownLocalities();
+    const localF = localFallbackParse(q, knownLocs);
+    let llmF = {};
+    let parseEngine = "local-nlp";
+
+    try {
+      const r = await fetch("/api/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "parse",
+          query: q,
+          currentMode: api.st.mode || "rent",
+          knownLocalities: knownLocs,
+        }),
+      });
+      if (r.ok) {
+        const d = await r.json();
+        if (d && d.ok && d.filters && typeof d.filters === "object") {
+          llmF = d.filters;
+          parseEngine = d.engine || "workers-ai";
+        }
+      }
+    } catch {}
+
+    if (mySeq !== _askSeq) return;
+
+    const f = Object.assign({}, localF, llmF);
+    if ((!f.localities || !f.localities.length) && localF.localities) f.localities = localF.localities;
+    if ((!f.bhks || !f.bhks.length) && localF.bhks) f.bhks = localF.bhks;
+
+    const targetMode = f.mode || api.st.mode || "rent";
+    if (api.setMode) {
+      if (targetMode === "buy" && statusEl) statusEl.textContent = "Loading Buy shards...";
+      await api.setMode(targetMode);
+    }
+    if (mySeq !== _askSeq) return;
+
+    const api2 = bh();
+    const st = api2.st;
+    if (api2.resetAskFilters) api2.resetAskFilters();
+
+    const applied = [targetMode === "buy" ? "Buy" : "Rent"];
+    const isBuy = targetMode === "buy";
+
+    if (Array.isArray(f.bhks) && f.bhks.length && st.bhks && st.bhks.add) {
+      f.bhks.forEach(b => {
+        st.bhks.add(Number(b));
+        applied.push(Number(b) === 0 ? "1RK" : (Number(b) === 4 ? "4+BHK" : (b + "BHK")));
+      });
+    }
+    if (f.minPrice && isFinite(f.minPrice)) {
+      st.pLo = Number(f.minPrice);
+      applied.push("Min " + fmtInrShort(st.pLo, isBuy));
+    }
+    if (f.maxPrice && isFinite(f.maxPrice)) {
+      st.pHi = Number(f.maxPrice);
+      applied.push("Under " + fmtInrShort(st.pHi, isBuy));
+    }
+    if (Array.isArray(f.localities) && f.localities.length) {
+      st.multiLocs = f.localities.slice(0, 5);
+      if (api2.renderLocChips) api2.renderLocChips();
+      applied.push(st.multiLocs.slice(0, 3).join(" + "));
+    }
+    if (f.zero) { st.zero = true; applied.push("Zero Brokerage"); }
+    if (f.lister === "shared") { st.lister = "shared"; applied.push("Shared / Flatmate"); }
+    else if (f.lister === "owner") { st.lister = "owner"; st.zero = true; if (!applied.includes("Zero Brokerage")) applied.push("Owner Direct"); }
+
+    function setSelectSmart(id, wanted, numericCeil) {
+      const el = document.getElementById(id);
+      if (!el) return false;
+      const opts = [...(el.options || [])];
+      if (!opts.length) { el.value = String(wanted); return true; }
+      if (numericCeil) {
+        const num = Number(wanted);
+        const nums = opts.map(o => ({ v: o.value, n: Number(o.value) })).filter(x => isFinite(x.n) && x.n > 0).sort((a, b) => a.n - b.n);
+        if (!nums.length) return false;
+        const pick = nums.find(x => x.n >= num) || nums[nums.length - 1];
+        el.value = pick.v;
+        return true;
+      }
+      const lowW = String(wanted).toLowerCase();
+      const exact = opts.find(o => o.value.toLowerCase() === lowW || (o.textContent || "").toLowerCase().includes(lowW));
+      if (exact) { el.value = exact.value; return true; }
+      return false;
+    }
+
+    if (f.furn && setSelectSmart("fFurn", f.furn, false)) applied.push(f.furn);
+    if (f.balcony) { st.balcony = true; applied.push("Balcony"); }
+    if (f.seaview) { st.seaview = true; applied.push("Sea View"); }
+    if (f.terrace) { st.terrace = true; applied.push("Terrace"); }
+    if (f.drop) { st.drop = true; applied.push("Price Drop"); }
+    if (f.floodSafe) { st.flood = true; applied.push("Low Flood Risk"); }
+    if (f.brightOnly) { st.brightOnly = true; applied.push("Bright & Modern"); }
+    if (f.reraOnly) { st.reraOnly = true; applied.push("MahaRERA"); }
+    if (f.maxMetroWalk && setSelectSmart("fMetro", f.maxMetroWalk, true)) {
+      applied.push("<=" + (document.getElementById("fMetro")?.value || f.maxMetroWalk) + "m Metro");
+    }
+    if (f.hub && setSelectSmart("fHub", f.hub, false)) {
+      if (f.maxHubMin) setSelectSmart("fHubMin", f.maxHubMin, true);
+      applied.push("Commute: " + f.hub.toUpperCase());
+    }
+    if (f.sort) {
+      const se = document.getElementById("sortSelect");
+      if (se) se.value = f.sort;
+    }
+    if (f.keywords && !st.multiLocs.length) {
+      const sb = document.getElementById("searchBox");
+      if (sb) sb.value = f.keywords;
+      applied.push('"' + f.keywords + '"');
+    }
+
+    syncBrightBtnUi();
+    if (api2.renderAll) api2.renderAll();
+
+    const api3 = bh();
+    const matchedSocs = api3.filtered || [];
+    const pts = matchedSocs.filter(s => s && s.lat && s.lng).slice(0, 120).map(s => [s.lat, s.lng]);
+    if (api3.map && typeof L !== "undefined" && pts.length) {
+      try {
+        if (pts.length >= 2) api3.map.fitBounds(L.latLngBounds(pts).pad(0.18), { maxZoom: 14, animate: true });
+        else api3.map.flyTo(pts[0], 15, { duration: 0.6 });
+      } catch {}
+    } else if (api3.fitToSelectedLocalities) {
+      try { api3.fitToSelectedLocalities(); } catch {}
+    }
+
+    let totalFlats = 0;
+    const topMatches = [];
+    for (let i = 0; i < matchedSocs.length; i++) {
+      const s = matchedSocs[i];
+      const mu = api3.matchingUnits ? api3.matchingUnits(s) : ((isBuy ? s.units_buy : s.units_rent) || []);
+      totalFlats += mu.length;
+      if (topMatches.length < 12) {
+        const prices = mu.map(u => u.p).filter(Boolean);
+        const minP = prices.length ? Math.min(...prices) : (isBuy ? s.pricing?.buy_min : s.pricing?.rent_min);
+        topMatches.push({
+          id: s.id,
+          name: s.name,
+          locality: s.locality,
+          p: minP || 0,
+          bhks: (s.bhks || []).slice(0, 4),
+          units: mu.length,
+          zb: !!(s.pricing?.has_zero_brokerage || mu.some(u => u.zb)),
+          vs: typeof s.vs === "number" ? s.vs : 50,
+          vr: !!s.vr,
+          metro: s.mumbai_context?.nearest_metro?.name || null,
+          metroWalk: s.mumbai_context?.nearest_metro?.walk_min || null,
+          flood: s.mumbai_context?.monsoon_flood_risk || null,
+          drop: !!(s.price_drop && s.price_drop[targetMode]),
+          rera: !!(s.rera || s.rera_id || (Array.isArray(s.rera_ids) && s.rera_ids.length)),
+          rating: s.google?.rating || null,
+        });
       }
     }
 
-    const matchedLocs = [];
-    for (const loc of KNOWN_LOCS) {
-      if (low.includes(loc.toLowerCase()) && !matchedLocs.includes(loc)) matchedLocs.push(loc);
-    }
-    if (!matchedLocs.length) {
-      for (const [al, tgt] of Object.entries(LOC_ALIASES)) {
-        if (new RegExp("\\b" + al + "\\b", "i").test(low) && !matchedLocs.includes(tgt)) matchedLocs.push(tgt);
-      }
-    }
-    if (matchedLocs.length) {
-      if (window.__v16Locs && window.__v16Locs.clear) {
-        window.__v16Locs.clear();
-        matchedLocs.slice(0, 5).forEach(l => window.__v16Locs.add(l));
-      }
-      st.locality = matchedLocs[0];
-      applied.push(matchedLocs.slice(0, 3).join(" + "));
-    }
-
-    if (/\b(zero brokerage|no broker|owner|direct)\b/i.test(low)) {
-      st.zb = true; applied.push("Zero Brokerage");
-    }
-    if (/\b(flatmate|roommate|shared|sharing)\b/i.test(low)) {
-      st.lister = "shared"; applied.push("Shared");
-    }
-    if (/\b(balcony)\b/i.test(low)) { st.balcony = true; applied.push("Balcony"); }
-    if (/\b(sea view|ocean|seaview)\b/i.test(low)) { st.seaview = true; applied.push("Sea View"); }
-    if (/\b(bright|sunlit|modern|daylight)\b/i.test(low)) {
-      brightOnly = true;
-      document.getElementById("bhBrightBtn")?.classList.add("active");
-      applied.push("Bright & Modern");
-    }
-
-    try { if (bh().applyFilters) bh().applyFilters(); } catch {}
-    setTimeout(applyBrightFilterToDom, 120);
+    setTimeout(stampVibeBadgesOnDom, 110);
     if (statusEl) {
-      statusEl.textContent = applied.length ? ("Applied: " + applied.join(" \u00b7 ")) : "No filters recognized";
+      statusEl.textContent = `${matchedSocs.length.toLocaleString("en-IN")} buildings (${totalFlats.toLocaleString("en-IN")} flats) \u00b7 ${applied.join(" \u00b7 ")}`;
     }
+
+    let summaryText = "";
+    let sumEngine = parseEngine;
+    try {
+      const sr = await fetch("/api/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "summarize",
+          query: q,
+          mode: targetMode,
+          totalBuildings: matchedSocs.length,
+          totalFlats,
+          appliedLabels: applied,
+          topMatches,
+        }),
+      });
+      if (sr.ok) {
+        const sd = await sr.json();
+        if (sd && sd.ok && sd.summary) {
+          summaryText = sd.summary;
+          sumEngine = sd.engine || parseEngine;
+        }
+      }
+    } catch {}
+
+    if (mySeq !== _askSeq) return;
+    if (!summaryText) {
+      summaryText = topMatches.length
+        ? `Matched ${totalFlats.toLocaleString("en-IN")} live flats across ${matchedSocs.length.toLocaleString("en-IN")} Mumbai buildings. Click any society chip below to jump straight to it on the map.`
+        : "No exact matches for that combination. Try broadening the budget or removing one constraint.";
+    }
+    renderAnswerPanel(summaryText, sumEngine, topMatches, isBuy);
+    if (goBtn) { goBtn.disabled = false; goBtn.textContent = "Ask Map"; }
+  }
+
+  function resetAskMapAll() {
+    const api = bh();
+    const inp = document.getElementById("bhAiInput");
+    const statusEl = document.getElementById("bhAiStatus");
+    const box = document.getElementById("bhAiAnswer");
+    if (inp) inp.value = "";
+    if (statusEl) statusEl.textContent = "";
+    if (box) box.style.display = "none";
+    if (api.resetAskFilters) api.resetAskFilters();
+    syncBrightBtnUi();
+    if (api.renderAll) api.renderAll();
   }
 
   function injectTalkToMapBar() {
@@ -730,9 +1050,10 @@
     bar.id = "bhAiBar";
     bar.className = "bh-ai-bar";
     bar.innerHTML =
-      '<input id="bhAiInput" class="bh-ai-input" type="text" placeholder="Talk to the Map: e.g. Sunlit 2BHK under 80k in Bandra or Khar zero brokerage" />' +
+      '<input id="bhAiInput" class="bh-ai-input" type="text" placeholder="Ask the Map AI: e.g. Sunlit 2BHK under 85k in Bandra or Khar zero brokerage near metro" />' +
       '<button id="bhAiGo" class="bh-ai-go" type="button">Ask Map</button>' +
-      '<button type="button" class="bh-ai-preset" data-q="Sunlit 2BHK under 80k Bandra zero brokerage">2BHK Bandra <80k</button>' +
+      '<button id="bhAiReset" class="bh-ai-reset" type="button" title="Reset AI filters">Reset</button>' +
+      '<button type="button" class="bh-ai-preset" data-q="Sunlit 2BHK under 85k Bandra or Khar zero brokerage">2BHK Bandra <85k</button>' +
       '<button type="button" class="bh-ai-preset" data-q="Bright 1BHK under 50k Andheri or Powai zero brokerage">1BHK Powai/Andheri</button>' +
       '<button type="button" class="bh-ai-preset" data-q="Buy 3BHK under 4cr Worli or Lower Parel">Buy 3BHK SoBo</button>' +
       '<span id="bhAiStatus" class="bh-ai-status"></span>';
@@ -741,6 +1062,7 @@
 
     const inp = document.getElementById("bhAiInput");
     document.getElementById("bhAiGo").addEventListener("click", () => runTalkToMap(inp.value));
+    document.getElementById("bhAiReset").addEventListener("click", resetAskMapAll);
     inp.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); runTalkToMap(inp.value); } });
     bar.querySelectorAll(".bh-ai-preset").forEach(b => {
       b.addEventListener("click", () => { inp.value = b.dataset.q; runTalkToMap(b.dataset.q); });
@@ -748,7 +1070,7 @@
   }
 
   const cl = document.getElementById("cardList");
-  if (cl) new MutationObserver(() => requestAnimationFrame(applyBrightFilterToDom)).observe(cl, { childList: true });
+  if (cl) new MutationObserver(() => requestAnimationFrame(stampVibeBadgesOnDom)).observe(cl, { childList: true });
 
-  setTimeout(() => { injectBrightChip(); injectTalkToMapBar(); applyBrightFilterToDom(); }, 600);
+  setTimeout(() => { injectBrightChip(); injectTalkToMapBar(); stampVibeBadgesOnDom(); }, 500);
 })();

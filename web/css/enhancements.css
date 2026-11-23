@@ -205,3 +205,22 @@ button[data-act="save"], [aria-label*="Save" i].fc-act {
 .bh-badge-row .bh-rera-chip,
 .bh-badge-row .bh-render-badge,
 .bh-badge-row .bh-flag-pill { margin-left: 0 !important; }
+/* === V36 AI CONCIERGE DRAWER & BRIGHT CHIP ACTIVE === */
+.bh-vibe-chip.active { background: #14532d !important; color: #f8fafc !important; border-color: #15803d !important; box-shadow: 0 0 0 2px rgba(21,128,61,0.22); }
+[data-theme="dark"] .bh-vibe-chip.active { background: #c49a45 !important; color: #111715 !important; border-color: #e6c278 !important; }
+.bh-ai-reset { padding: 6px 10px; border-radius: 999px; border: 1px solid rgba(0,0,0,0.16); background: transparent; color: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.bh-ai-reset:hover { border-color: #c49a45; }
+[data-theme="dark"] .bh-ai-reset { border-color: rgba(255,255,255,0.18); color: #e2e8f0; }
+.bh-ai-answer { padding: 10px 16px; background: #f8faf8; border-bottom: 1px solid rgba(0,0,0,0.08); font-size: 13px; line-height: 1.45; }
+[data-theme="dark"] .bh-ai-answer { background: #141c19; border-bottom: 1px solid #283430; color: #ece7db; }
+.bh-ai-answer-head { display: flex; align-items: flex-start; gap: 10px; }
+.bh-ai-engine { flex: 0 0 auto; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; padding: 2px 7px; border-radius: 999px; background: rgba(21,128,61,0.12); color: #15803d; margin-top: 2px; }
+[data-theme="dark"] .bh-ai-engine { background: rgba(196,154,69,0.2); color: #e6c278; }
+.bh-ai-answer-text { flex: 1 1 auto; }
+.bh-ai-close { flex: 0 0 auto; border: none; background: transparent; color: inherit; font-size: 18px; line-height: 1; cursor: pointer; opacity: 0.65; padding: 0 4px; }
+.bh-ai-close:hover { opacity: 1; }
+.bh-ai-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.bh-ai-chip { padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(20,83,45,0.22); background: #ffffff; color: #14532d; font-size: 11.5px; font-weight: 600; cursor: pointer; transition: all 0.15s ease; }
+.bh-ai-chip:hover { background: #14532d; color: #ffffff; }
+[data-theme="dark"] .bh-ai-chip { background: #1c2622; color: #e6c278; border-color: rgba(230,194,120,0.3); }
+[data-theme="dark"] .bh-ai-chip:hover { background: #c49a45; color: #111715; }

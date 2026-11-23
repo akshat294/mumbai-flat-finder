@@ -6,3 +6,6 @@ pages_build_output_dir = "web"
 binding = "DB"
 database_name = "bombayhomes-db"
 database_id = "cfde3fad-0daf-48ea-ab70-3d0e2ae59daf"
+
+[ai]
+binding = "AI"
