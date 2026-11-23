@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       apish_max_calls:
-        description: 'NEW 99acres api.sh pages to harvest (300 = ~7,500+ NEW flats; already-saved pages are skipped free!)'
+        description: 'NEW 99acres api.sh pages to harvest (460 = ~11,000+ NEW deep flats; already-saved pages are skipped free!)'
         required: true
-        default: '300'
+        default: '460'
       core_limit:
         description: 'Max listings per hub for core DIY portals (MagicBricks, NoBroker, SquareYards, Makaan)'
         required: true
@@ -19,11 +19,11 @@ on:
       housing_rent_limit:
         description: 'Housing.com Apify max Rent results for Mumbai (Thane & Navi Mumbai get half each)'
         required: true
-        default: '1000'
+        default: '2500'
       housing_buy_limit:
         description: 'Housing.com Apify max Buy results for Mumbai (Thane & Navi Mumbai get half each)'
         required: true
-        default: '500'
+        default: '1500'
       deploy_live:
         description: 'Deploy harvested inventory to bombayhomes.pages.dev after summary'
         type: boolean
@@ -40,7 +40,7 @@ permissions:
 jobs:
   full-harvest:
     runs-on: ubuntu-latest
-    timeout-minutes: 55
+    timeout-minutes: 95
     steps:
       - uses: actions/checkout@v4
 

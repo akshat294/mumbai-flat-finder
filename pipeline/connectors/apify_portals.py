@@ -21,7 +21,7 @@ def _api_get(url, timeout=45):
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return json.loads(r.read().decode("utf-8", errors="ignore"))
 
-def _call_apify_actor(actor_id, payload, token, timeout=600):
+def _call_apify_actor(actor_id, payload, token, timeout=900):
     if (os.environ.get("APISH_KEY") or os.environ.get("SKIP_APIFY_99ACRES")) and ("99acres" in str(actor_id).lower() or "99acres" in json.dumps(payload, ensure_ascii=False).lower()):
         print(f"  [apify] Skipping 99acres actor ({actor_id}) - api.sh owns 99acres; saving Apify credits for Housing.com")
         return []
@@ -333,6 +333,8 @@ def sync_apify(rent_limit=250, buy_limit=125, sources=("housing", "99acres"), fo
                             fresh.append(rec)
                             n_ok += 1
                     print(f"  [apify] Housing.com {h_city} ({mode}, lim={lim}): kept {n_ok}/{len(rows or [])} clean listings")
+                    if fresh:
+                        _save_merged_cache(fresh)
                 except Exception as e:
                     print(f"  [apify] Housing.com {h_city} ({mode}) error: {e}")
 

@@ -112,6 +112,12 @@ MUMBAI_LOCS = [
     ("Balkum", "Thane", 19.2225, 72.9945),
     ("Kasarvadavali", "Thane", 19.2665, 72.9665),
     ("Manpada", "Thane", 19.2285, 72.9745),
+    ("Mankhurd", "Powai-Central", 19.0485, 72.9325),
+    ("Govandi", "Powai-Central", 19.0550, 72.9155),
+    ("Deonar", "Powai-Central", 19.0475, 72.9145),
+    ("Chunabhatti", "Powai-Central", 19.0515, 72.8715),
+    ("Tilak Nagar", "Powai-Central", 19.0675, 72.8980),
+    ("Trombay", "Powai-Central", 19.0355, 72.9465),
 ]
 
 LOC_MAP = {name.lower(): (name, zone, lat, lng) for name, zone, lat, lng in MUMBAI_LOCS}
