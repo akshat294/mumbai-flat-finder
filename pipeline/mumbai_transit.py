@@ -65,7 +65,14 @@ LOCAL_TRAINS = [
     ("Kopar Khairane (TH)", 19.1030, 73.0050), ("Panvel (HR)", 18.9906, 73.1208),
 ]
 
-BKC_LAT, BKC_LNG = 19.0658, 72.8645
+HUB_COORDS = {
+    "bkc": (19.0658, 72.8645),
+    "lower_parel": (18.9977, 72.8300),
+    "nariman_point": (18.9256, 72.8242),
+    "andheri_seepz": (19.1245, 72.8740),
+    "powai": (19.1197, 72.9051),
+    "goregaon_nesco": (19.1510, 72.8535),
+}
 
 def enrich_transit_context(socs):
     fixed_far, filled = 0, 0
@@ -74,35 +81,45 @@ def enrich_transit_context(socs):
         if not lat or not lng:
             continue
         lat, lng = float(lat), float(lng)
-        ctx = s.setdefault("mumbai_context", {})
+        ctx = s.get("mumbai_context")
         if not isinstance(ctx, dict):
-            ctx = {}; s["mumbai_context"] = ctx
+            ctx = {}
+            s["mumbai_context"] = ctx
 
         m_name, m_km = min(((n, _hav_km(lat, lng, a, o)) for n, a, o in METRO_STATIONS), key=lambda x: x[1])
         m_walk = max(2, int(round(m_km * 1.3 * 12)))
         cur_m = ctx.get("nearest_metro")
-        if isinstance(cur_m, dict) and (cur_m.get("walk_min") or 0) > 35:
+        if isinstance(cur_m, dict) and (cur_m.get("walk_min") or 0) > 45:
             ctx.pop("nearest_metro", None)
             fixed_far += 1
-        if m_walk <= 35 and (not ctx.get("nearest_metro") or (ctx["nearest_metro"].get("walk_min") or 999) > m_walk):
-            ctx["nearest_metro"] = {"name": m_name, "walk_min": m_walk, "km": round(m_km, 2)}
+        if m_walk <= 45 and (not ctx.get("nearest_metro") or (ctx["nearest_metro"].get("walk_min") or 999) > m_walk):
+            ctx["nearest_metro"] = {"name": m_name, "distance_m": int(round(m_km * 1000)), "walk_min": m_walk}
             filled += 1
 
         t_name, t_km = min(((n, _hav_km(lat, lng, a, o)) for n, a, o in LOCAL_TRAINS), key=lambda x: x[1])
         t_walk = max(2, int(round(t_km * 1.3 * 12)))
-        cur_t = ctx.get("nearest_train")
-        if isinstance(cur_t, dict) and (cur_t.get("walk_min") or 0) > 45:
-            ctx.pop("nearest_train", None)
-        if t_walk <= 40 and not ctx.get("nearest_train"):
-            ctx["nearest_train"] = {"name": t_name, "walk_min": t_walk, "km": round(t_km, 2)}
+        cur_l = ctx.get("nearest_local")
+        if not isinstance(cur_l, dict) or (cur_l.get("walk_min") or 999) > 60:
+            ctx["nearest_local"] = {"name": t_name, "distance_m": int(round(t_km * 1000)), "walk_min": t_walk}
             filled += 1
+        ctx.pop("nearest_train", None)
 
-        comm = s.setdefault("commutes", {})
+        hubs = ctx.get("commute_hubs_min")
+        if not isinstance(hubs, dict):
+            hubs = {}
+            ctx["commute_hubs_min"] = hubs
+        comm = s.get("commutes")
         if not isinstance(comm, dict):
-            comm = {}; s["commutes"] = comm
-        if not comm.get("bkc") and not comm.get("bkc_min"):
-            d_bkc = _hav_km(lat, lng, BKC_LAT, BKC_LNG)
-            mins = max(8, min(95, int(round(8 + d_bkc * 2.6))))
-            comm["bkc"] = mins
-            comm["bkc_min"] = mins
+            comm = {}
+            s["commutes"] = comm
+        for hk, (hlat, hlng) in HUB_COORDS.items():
+            if not hubs.get(hk):
+                dk = _hav_km(lat, lng, hlat, hlng)
+                mins = max(8, min(140, int(round(9 + dk * 3.1))))
+                hubs[hk] = mins
+                comm[hk if hk != "andheri_seepz" else "seepz"] = mins
+        if not comm.get("bkc"):
+            comm["bkc"] = hubs["bkc"]
+        if not ctx.get("monsoon_flood_risk"):
+            ctx["monsoon_flood_risk"] = "low"
     return fixed_far, filled

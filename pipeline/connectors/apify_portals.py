@@ -162,6 +162,21 @@ def _find_img(obj):
                 return m.group(0)
     return None
 
+def _pick_housing_name(it, title_raw, loc):
+    t = str(title_raw or "").strip()
+    is_gen = (not t) or bool(re.match(r"^(?:\d\s*(?:bhk|rk)|studio|flat|apartment|independent|residential)", t, re.I)) or (t.lower() == loc.lower())
+    if not is_gen:
+        return clean_soc_name(t, loc)
+    addr = str(it.get("address") or it.get("subLocality") or it.get("locality") or "").strip()
+    if addr:
+        parts = [p.strip() for p in re.split(r"[,\-|]", addr) if p.strip()]
+        skip = {loc.lower(), "mumbai", "western suburbs", "central mumbai", "south mumbai", "navi mumbai", "thane", "maharashtra", "india"}
+        for part in parts:
+            pl = part.lower()
+            if pl not in skip and len(part) >= 3 and not re.match(r"^\d{6}$", part) and not re.match(r"^(?:flat|apartment|\d\s*bhk)$", pl):
+                return clean_soc_name(part, loc)
+    return clean_soc_name(t or f"{loc} Flat", loc)
+
 def _norm_any_item(it, source_hint="", mode_hint="rent"):
     if not isinstance(it, dict):
         return None
@@ -221,14 +236,15 @@ def _norm_any_item(it, source_hint="", mode_hint="rent"):
 
     bhk_raw = it.get("bhk") or it.get("bedrooms") or it.get("config") or it.get("configurations") or it.get("subtitle") or it.get("amenities") or title_raw
 
+    furn_blob = " ".join(str(x or "") for x in (it.get("furnishing"), it.get("furnishing_type"), it.get("furnishingType"), it.get("furnished"), it.get("amenities"), it.get("title")))
     return {
-        "name": clean_soc_name(title_raw or f"{det[0]} Flat", det[0]),
+        "name": _pick_housing_name(it, title_raw, det[0]),
         "locality": det[0], "mode": mode, "p": price,
         "b": parse_bhk(bhk_raw),
         "sq": int(sq_m.group(1)) if sq_m else None,
         "s": src, "u": u.split("?")[0], "zb": is_owner,
         "lt": "owner" if is_owner else "broker",
-        "f": norm_furnishing(it.get("furnishing") or it.get("furnishing_type") or it.get("furnishingType") or it.get("furnished")),
+        "f": norm_furnishing(furn_blob),
         "img": (_find_imgs(it)[0] if _find_imgs(it) else None), "imgs": _find_imgs(it),
         "lat": lat, "lng": lng,
         "rera_ids": rera_list,

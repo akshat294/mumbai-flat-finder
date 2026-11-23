@@ -177,12 +177,17 @@ def normalize_apish_item(item, fallback_mode="rent", fallback_label=""):
 
     soc_raw = str(item.get("society") or "").strip()
     title_raw = str(item.get("title") or "").strip()
+    desc_raw = str(item.get("description") or "").strip()
     if soc_raw and soc_raw.lower() not in ("none", "null", "na", "n/a", det[0].lower()):
         name = clean_soc_name(soc_raw, det[0])
-    elif title_raw:
-        name = clean_soc_name(title_raw, det[0])
     else:
-        name = f"{det[0]} Flat"
+        m_desc = re.search(r"\b(?:in|at|near)\s+([A-Z][A-Za-z0-9&\'\- ]{2,34}?(?:CHS|Society|Heights|Tower|Towers|Residency|Residences|Apartment|Apartments|Enclave|Complex|Classic|Terrace|Palace|Villa|Park|Plaza|Avenue|Court|Mansion|Building|Darshan|Kunj|Sadan|Niwas|Niketan))\b", desc_raw)
+        if m_desc:
+            name = clean_soc_name(m_desc.group(1), det[0])
+        elif title_raw:
+            name = clean_soc_name(title_raw, det[0])
+        else:
+            name = f"{det[0]} Flat"
 
     sq = None
     for ak in ("carpet_sqft", "builtup_sqft", "super_builtup_sqft"):

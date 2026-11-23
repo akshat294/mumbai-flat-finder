@@ -12,6 +12,7 @@ from pipeline.connectors.apify_portals import sync_apify, load_cached_apify
 from pipeline.connectors.apish_99acres import sync_apish_99acres, load_cached_apish_99acres
 from pipeline.compact_index import save_compacted_index
 from pipeline.mumbai_transit import enrich_transit_context
+from pipeline.data_hygiene import run_data_hygiene
 from pipeline.connectors.maharera_enricher import enrich_societies as enrich_maharera
 
 SEEN_PATH = ROOT / "data/seen_timestamps.json"
@@ -135,7 +136,8 @@ def run():
             pass
     a99_u, a99_s = merge_records_into_societies(socs, apish_recs)
 
-    nb_photos = backfill_nobroker_photos(socs, max_fetch=150)
+    run_data_hygiene(socs)
+    nb_photos = backfill_nobroker_photos(socs, max_fetch=400)
     multi_photo_socs = 0
     for s in socs:
         gal = []

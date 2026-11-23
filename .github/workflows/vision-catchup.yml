@@ -43,6 +43,7 @@ jobs:
       - name: Install Python + ONNX dependencies
         run: |
           pip install -r requirements.txt
+          pip install -q curl_cffi
           pip install -q onnxruntime huggingface_hub tokenizers numpy pillow
 
       - name: Cache Hugging Face ONNX Model
@@ -50,6 +51,12 @@ jobs:
         with:
           path: ~/.cache/huggingface
           key: hf-siglip2-onnx-v2
+
+      - name: Apply v37 Data Hygiene, Raw Reparse & Transit Fix (0 credits)
+        env:
+          PYTHONUNBUFFERED: "1"
+        run: |
+          python -u pipeline/apply_v37_hygiene.py
 
       - name: Run ONNX SigLIP 2 Photo Scan Catch-Up
         env:
@@ -82,5 +89,5 @@ jobs:
         run: |
           git config user.name "mumbai-flat-finder-bot"
           git config user.email "bot@users.noreply.github.com"
-          git add data/vision_tags_cache.json web/public/data/manifest.json web/public/data/shards
+          git add data/vision_tags_cache.json data/apify_cache.json data/apish_99acres_cache.json data/listing_registry.json web/public/data/manifest.json web/public/data/shards
           git diff --staged --quiet || (git commit -m "chore: ONNX SigLIP 2 vision catch-up scan" && (git pull --rebase || (git rebase --abort && git pull --no-rebase -X ours --no-edit)) && git push)
