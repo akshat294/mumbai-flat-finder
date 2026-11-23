@@ -1,0 +1,112 @@
+name: Full Mumbai MMR Harvest (All Portals Backfill)
+
+on:
+  workflow_dispatch:
+    inputs:
+      apish_max_calls:
+        description: '99acres api.sh pages to harvest (330 = ALL 73 MMR Rent+Buy+Owner slices; ~8,500+ raw flats)'
+        required: true
+        default: '330'
+      core_limit:
+        description: 'Max listings per hub for core DIY portals (MagicBricks, NoBroker, SquareYards, Makaan)'
+        required: true
+        default: '220'
+      force_housing_apify:
+        description: 'Force a brand-new Apify Housing.com sweep (otherwise reuses 3,207 cached Housing records)'
+        type: boolean
+        required: false
+        default: false
+      deploy_live:
+        description: 'Deploy harvested inventory to bombayhomes.pages.dev after summary'
+        type: boolean
+        required: false
+        default: true
+
+concurrency:
+  group: mumbai-mmr-daily-sync
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  full-harvest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Python dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install -q curl_cffi
+
+      - name: Snapshot BEFORE inventory counts
+        run: |
+          python -u pipeline/inventory_report.py | tee before_report.txt
+
+      - name: Deep harvest core DIY portals (MagicBricks, NoBroker, SquareYards, Makaan, Community)
+        env:
+          PYTHONUNBUFFERED: "1"
+          GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLEPLACESAPI }}
+          PROXY_URL: ${{ secrets.PROXY_URL }}
+        run: |
+          python -u run_pipeline.py --all-mmr --sources magicbricks,nobroker,squareyards,makaan,nobrokerage,community --limit ${{ inputs.core_limit }} --fresh-hours 1 --max-google-calls 40
+
+      - name: Optionally expire Apify Housing cache timestamp if force_housing_apify=true
+        if: ${{ inputs.force_housing_apify }}
+        run: |
+          python -c "import json; from pathlib import Path; p=Path('data/apify_cache.json'); d=json.loads(p.read_text(encoding='utf-8-sig')) if p.exists() else {}; d['updated']=0; d['ts']=0; p.write_text(json.dumps(d), encoding='utf-8'); print('[harvest] Marked Apify Housing cache for fresh pull')"
+
+      - name: Full Harvest Merge (NoBroker 44-Hubs + Housing Apify + 99acres api.sh Full MMR + MahaRERA + Quality Filter + Shards)
+        env:
+          PYTHONUNBUFFERED: "1"
+          APIFY_TOKEN: ${{ secrets.APIFY_TOKEN }}
+          FORCE_APIFY_REFRESH: ${{ inputs.force_housing_apify && '1' || '0' }}
+          APISH_KEY: ${{ secrets.APISH_KEY }}
+          APISH_MAX_CALLS: ${{ inputs.apish_max_calls }}
+          APISH_FULL: "1"
+          APISH_RESET_QUEUE: "1"
+        run: |
+          python -u pipeline/post_build_v18.py
+
+      - name: Verify final sharded build & publish Full Harvest Summary
+        run: |
+          python -u pipeline/verify_build.py | tee verify_out.txt
+          python -u pipeline/inventory_report.py | tee after_report.txt
+          {
+            echo "## Full Mumbai MMR Harvest Summary"
+            echo ""
+            echo "### Build Verification"
+            echo '```'
+            cat verify_out.txt
+            echo '```'
+            echo ""
+            echo "### Final Inventory Breakdown (All Portals Combined)"
+            echo '```'
+            cat after_report.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Deploy harvested inventory to Cloudflare Pages (bombayhomes)
+        if: ${{ inputs.deploy_live }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx --yes wrangler@latest pages deploy web --project-name=bombayhomes --branch=production --commit-dirty=true
+
+      - name: Save all harvested caches, raw archives & shards to Git
+        run: |
+          git config user.name "mumbai-flat-finder-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add data/google_places_cache.json data/osm_geo_cache.json data/osm_civic_cache.json data/mumbai_osm_buildings.json data/vision_tags_cache.json data/price_history.json data/apify_cache.json data/apish_99acres_cache.json data/apish_99acres_queue.json data/raw_99acres data/raw_housing data/maharera_cache.json data/seen_timestamps.json data/listing_registry.json web/public/data/manifest.json web/public/data/shards web/public/data/mumbai-societies.csv
+          git diff --staged --quiet || (git commit -m "feat: full Mumbai MMR multi-portal backfill harvest" && (git pull --rebase || (git rebase --abort && git pull --no-rebase -X ours --no-edit)) && git push)

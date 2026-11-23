@@ -12,59 +12,86 @@ from pipeline.index_io import load_index, save_sharded_index
 from pipeline.quality_filter import filter_and_track_societies, REGISTRY_PATH
 from pipeline.mumbai_transit import enrich_transit_context
 
-API_BASE = "https://api.api.sh/99acres/v1/search"
+API_BASE = "[https://api.api.sh/99acres/v1/search](https://api.api.sh/99acres/v1/search)"
 CACHE_PATH = ROOT / "data/apish_99acres_cache.json"
 QUEUE_PATH = ROOT / "data/apish_99acres_queue.json"
 RAW_DIR = ROOT / "data/raw_99acres"
 
-# 46 Priority-ordered Mumbai MMR slices: (slice_id, label, params, max_pages)
+# 73 Priority-ordered Mumbai MMR Rent + Buy + Direct-Owner slices (328 pages total)
 SLICE_SPECS = [
-    ("mumbai_rent_owner", "Mumbai Rent (Owner)", {"city": "mumbai", "purpose": "rent", "posted_by": "owner", "type": "apartment,studio,builder_floor,independent_house"}, 8),
-    ("mumbai_sale_owner", "Mumbai Buy (Owner)", {"city": "mumbai", "purpose": "sale", "posted_by": "owner", "type": "apartment,studio,builder_floor,independent_house"}, 6),
-    ("thane_rent_owner", "Thane Rent (Owner)", {"city": "thane", "purpose": "rent", "posted_by": "owner", "type": "apartment,studio,builder_floor,independent_house"}, 4),
-    ("mumbai_rent_all", "Mumbai Rent (All)", {"city": "mumbai", "purpose": "rent", "type": "apartment,studio"}, 12),
-    ("mumbai_sale_all", "Mumbai Buy (All)", {"city": "mumbai", "purpose": "sale", "type": "apartment,studio"}, 10),
-    ("thane_rent_all", "Thane Rent (All)", {"city": "thane", "purpose": "rent", "type": "apartment,studio"}, 5),
-    ("thane_sale_all", "Thane Buy (All)", {"city": "thane", "purpose": "sale", "type": "apartment,studio"}, 4),
-    ("loc_bandra_west_rent", "Bandra West Rent", {"location": "bandra-west-mumbai", "purpose": "rent", "type": "apartment,studio"}, 4),
-    ("loc_bandra_west_sale", "Bandra West Buy", {"location": "bandra-west-mumbai", "purpose": "sale", "type": "apartment,studio"}, 3),
-    ("loc_khar_west_rent", "Khar West Rent", {"location": "khar-west-mumbai", "purpose": "rent", "type": "apartment,studio"}, 3),
-    ("loc_khar_west_sale", "Khar West Buy", {"location": "khar-west-mumbai", "purpose": "sale", "type": "apartment,studio"}, 2),
-    ("loc_santacruz_west_rent", "Santacruz West Rent", {"location": "santacruz-west-mumbai", "purpose": "rent", "type": "apartment,studio"}, 3),
-    ("loc_juhu_rent", "Juhu Rent", {"location": "juhu-mumbai", "purpose": "rent", "type": "apartment,studio"}, 3),
-    ("loc_andheri_west_rent", "Andheri West Rent", {"location": "andheri-west-mumbai", "purpose": "rent", "type": "apartment,studio"}, 5),
-    ("loc_andheri_west_sale", "Andheri West Buy", {"location": "andheri-west-mumbai", "purpose": "sale", "type": "apartment,studio"}, 4),
-    ("loc_andheri_east_rent", "Andheri East Rent", {"location": "andheri-east-mumbai", "purpose": "rent", "type": "apartment,studio"}, 4),
-    ("loc_versova_rent", "Versova Rent", {"location": "versova-mumbai", "purpose": "rent", "type": "apartment,studio"}, 3),
-    ("loc_worli_rent", "Worli Rent", {"location": "worli-mumbai", "purpose": "rent", "type": "apartment,studio"}, 4),
-    ("loc_worli_sale", "Worli Buy", {"location": "worli-mumbai", "purpose": "sale", "type": "apartment,studio"}, 3),
-    ("loc_lower_parel_rent", "Lower Parel Rent", {"location": "lower-parel-mumbai", "purpose": "rent", "type": "apartment,studio"}, 3),
-    ("loc_prabhadevi_rent", "Prabhadevi Rent", {"location": "prabhadevi-mumbai", "purpose": "rent", "type": "apartment,studio"}, 3),
-    ("loc_dadar_west_rent", "Dadar West Rent", {"location": "dadar-west-mumbai", "purpose": "rent", "type": "apartment,studio"}, 3),
-    ("loc_matunga_rent", "Matunga Rent", {"location": "matunga-mumbai", "purpose": "rent", "type": "apartment,studio"}, 2),
-    ("loc_colaba_rent", "Colaba Rent", {"location": "colaba-mumbai", "purpose": "rent", "type": "apartment,studio"}, 2),
-    ("loc_byculla_rent", "Byculla Rent", {"location": "byculla-mumbai", "purpose": "rent", "type": "apartment,studio"}, 2),
-    ("loc_wadala_rent", "Wadala Rent", {"location": "wadala-mumbai", "purpose": "rent", "type": "apartment,studio"}, 3),
-    ("loc_powai_rent", "Powai Rent", {"location": "powai-mumbai", "purpose": "rent", "type": "apartment,studio"}, 4),
-    ("loc_powai_sale", "Powai Buy", {"location": "powai-mumbai", "purpose": "sale", "type": "apartment,studio"}, 3),
-    ("loc_chembur_rent", "Chembur Rent", {"location": "chembur-mumbai", "purpose": "rent", "type": "apartment,studio"}, 3),
-    ("loc_goregaon_west_rent", "Goregaon West Rent", {"location": "goregaon-west-mumbai", "purpose": "rent", "type": "apartment,studio"}, 3),
-    ("loc_goregaon_east_rent", "Goregaon East Rent", {"location": "goregaon-east-mumbai", "purpose": "rent", "type": "apartment,studio"}, 3),
-    ("loc_malad_west_rent", "Malad West Rent", {"location": "malad-west-mumbai", "purpose": "rent", "type": "apartment,studio"}, 4),
-    ("loc_malad_east_rent", "Malad East Rent", {"location": "malad-east-mumbai", "purpose": "rent", "type": "apartment,studio"}, 3),
-    ("loc_kandivali_west_rent", "Kandivali West Rent", {"location": "kandivali-west-mumbai", "purpose": "rent", "type": "apartment,studio"}, 3),
-    ("loc_kandivali_east_rent", "Kandivali East Rent", {"location": "kandivali-east-mumbai", "purpose": "rent", "type": "apartment,studio"}, 3),
-    ("loc_borivali_west_rent", "Borivali West Rent", {"location": "borivali-west-mumbai", "purpose": "rent", "type": "apartment,studio"}, 3),
-    ("loc_ghatkopar_west_rent", "Ghatkopar West Rent", {"location": "ghatkopar-west-mumbai", "purpose": "rent", "type": "apartment,studio"}, 3),
-    ("loc_vikhroli_rent", "Vikhroli Rent", {"location": "vikhroli-mumbai", "purpose": "rent", "type": "apartment,studio"}, 2),
-    ("loc_mulund_west_rent", "Mulund West Rent", {"location": "mulund-west-mumbai", "purpose": "rent", "type": "apartment,studio"}, 3),
-    ("loc_mira_road_rent", "Mira Road Rent", {"location": "mira-road-mumbai", "purpose": "rent", "type": "apartment,studio"}, 3),
-    ("loc_vashi_rent", "Vashi Rent", {"location": "vashi-navi-mumbai", "purpose": "rent", "type": "apartment,studio"}, 3),
+    ("mumbai_rent_owner", "Mumbai Rent (Owner)", {"city": "mumbai", "purpose": "rent", "posted_by": "owner", "type": "apartment,studio,builder_floor,independent_house"}, 10),
+    ("mumbai_sale_owner", "Mumbai Buy (Owner)", {"city": "mumbai", "purpose": "sale", "posted_by": "owner", "type": "apartment,studio,builder_floor,independent_house"}, 8),
+    ("thane_rent_owner", "Thane Rent (Owner)", {"city": "thane", "purpose": "rent", "posted_by": "owner", "type": "apartment,studio,builder_floor,independent_house"}, 5),
+    ("thane_sale_owner", "Thane Buy (Owner)", {"city": "thane", "purpose": "sale", "posted_by": "owner", "type": "apartment,studio,builder_floor,independent_house"}, 4),
+    ("navimumbai_rent_owner", "Navi Mumbai Rent (Owner)", {"city": "navi-mumbai", "purpose": "rent", "posted_by": "owner", "type": "apartment,studio,builder_floor,independent_house"}, 5),
+    ("navimumbai_sale_owner", "Navi Mumbai Buy (Owner)", {"city": "navi-mumbai", "purpose": "sale", "posted_by": "owner", "type": "apartment,studio,builder_floor,independent_house"}, 4),
+    ("mumbai_rent_all", "Mumbai Rent (All)", {"city": "mumbai", "purpose": "rent", "type": "apartment,studio"}, 15),
+    ("mumbai_sale_all", "Mumbai Buy (All)", {"city": "mumbai", "purpose": "sale", "type": "apartment,studio"}, 15),
+    ("thane_rent_all", "Thane Rent (All)", {"city": "thane", "purpose": "rent", "type": "apartment,studio"}, 6),
+    ("thane_sale_all", "Thane Buy (All)", {"city": "thane", "purpose": "sale", "type": "apartment,studio"}, 6),
+    ("navimumbai_rent_all", "Navi Mumbai Rent (All)", {"city": "navi-mumbai", "purpose": "rent", "type": "apartment,studio"}, 6),
+    ("navimumbai_sale_all", "Navi Mumbai Buy (All)", {"city": "navi-mumbai", "purpose": "sale", "type": "apartment,studio"}, 6),
+    ("loc_bandra_west_rent", "Bandra West Rent", {"location": "bandra-west-mumbai", "purpose": "rent", "type": "apartment,studio"}, 6),
+    ("loc_bandra_west_sale", "Bandra West Buy", {"location": "bandra-west-mumbai", "purpose": "sale", "type": "apartment,studio"}, 5),
+    ("loc_khar_west_rent", "Khar West Rent", {"location": "khar-west-mumbai", "purpose": "rent", "type": "apartment,studio"}, 5),
+    ("loc_khar_west_sale", "Khar West Buy", {"location": "khar-west-mumbai", "purpose": "sale", "type": "apartment,studio"}, 4),
+    ("loc_santacruz_west_rent", "Santacruz West Rent", {"location": "santacruz-west-mumbai", "purpose": "rent", "type": "apartment,studio"}, 4),
+    ("loc_santacruz_west_sale", "Santacruz West Buy", {"location": "santacruz-west-mumbai", "purpose": "sale", "type": "apartment,studio"}, 3),
+    ("loc_juhu_rent", "Juhu Rent", {"location": "juhu-mumbai", "purpose": "rent", "type": "apartment,studio"}, 4),
+    ("loc_juhu_sale", "Juhu Buy", {"location": "juhu-mumbai", "purpose": "sale", "type": "apartment,studio"}, 3),
+    ("loc_vile_parle_west_rent", "Vile Parle West Rent", {"location": "vile-parle-west-mumbai", "purpose": "rent", "type": "apartment,studio"}, 3),
+    ("loc_andheri_west_rent", "Andheri West Rent", {"location": "andheri-west-mumbai", "purpose": "rent", "type": "apartment,studio"}, 6),
+    ("loc_andheri_west_sale", "Andheri West Buy", {"location": "andheri-west-mumbai", "purpose": "sale", "type": "apartment,studio"}, 5),
+    ("loc_andheri_east_rent", "Andheri East Rent", {"location": "andheri-east-mumbai", "purpose": "rent", "type": "apartment,studio"}, 5),
+    ("loc_andheri_east_sale", "Andheri East Buy", {"location": "andheri-east-mumbai", "purpose": "sale", "type": "apartment,studio"}, 4),
+    ("loc_versova_rent", "Versova Rent", {"location": "versova-mumbai", "purpose": "rent", "type": "apartment,studio"}, 4),
+    ("loc_worli_rent", "Worli Rent", {"location": "worli-mumbai", "purpose": "rent", "type": "apartment,studio"}, 5),
+    ("loc_worli_sale", "Worli Buy", {"location": "worli-mumbai", "purpose": "sale", "type": "apartment,studio"}, 4),
+    ("loc_lower_parel_rent", "Lower Parel Rent", {"location": "lower-parel-mumbai", "purpose": "rent", "type": "apartment,studio"}, 4),
+    ("loc_lower_parel_sale", "Lower Parel Buy", {"location": "lower-parel-mumbai", "purpose": "sale", "type": "apartment,studio"}, 3),
+    ("loc_prabhadevi_rent", "Prabhadevi Rent", {"location": "prabhadevi-mumbai", "purpose": "rent", "type": "apartment,studio"}, 4),
+    ("loc_prabhadevi_sale", "Prabhadevi Buy", {"location": "prabhadevi-mumbai", "purpose": "sale", "type": "apartment,studio"}, 3),
+    ("loc_dadar_west_rent", "Dadar West Rent", {"location": "dadar-west-mumbai", "purpose": "rent", "type": "apartment,studio"}, 4),
+    ("loc_dadar_west_sale", "Dadar West Buy", {"location": "dadar-west-mumbai", "purpose": "sale", "type": "apartment,studio"}, 3),
+    ("loc_matunga_rent", "Matunga Rent", {"location": "matunga-mumbai", "purpose": "rent", "type": "apartment,studio"}, 3),
+    ("loc_colaba_rent", "Colaba Rent", {"location": "colaba-mumbai", "purpose": "rent", "type": "apartment,studio"}, 3),
+    ("loc_byculla_rent", "Byculla Rent", {"location": "byculla-mumbai", "purpose": "rent", "type": "apartment,studio"}, 3),
+    ("loc_wadala_rent", "Wadala Rent", {"location": "wadala-mumbai", "purpose": "rent", "type": "apartment,studio"}, 4),
+    ("loc_wadala_sale", "Wadala Buy", {"location": "wadala-mumbai", "purpose": "sale", "type": "apartment,studio"}, 3),
+    ("loc_powai_rent", "Powai Rent", {"location": "powai-mumbai", "purpose": "rent", "type": "apartment,studio"}, 5),
+    ("loc_powai_sale", "Powai Buy", {"location": "powai-mumbai", "purpose": "sale", "type": "apartment,studio"}, 4),
+    ("loc_chembur_rent", "Chembur Rent", {"location": "chembur-mumbai", "purpose": "rent", "type": "apartment,studio"}, 4),
+    ("loc_chembur_sale", "Chembur Buy", {"location": "chembur-mumbai", "purpose": "sale", "type": "apartment,studio"}, 4),
+    ("loc_goregaon_west_rent", "Goregaon West Rent", {"location": "goregaon-west-mumbai", "purpose": "rent", "type": "apartment,studio"}, 4),
+    ("loc_goregaon_west_sale", "Goregaon West Buy", {"location": "goregaon-west-mumbai", "purpose": "sale", "type": "apartment,studio"}, 4),
+    ("loc_goregaon_east_rent", "Goregaon East Rent", {"location": "goregaon-east-mumbai", "purpose": "rent", "type": "apartment,studio"}, 4),
+    ("loc_goregaon_east_sale", "Goregaon East Buy", {"location": "goregaon-east-mumbai", "purpose": "sale", "type": "apartment,studio"}, 4),
+    ("loc_malad_west_rent", "Malad West Rent", {"location": "malad-west-mumbai", "purpose": "rent", "type": "apartment,studio"}, 5),
+    ("loc_malad_west_sale", "Malad West Buy", {"location": "malad-west-mumbai", "purpose": "sale", "type": "apartment,studio"}, 4),
+    ("loc_malad_east_rent", "Malad East Rent", {"location": "malad-east-mumbai", "purpose": "rent", "type": "apartment,studio"}, 4),
+    ("loc_kandivali_west_rent", "Kandivali West Rent", {"location": "kandivali-west-mumbai", "purpose": "rent", "type": "apartment,studio"}, 4),
+    ("loc_kandivali_west_sale", "Kandivali West Buy", {"location": "kandivali-west-mumbai", "purpose": "sale", "type": "apartment,studio"}, 4),
+    ("loc_kandivali_east_rent", "Kandivali East Rent", {"location": "kandivali-east-mumbai", "purpose": "rent", "type": "apartment,studio"}, 4),
+    ("loc_borivali_west_rent", "Borivali West Rent", {"location": "borivali-west-mumbai", "purpose": "rent", "type": "apartment,studio"}, 4),
+    ("loc_borivali_west_sale", "Borivali West Buy", {"location": "borivali-west-mumbai", "purpose": "sale", "type": "apartment,studio"}, 4),
+    ("loc_ghatkopar_west_rent", "Ghatkopar West Rent", {"location": "ghatkopar-west-mumbai", "purpose": "rent", "type": "apartment,studio"}, 4),
+    ("loc_ghatkopar_east_rent", "Ghatkopar East Rent", {"location": "ghatkopar-east-mumbai", "purpose": "rent", "type": "apartment,studio"}, 3),
+    ("loc_vikhroli_rent", "Vikhroli Rent", {"location": "vikhroli-mumbai", "purpose": "rent", "type": "apartment,studio"}, 3),
+    ("loc_mulund_west_rent", "Mulund West Rent", {"location": "mulund-west-mumbai", "purpose": "rent", "type": "apartment,studio"}, 4),
+    ("loc_mulund_west_sale", "Mulund West Buy", {"location": "mulund-west-mumbai", "purpose": "sale", "type": "apartment,studio"}, 4),
+    ("loc_mira_road_rent", "Mira Road Rent", {"location": "mira-road-mumbai", "purpose": "rent", "type": "apartment,studio"}, 4),
+    ("loc_mira_road_sale", "Mira Road Buy", {"location": "mira-road-mumbai", "purpose": "sale", "type": "apartment,studio"}, 4),
+    ("loc_thane_west_rent", "Thane West Rent", {"location": "thane-west-thane", "purpose": "rent", "type": "apartment,studio"}, 5),
+    ("loc_thane_west_sale", "Thane West Buy", {"location": "thane-west-thane", "purpose": "sale", "type": "apartment,studio"}, 4),
+    ("loc_vashi_rent", "Vashi Rent", {"location": "vashi-navi-mumbai", "purpose": "rent", "type": "apartment,studio"}, 4),
+    ("loc_vashi_sale", "Vashi Buy", {"location": "vashi-navi-mumbai", "purpose": "sale", "type": "apartment,studio"}, 3),
     ("loc_nerul_rent", "Nerul Rent", {"location": "nerul-navi-mumbai", "purpose": "rent", "type": "apartment,studio"}, 3),
-    ("loc_seawoods_rent", "Seawoods Rent", {"location": "seawoods-navi-mumbai", "purpose": "rent", "type": "apartment,studio"}, 2),
-    ("loc_kharghar_rent", "Kharghar Rent", {"location": "kharghar-navi-mumbai", "purpose": "rent", "type": "apartment,studio"}, 3),
-    ("loc_airoli_rent", "Airoli Rent", {"location": "airoli-navi-mumbai", "purpose": "rent", "type": "apartment,studio"}, 2),
-    ("loc_panvel_rent", "Panvel Rent", {"location": "panvel-navi-mumbai", "purpose": "rent", "type": "apartment,studio"}, 2),
+    ("loc_seawoods_rent", "Seawoods Rent", {"location": "seawoods-navi-mumbai", "purpose": "rent", "type": "apartment,studio"}, 3),
+    ("loc_kharghar_rent", "Kharghar Rent", {"location": "kharghar-navi-mumbai", "purpose": "rent", "type": "apartment,studio"}, 4),
+    ("loc_kharghar_sale", "Kharghar Buy", {"location": "kharghar-navi-mumbai", "purpose": "sale", "type": "apartment,studio"}, 4),
+    ("loc_airoli_rent", "Airoli Rent", {"location": "airoli-navi-mumbai", "purpose": "rent", "type": "apartment,studio"}, 3),
+    ("loc_panvel_rent", "Panvel Rent", {"location": "panvel-navi-mumbai", "purpose": "rent", "type": "apartment,studio"}, 3),
+    ("loc_panvel_sale", "Panvel Buy", {"location": "panvel-navi-mumbai", "purpose": "sale", "type": "apartment,studio"}, 3),
 ]
 
 def _load_json(p, default):
@@ -93,21 +120,21 @@ def _extract_property_imgs(item):
         if u not in imgs:
             imgs.append(u)
 
-    for k in ("image", "cover_image", "thumbnail", "photo", "main_image", "photo_url", "image_url"):
+    for k in ("image", "cover_image", "cover_photo", "thumbnail", "thumbnail_url", "photo", "main_image", "photo_url", "image_url", "primary_photo"):
         v = item.get(k)
         if isinstance(v, str):
             _add(v)
         elif isinstance(v, dict):
-            _add(v.get("url") or v.get("src") or v.get("large") or v.get("original"))
+            _add(v.get("url") or v.get("src") or v.get("large") or v.get("original") or v.get("photo_url"))
 
-    for k in ("photos", "images", "media", "gallery", "photo_urls", "image_urls"):
+    for k in ("photos", "images", "media", "gallery", "photo_urls", "image_urls", "property_images"):
         arr = item.get(k)
         if isinstance(arr, list):
             for el in arr[:8]:
                 if isinstance(el, str):
                     _add(el)
                 elif isinstance(el, dict):
-                    _add(el.get("url") or el.get("src") or el.get("large") or el.get("original") or el.get("photoUrl"))
+                    _add(el.get("url") or el.get("src") or el.get("large") or el.get("original") or el.get("photoUrl") or el.get("photo_url"))
     return imgs[:5]
 
 def normalize_apish_item(item, fallback_mode="rent", fallback_label=""):
@@ -216,7 +243,7 @@ def _call_apish_search(params, api_key, timeout=90):
         headers={
             "x-api-key": api_key,
             "Accept": "application/json",
-            "User-Agent": "BombayHomes/v30",
+            "User-Agent": "BombayHomes/v31",
         },
     )
     try:
@@ -272,6 +299,11 @@ def sync_apish_99acres(max_calls=28, incremental=True, reset_queue=False, fresh=
         print(f"[APISH 99] APISH_KEY not set; returning {len(cached):,} cached listings (0 calls).")
         return cached
 
+    if os.environ.get("APISH_FULL") == "1":
+        incremental = False
+    if os.environ.get("APISH_RESET_QUEUE") == "1":
+        reset_queue = True
+
     by_u = {r["u"]: r for r in load_cached_apish_99acres() if isinstance(r, dict) and r.get("u")}
     reg = _load_json(REGISTRY_PATH, {})
     qstate = {"cursor": 0, "dead_slices": [], "total_credits": 0} if reset_queue else _load_json(
@@ -281,18 +313,22 @@ def sync_apish_99acres(max_calls=28, incremental=True, reset_queue=False, fresh=
     cursor = int(qstate.get("cursor") or 0) % len(SLICE_SPECS)
 
     calls_made, credits_spent, new_cnt, upd_cnt, early_stops, slices_visited = 0, 0, 0, 0, 0, 0
+    stop_all = False
+    logged_schema = False
 
-    while calls_made < max_calls and slices_visited < len(SLICE_SPECS):
-        slice_id, label, base_params, max_pages = SLICE_SPECS[cursor]
-        cursor = (cursor + 1) % len(SLICE_SPECS)
+    while calls_made < max_calls and slices_visited < len(SLICE_SPECS) and not stop_all:
+        cur_idx = cursor
+        slice_id, label, base_params, max_pages = SLICE_SPECS[cur_idx]
+        next_cursor = (cur_idx + 1) % len(SLICE_SPECS)
         slices_visited += 1
 
         if slice_id in dead_slices:
+            cursor = next_cursor
             continue
 
         fallback_mode = "buy" if base_params.get("purpose") == "sale" else "rent"
         for pg_no in range(1, max_pages + 1):
-            if calls_made >= max_calls:
+            if calls_made >= max_calls or stop_all:
                 break
             params = dict(base_params)
             params["page"] = pg_no
@@ -304,7 +340,7 @@ def sync_apish_99acres(max_calls=28, incremental=True, reset_queue=False, fresh=
 
             if status in (401, 402, 429):
                 print(f"  [APISH 99 STOP] HTTP {status} ({str(payload.get('error', ''))[:120]}). Stopping cleanly.")
-                calls_made = max_calls
+                stop_all = True
                 break
             if status == 404:
                 print(f"  [APISH 99 404] {label} ({slice_id}) p{pg_no} returned 404; marking slice dead.")
@@ -323,12 +359,18 @@ def sync_apish_99acres(max_calls=28, incremental=True, reset_queue=False, fresh=
             if not results:
                 break
 
-            pg_valid, pg_unchanged, pg_new = 0, 0, 0
+            if not logged_schema and isinstance(results[0], dict):
+                logged_schema = True
+                print(f"  [APISH 99 SCHEMA] results[0] keys: {sorted(results[0].keys())}")
+
+            pg_valid, pg_unchanged, pg_new, pg_photos = 0, 0, 0, 0
             for it in results:
                 rec = normalize_apish_item(it, fallback_mode=fallback_mode, fallback_label=label)
                 if not rec:
                     continue
                 pg_valid += 1
+                if rec.get("img"):
+                    pg_photos += 1
                 u = rec["u"]
                 prev_rec = by_u.get(u)
                 prev_reg = reg.get(u)
@@ -347,7 +389,7 @@ def sync_apish_99acres(max_calls=28, incremental=True, reset_queue=False, fresh=
 
             print(
                 f"  [APISH 99] {label} p{pg_no}/{payload.get('total_pages') or '?'} | "
-                f"raw={len(results)} valid={pg_valid} new={pg_new} unchanged={pg_unchanged} | credits={c_used}"
+                f"raw={len(results)} valid={pg_valid} new={pg_new} photos={pg_photos} unchanged={pg_unchanged} | cr={c_used}"
             )
 
             if incremental and pg_valid >= 10 and (pg_unchanged / pg_valid) >= 0.85:
@@ -356,8 +398,10 @@ def sync_apish_99acres(max_calls=28, incremental=True, reset_queue=False, fresh=
                 break
             if not payload.get("next_page"):
                 break
-            time.sleep(0.35)
+            time.sleep(0.25)
 
+        if not stop_all:
+            cursor = next_cursor
         recs_now = list(by_u.values())
         _save_json(CACHE_PATH, {"updated": int(time.time()), "count": len(recs_now), "records": recs_now})
         _save_json(QUEUE_PATH, {
@@ -397,12 +441,12 @@ def publish_cached_to_shards():
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("--max-calls", type=int, default=28, help="Max API calls (default 28/day fits 1k/mo free tier)")
-    ap.add_argument("--full", action="store_true", help="Disable incremental 85% early-stop")
-    ap.add_argument("--reset-queue", action="store_true", help="Reset slice cursor to 0")
-    ap.add_argument("--fresh", action="store_true", help="Bypass api.sh cache")
-    ap.add_argument("--reparse-raw", action="store_true", help="Re-parse saved data/raw_99acres/*.json.gz offline (0 credits)")
-    ap.add_argument("--publish", action="store_true", help="Also merge cache into sharded index immediately")
+    ap.add_argument("--max-calls", type=int, default=28)
+    ap.add_argument("--full", action="store_true")
+    ap.add_argument("--reset-queue", action="store_true")
+    ap.add_argument("--fresh", action="store_true")
+    ap.add_argument("--reparse-raw", action="store_true")
+    ap.add_argument("--publish", action="store_true")
     args = ap.parse_args()
 
     if args.reparse_raw:
