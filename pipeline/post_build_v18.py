@@ -9,6 +9,7 @@ sys.path.insert(0, str(ROOT))
 from pipeline.connectors.v19_common import haversine_km, clean_soc_name, merge_records_into_societies, extract_rera_ids
 from pipeline.connectors.native_boost import run_native_boost, backfill_nobroker_photos
 from pipeline.connectors.apify_portals import sync_apify, load_cached_apify
+from pipeline.connectors.apish_99acres import sync_apish_99acres, load_cached_apish_99acres
 from pipeline.compact_index import save_compacted_index
 from pipeline.mumbai_transit import enrich_transit_context
 from pipeline.connectors.maharera_enricher import enrich_societies as enrich_maharera
@@ -123,6 +124,16 @@ def run():
     apify_recs = sync_apify() if os.environ.get("GITHUB_ACTIONS") == "true" else load_cached_apify()
     a_u, a_s = merge_records_into_societies(socs, apify_recs)
 
+    apish_budget = int(os.environ.get("APISH_MAX_CALLS") or "28")
+    apish_recs = sync_apish_99acres(max_calls=apish_budget) if os.environ.get("APISH_KEY") else load_cached_apish_99acres()
+    _diy99_p = ROOT / "data/diy_99acres_cache.json"
+    if _diy99_p.exists():
+        try:
+            apish_recs = list(apish_recs) + (json.loads(_diy99_p.read_text(encoding="utf-8-sig")).get("records") or [])
+        except Exception:
+            pass
+    a99_u, a99_s = merge_records_into_societies(socs, apish_recs)
+
     nb_photos = backfill_nobroker_photos(socs, max_fetch=150)
     multi_photo_socs = 0
     for s in socs:
@@ -172,7 +183,7 @@ def run():
     except Exception as _ve:
         print(f'[v25 VIBE WARN] {_ve}')
 
-    print(f"[v20 DONE] Pins fixed: {fixed_pins} | Names cleaned: {fixed_names} | Native +{n_u} ({n_s} bldgs) | Apify +{a_u} | NB photos +{nb_photos} | Multi-photo bldgs: {multi_photo_socs} | RERA bldgs: {rera_total} (+{rera_hits} matched)")
+    print(f"[v20 DONE] Pins fixed: {fixed_pins} | Names cleaned: {fixed_names} | Native +{n_u} ({n_s} bldgs) | Apify(Housing) +{a_u} | api.sh(99acres) +{a99_u} ({a99_s} bldgs) | NB photos +{nb_photos} | Multi-photo bldgs: {multi_photo_socs} | RERA bldgs: {rera_total} (+{rera_hits} matched)")
 
 if __name__ == "__main__":
     run()

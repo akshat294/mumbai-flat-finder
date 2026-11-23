@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: '30 21 * * *'
   workflow_dispatch:
+    inputs:
+      apish_max_calls:
+        description: 'Max api.sh 99acres calls (28=daily free tier, 120=backfill)'
+        required: false
+        default: '28'
 
 concurrency:
   group: mumbai-mmr-daily-sync
@@ -59,6 +64,8 @@ jobs:
         env:
           PYTHONUNBUFFERED: "1"
           APIFY_TOKEN: ${{ secrets.APIFY_TOKEN }}
+          APISH_KEY: ${{ secrets.APISH_KEY }}
+          APISH_MAX_CALLS: ${{ inputs.apish_max_calls || '28' }}
         run: |
           python -u pipeline/post_build_v18.py
           python -u pipeline/inventory_report.py
@@ -76,5 +83,5 @@ jobs:
         run: |
           git config user.name "mumbai-flat-finder-bot"
           git config user.email "bot@users.noreply.github.com"
-          git add data/google_places_cache.json data/osm_geo_cache.json data/osm_civic_cache.json data/mumbai_osm_buildings.json data/vision_tags_cache.json data/price_history.json data/apify_cache.json data/maharera_cache.json data/seen_timestamps.json web/public/data/manifest.json web/public/data/shards data/listing_registry.json web/public/data/mumbai-societies.csv
+          git add data/google_places_cache.json data/osm_geo_cache.json data/osm_civic_cache.json data/mumbai_osm_buildings.json data/vision_tags_cache.json data/price_history.json data/apify_cache.json data/apish_99acres_cache.json data/apish_99acres_queue.json data/raw_99acres data/raw_housing data/maharera_cache.json data/seen_timestamps.json web/public/data/manifest.json web/public/data/shards data/listing_registry.json web/public/data/mumbai-societies.csv
           git diff --staged --quiet || (git commit -m "chore: daily Mumbai MMR sync" && git pull --rebase && git push)

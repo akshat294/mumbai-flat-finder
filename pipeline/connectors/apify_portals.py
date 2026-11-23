@@ -13,6 +13,9 @@ def _api_get(url, timeout=45):
         return json.loads(r.read().decode("utf-8", errors="ignore"))
 
 def _call_apify_actor(actor_id, payload, token, timeout=600):
+    if (os.environ.get("APISH_KEY") or os.environ.get("SKIP_APIFY_99ACRES")) and ("99acres" in str(actor_id).lower() or "99acres" in json.dumps(payload, ensure_ascii=False).lower()):
+        print(f"  [apify] Skipping 99acres actor ({actor_id}) - api.sh owns 99acres; saving Apify credits for Housing.com")
+        return []
     start_url = f"https://api.apify.com/v2/actors/{actor_id}/runs?token={urllib.parse.quote(token)}"
     body = json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(start_url, data=body, headers={"Content-Type": "application/json"}, method="POST")
@@ -28,7 +31,16 @@ def _call_apify_actor(actor_id, payload, token, timeout=600):
         st_data = _api_get(f"https://api.apify.com/v2/actor-runs/{rid}?token={urllib.parse.quote(token)}", timeout=30).get("data") or {}
         status = st_data.get("status")
         if status == "SUCCEEDED":
-            return _api_get(f"https://api.apify.com/v2/datasets/{ds_id}/items?token={urllib.parse.quote(token)}&clean=true&limit=2500", timeout=90)
+            items = _api_get(f"https://api.apify.com/v2/datasets/{ds_id}/items?token={urllib.parse.quote(token)}&clean=true&limit=2500", timeout=90)
+            try:
+                import gzip as _gz
+                _rdir = ROOT / "data/raw_housing"
+                _rdir.mkdir(parents=True, exist_ok=True)
+                with _gz.open(_rdir / f"apify_{rid}.json.gz", "wt", encoding="utf-8") as _gf:
+                    json.dump(items, _gf, separators=(",", ":"), ensure_ascii=False)
+            except Exception:
+                pass
+            return items
         if status in ("FAILED", "ABORTED", "TIMED-OUT"):
             raise RuntimeError(f"Apify run {rid} ended with status={status}")
     raise TimeoutError(f"Apify run {rid} timed out after {timeout}s")
