@@ -64,6 +64,9 @@ jobs:
         env:
           PYTHONUNBUFFERED: "1"
           APIFY_TOKEN: ${{ secrets.APIFY_TOKEN }}
+          APIFY_TOKEN_1: ${{ secrets.APIFY_TOKEN_1 }}
+          APIFY_TOKEN_2: ${{ secrets.APIFY_TOKEN_2 }}
+          APIFY_TOKEN_3: ${{ secrets.APIFY_TOKEN_3 }}
           APISH_KEY: ${{ secrets.APISH_KEY }}
           APISH_MAX_CALLS: ${{ inputs.apish_max_calls || '28' }}
         run: |

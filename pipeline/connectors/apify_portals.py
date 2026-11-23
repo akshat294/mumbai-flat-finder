@@ -1,4 +1,4 @@
-import argparse, json, os, re, sys, time, urllib.request, urllib.parse
+import argparse, json, os, re, sys, time, urllib.error, urllib.request, urllib.parse
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent.parent
@@ -6,6 +6,15 @@ sys.path.insert(0, str(ROOT))
 from pipeline.connectors.v19_common import detect_locality, parse_price, parse_bhk, norm_furnishing, clean_soc_name
 
 CACHE_PATH = ROOT / "data/apify_cache.json"
+_APIFY_EXHAUSTED = set()
+
+def _get_apify_tokens():
+    out = []
+    for env_k in ("APIFY_TOKEN_1", "APIFY_TOKEN_2", "APIFY_TOKEN_3", "APIFY_TOKEN"):
+        val = (os.environ.get(env_k) or "").strip()
+        if val and val not in out:
+            out.append(val)
+    return out
 
 def _api_get(url, timeout=45):
     req = urllib.request.Request(url, headers={"Accept": "application/json"})
@@ -16,34 +25,64 @@ def _call_apify_actor(actor_id, payload, token, timeout=600):
     if (os.environ.get("APISH_KEY") or os.environ.get("SKIP_APIFY_99ACRES")) and ("99acres" in str(actor_id).lower() or "99acres" in json.dumps(payload, ensure_ascii=False).lower()):
         print(f"  [apify] Skipping 99acres actor ({actor_id}) - api.sh owns 99acres; saving Apify credits for Housing.com")
         return []
-    start_url = f"https://api.apify.com/v2/actors/{actor_id}/runs?token={urllib.parse.quote(token)}"
+    cands = [t for t in _get_apify_tokens() if t not in _APIFY_EXHAUSTED]
+    if token and token not in cands and token not in _APIFY_EXHAUSTED:
+        cands.append(token)
+    if not cands:
+        raise RuntimeError("All configured Apify tokens are exhausted or missing")
+    apify_base = "https:" + "//api.apify.com/v2"
     body = json.dumps(payload).encode("utf-8")
-    req = urllib.request.Request(start_url, data=body, headers={"Content-Type": "application/json"}, method="POST")
-    with urllib.request.urlopen(req, timeout=45) as r:
-        run_data = json.loads(r.read().decode("utf-8", errors="ignore")).get("data") or {}
-    rid = run_data.get("id")
-    ds_id = run_data.get("defaultDatasetId")
-    if not rid or not ds_id:
-        raise RuntimeError(f"Apify run did not start cleanly: {run_data}")
-    t0 = time.time()
-    while time.time() - t0 < timeout:
-        time.sleep(6)
-        st_data = _api_get(f"https://api.apify.com/v2/actor-runs/{rid}?token={urllib.parse.quote(token)}", timeout=30).get("data") or {}
-        status = st_data.get("status")
-        if status == "SUCCEEDED":
-            items = _api_get(f"https://api.apify.com/v2/datasets/{ds_id}/items?token={urllib.parse.quote(token)}&clean=true&limit=5000", timeout=90)
+    last_err = None
+    for tok in cands:
+        tok_tag = tok[:8] + "..."
+        try:
+            start_url = f"{apify_base}/actors/{actor_id}/runs?token={urllib.parse.quote(tok)}"
+            req = urllib.request.Request(start_url, data=body, headers={"Content-Type": "application/json"}, method="POST")
+            with urllib.request.urlopen(req, timeout=45) as r:
+                run_data = json.loads(r.read().decode("utf-8", errors="ignore")).get("data") or {}
+            rid = run_data.get("id")
+            ds_id = run_data.get("defaultDatasetId")
+            if not rid or not ds_id:
+                raise RuntimeError(f"Apify run did not start cleanly: {run_data}")
+            t0 = time.time()
+            while time.time() - t0 < timeout:
+                time.sleep(6)
+                st_data = _api_get(f"{apify_base}/actor-runs/{rid}?token={urllib.parse.quote(tok)}", timeout=30).get("data") or {}
+                status = st_data.get("status")
+                if status == "SUCCEEDED":
+                    items = _api_get(f"{apify_base}/datasets/{ds_id}/items?token={urllib.parse.quote(tok)}&clean=true&limit=5000", timeout=90)
+                    try:
+                        import gzip as _gz
+                        _rdir = ROOT / "data/raw_housing"
+                        _rdir.mkdir(parents=True, exist_ok=True)
+                        with _gz.open(_rdir / f"apify_{rid}.json.gz", "wt", encoding="utf-8") as _gf:
+                            json.dump(items, _gf, separators=(",", ":"), ensure_ascii=False)
+                    except Exception:
+                        pass
+                    return items
+                if status in ("FAILED", "ABORTED", "TIMED-OUT"):
+                    msg = str(st_data.get("statusMessage") or "")
+                    if any(w in msg.lower() for w in ("limit", "usage", "credit", "payment", "quota")):
+                        _APIFY_EXHAUSTED.add(tok)
+                        print(f"  [apify] Token {tok_tag} hit usage limit ({status}: {msg[:80]}) -> failing over to next key...")
+                        last_err = RuntimeError(f"Token exhausted: {msg}")
+                        break
+                    raise RuntimeError(f"Apify run {rid} ended with status={status} {msg}")
+            else:
+                raise TimeoutError(f"Apify run {rid} timed out after {timeout}s")
+        except urllib.error.HTTPError as he:
+            err_txt = ""
             try:
-                import gzip as _gz
-                _rdir = ROOT / "data/raw_housing"
-                _rdir.mkdir(parents=True, exist_ok=True)
-                with _gz.open(_rdir / f"apify_{rid}.json.gz", "wt", encoding="utf-8") as _gf:
-                    json.dump(items, _gf, separators=(",", ":"), ensure_ascii=False)
+                err_txt = he.read().decode("utf-8", errors="ignore")[:160]
             except Exception:
                 pass
-            return items
-        if status in ("FAILED", "ABORTED", "TIMED-OUT"):
-            raise RuntimeError(f"Apify run {rid} ended with status={status}")
-    raise TimeoutError(f"Apify run {rid} timed out after {timeout}s")
+            if he.code in (401, 402, 403, 429):
+                _APIFY_EXHAUSTED.add(tok)
+                print(f"  [apify] Token {tok_tag} returned HTTP {he.code} ({err_txt}) -> failing over to next key...")
+                last_err = he
+                continue
+            raise
+    raise RuntimeError(f"All Apify tokens failed: {last_err}")
 
 def _first_str(obj, keys):
     for k in keys:
@@ -252,11 +291,13 @@ def recover_recent_runs():
     return load_cached_apify()
 
 def sync_apify(rent_limit=250, buy_limit=125, sources=("housing", "99acres"), force=False):
-    token = os.environ.get("APIFY_TOKEN", "").strip()
+    tokens = _get_apify_tokens()
+    token = tokens[0] if tokens else ""
     existing = load_cached_apify()
     if not token:
-        print(f"  [apify] APIFY_TOKEN not set -> using {len(existing)} cached records")
+        print(f"  [apify] No APIFY_TOKEN(_1/2/3) set -> using {len(existing)} cached records")
         return existing
+    print(f"  [apify] Loaded {len(tokens)} Apify token(s) in failover pool")
 
     last_ts = 0
     if CACHE_PATH.exists():

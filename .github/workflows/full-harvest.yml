@@ -79,6 +79,9 @@ jobs:
         env:
           PYTHONUNBUFFERED: "1"
           APIFY_TOKEN: ${{ secrets.APIFY_TOKEN }}
+          APIFY_TOKEN_1: ${{ secrets.APIFY_TOKEN_1 }}
+          APIFY_TOKEN_2: ${{ secrets.APIFY_TOKEN_2 }}
+          APIFY_TOKEN_3: ${{ secrets.APIFY_TOKEN_3 }}
           FORCE_APIFY_REFRESH: ${{ inputs.force_housing_apify && '1' || '0' }}
           APIFY_RENT_LIMIT: ${{ inputs.housing_rent_limit }}
           APIFY_BUY_LIMIT: ${{ inputs.housing_buy_limit }}
