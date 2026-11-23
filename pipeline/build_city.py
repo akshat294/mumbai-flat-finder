@@ -112,7 +112,7 @@ def _merge_duplicates(compiled: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         key = (re.sub(r"[^a-z0-9]+", "", s["name"].lower()), s["locality"].lower())
         if key not in by_key: by_key[key] = s; continue
         cur = by_key[key]
-        if cur["coords_approx"] and not s["coords_approx"]:
+        if cur.get("coords_approx") and not s.get("coords_approx"):
             cur["lat"], cur["lng"], cur["coords_approx"] = s["lat"], s["lng"], False
         for lf in ("bhks","furnishing","tenant","rera_ids"): cur[lf] = sorted(set(cur[lf]) | set(s[lf]))
         for ff in ("thumb","google","rera_carpet_sqft"):
@@ -127,9 +127,9 @@ def _merge_duplicates(compiled: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         for sf in ("sources","sources_rent","sources_buy"): cur[sf].update(s[sf])
         cur["pricing"] = _strict_pricing(cur["pricing"], cur["units_rent"], cur["units_buy"])
         if cur.get("features") and s.get("features"):
-            cur["features"]["tags"] = sorted(set(cur["features"].get("tags") or []) | set(s["features"].get("tags") or []))
-            cur["features"]["vision_tags"] = sorted(set(cur["features"].get("vision_tags") or []) | set(s["features"].get("vision_tags") or []))
-            cur["features"]["bright"] = bool(cur["features"].get("bright") or s["features"].get("bright"))
+            cur.get("features")["tags"] = sorted(set(cur.get("features").get("tags") or []) | set(s.get("features").get("tags") or []))
+            cur.get("features")["vision_tags"] = sorted(set(cur.get("features").get("vision_tags") or []) | set(s.get("features").get("vision_tags") or []))
+            cur.get("features")["bright"] = bool(cur.get("features").get("bright") or s.get("features").get("bright"))
     return list(by_key.values())
 
 def _merge_with_previous_index(compiled: List[Dict[str, Any]], vision_cache: Dict[str, Any], prev_path: Path, hist_path: Path = Path("data/price_history.json"), max_days: int = 28) -> List[Dict[str, Any]]:
@@ -273,7 +273,7 @@ def build_mumbai(db_path: str | Path = "pipeline/staging/mumbai_raw.db", max_goo
             "lat": lat, "lng": lng, "coords_approx": coords_approx, "bhks": sorted(bhk_set),
             "furnishing": sorted({u["f"] for u in (ur + ub) if u.get("f")}),
             "tenant": sorted({r["tenant"] for r in recs if r.get("tenant")}),
-            "rera_ids": can["rera_ids"], "rera_carpet_sqft": int(med_c) if med_c else None,
+            "rera_ids": can.get("rera_ids"), "rera_carpet_sqft": int(med_c) if med_c else None,
             "pricing": pricing, "units_rent": ur, "units_buy": ub, "thumb": thumb,
             "mumbai_context": enrich_mumbai(lat, lng, transit),
             "features": extract_outdoor_features(raw_cname, recs, lat, lng, thumb, vision_cache),
@@ -284,7 +284,7 @@ def build_mumbai(db_path: str | Path = "pipeline/staging/mumbai_raw.db", max_goo
 
     compiled = _merge_duplicates(compiled)
     compiled = _merge_with_previous_index(compiled, vision_cache, Path("web/public/data/mumbai-index.json"))
-    exact_hits = sum(1 for s in compiled if not s["coords_approx"])
+    exact_hits = sum(1 for s in compiled if not s.get("coords_approx"))
     great = _attach_deals(compiled)
     drops, new_cnt = update_price_history(compiled)
     with_photos = sum(1 for s in compiled if s.get("thumb"))
@@ -295,12 +295,12 @@ def build_mumbai(db_path: str | Path = "pipeline/staging/mumbai_raw.db", max_goo
         w = csv.writer(f)
         w.writerow(["id","name","zone","locality","bhks","carpet_sqft","rent_inr","buy_inr","exact_pin","zero_brok","google","metro","walk_min","flood","features","sources"])
         for s in compiled:
-            w.writerow([s["id"],s["name"],s["zone"],s["locality"],"/".join("1 RK" if b==0 else f"{b} BHK" for b in s["bhks"]),s["rera_carpet_sqft"] or "",(s["units_rent"][0]["p"] if s["units_rent"] else ""),(s["units_buy"][0]["p"] if s["units_buy"] else ""),not s["coords_approx"],s["pricing"]["has_zero_brokerage"],(s["google"] or {}).get("rating",""),(s["mumbai_context"]["nearest_metro"] or {}).get("name",""),(s["mumbai_context"]["nearest_metro"] or {}).get("walk_min",""),s["mumbai_context"]["monsoon_flood_risk"],",".join(s["features"]["tags"]),",".join(sorted(s["sources"].keys()))])
+            w.writerow([s["id"],s["name"],s["zone"],s["locality"],"/".join("1 RK" if b==0 else f"{b} BHK" for b in s["bhks"]),s.get("rera_carpet_sqft") or "",(s["units_rent"][0]["p"] if s["units_rent"] else ""),(s["units_buy"][0]["p"] if s["units_buy"] else ""),not s.get("coords_approx"),s["pricing"]["has_zero_brokerage"],(s.get("google") or {}).get("rating",""),(s.get("mumbai_context")["nearest_metro"] or {}).get("name",""),(s.get("mumbai_context")["nearest_metro"] or {}).get("walk_min",""),s.get("mumbai_context")["monsoon_flood_risk"],",".join(s.get("features")["tags"]),",".join(sorted(s["sources"].keys()))])
     return {
         "compiled": len(compiled), "exact_pins": exact_hits, "with_photos": with_photos,
         "great_value_deals": great, "price_drops": drops,
-        "balcony_hits": sum(1 for s in compiled if "balcony" in s["features"]["tags"]),
-        "terrace_garden_hits": sum(1 for s in compiled if set(s["features"]["tags"]) & {"terrace","garden"}),
-        "sea_view_hits": sum(1 for s in compiled if "sea_view" in s["features"]["tags"]),
+        "balcony_hits": sum(1 for s in compiled if "balcony" in s.get("features")["tags"]),
+        "terrace_garden_hits": sum(1 for s in compiled if set(s.get("features")["tags"]) & {"terrace","garden"}),
+        "sea_view_hits": sum(1 for s in compiled if "sea_view" in s.get("features")["tags"]),
         "updated_at": now_ist,
     }

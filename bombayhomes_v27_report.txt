@@ -1,0 +1,21 @@
+[v27.2 SIZE AUDIT BEFORE] Top keys:
+  pricing             3.01 MiB | used_in_FE=True
+  mumbai_context      2.80 MiB | used_in_FE=True
+  units_rent          2.37 MiB | used_in_FE=True
+  units_buy           2.23 MiB | used_in_FE=True
+  sources             1.70 MiB | used_in_FE=True
+  civic               1.56 MiB | used_in_FE=True
+  thumb               1.40 MiB | used_in_FE=True
+  sources_rent        0.99 MiB | used_in_FE=True
+  sources_buy         0.95 MiB | used_in_FE=True
+  commutes            0.80 MiB | used_in_FE=True
+[v27.2 COMPACT] mumbai-index.json -> 21.10 MiB (removed 1318 dup/clone units)
+[v27.2 DIY 99ACRES] Upgraded extractor (ancestor Rupee walk + lazy-scroll images)
+[DIY 99] rent/Mumbai p1 | dom_cards=27 -> captured=24
+  [DIY 99] rent/Bandra West p1 | dom_cards=26 -> captured=23
+  [DIY 99] rent/Khar West p1 | dom_cards=26 -> captured=24
+[DIY 99ACRES] Total captured: 71 fresh Mumbai listings at Rs.0!
+[DIY 99ACRES MERGE] +24 new units (4 new buildings) | Index: 21.10 MiB
+[v27 VIBE] Scored 12,167 buildings | Bright & Modern (>=74): 2,902 (23.9%) | 3D Renders: 140 | Index: 21.10 MiB
+[v27.2 VERIFY_BUILD] rc=0 | [verify_build] Societies: 12167 | Size: 21.10 MB | Updated: 23 Nov 2026, 02:37 AM IST
+[verify_build] PASSED.

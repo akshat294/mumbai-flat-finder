@@ -9,8 +9,8 @@ CACHE_PATH = ROOT / "data/vibe_scores_cache.json"
 VISION_CACHE = ROOT / "data/vision_tags_cache.json"
 
 RENDER_RE = re.compile(r"(?:render|elevation|brochure|floorplan|masterplan|artist|3d|project-img|amenities)", re.I)
-MODERN_KW = ("sea_view", "balcony", "terrace", "modern", "pool", "gym", "clubhouse", "high_rise", "luxury", "furnished", "modular")
-BRIGHT_KW = ("sunlit", "bright", "daylight", "balcony", "sea_view", "terrace", "open_view", "greenery", "park")
+MODERN_KW = ("sea_view", "balcony", "terrace", "modern", "pool", "gym", "clubhouse", "high_rise", "luxury", "furnished", "modular", "ac", "lift")
+BRIGHT_KW = ("sunlit", "bright", "daylight", "balcony", "sea_view", "terrace", "open_view", "greenery", "park", "garden", "view")
 
 def _load_json(p, default):
     if not p.exists():
@@ -34,7 +34,11 @@ def score_societies(run_onnx=False, onnx_limit=200):
         thumb = str(s.get("thumb") or "")
         photos = s.get("photos") or []
         feats = [str(f).lower() for f in (s.get("features") or [])]
-        furn = str(s.get("furnishing") or "").lower()
+        units = (s.get("units_rent") or []) + (s.get("units_buy") or [])
+
+        furn_vals = [str(s.get("furnishing") or "").lower()] + [str(u.get("f") or "").lower() for u in units]
+        has_full_furn = any("furnished" in f and "unfurn" not in f and "semi" not in f for f in furn_vals)
+        has_semi_furn = any("semi" in f for f in furn_vals)
 
         cached_v = vtags.get(thumb) or vtags.get(sid) or {}
         if isinstance(cached_v, dict):
@@ -46,26 +50,31 @@ def score_societies(run_onnx=False, onnx_limit=200):
             score = int(vibe_cache[sid].get("vs", 50))
             is_render = bool(vibe_cache[sid].get("vr", False))
         else:
-            score = 48
+            score = 50
             n_photos = (1 if thumb else 0) + len(photos)
-            if n_photos >= 4: score += 16
-            elif n_photos >= 2: score += 10
-            elif n_photos == 0: score -= 20
+            if n_photos >= 4: score += 22
+            elif n_photos >= 3: score += 18
+            elif n_photos >= 2: score += 14
+            elif n_photos == 1: score += 4
+            else: score -= 24
 
-            if any(k in feats for k in BRIGHT_KW): score += 14
-            if any(k in feats for k in MODERN_KW): score += 10
-            if "furnished" in furn and "unfurn" not in furn: score += 8
-            elif "semi" in furn: score += 4
+            if has_full_furn: score += 12
+            elif has_semi_furn: score += 7
+
+            if any(any(bk in ft for bk in BRIGHT_KW) for ft in feats): score += 12
+            if any(any(mk in ft for mk in MODERN_KW) for ft in feats): score += 8
 
             g = s.get("google") or {}
-            if isinstance(g, dict) and float(g.get("rating") or 0) >= 4.2:
+            if isinstance(g, dict) and float(g.get("rating") or 0) >= 4.0:
                 score += 8
             if s.get("rera_ids"):
                 score += 6
+            if not s.get("is_unnamed"):
+                score += 4
 
             is_render = bool(thumb and RENDER_RE.search(thumb) and not s.get("units_rent"))
             if is_render:
-                score -= 12
+                score -= 18
             score = max(10, min(99, score))
 
         s["vs"] = score
@@ -79,7 +88,8 @@ def score_societies(run_onnx=False, onnx_limit=200):
             bright_modern_cnt += 1
 
     _, size_b = save_compacted_index(idx_p, data)
-    print(f"[v25 VIBE] Scored {len(socs):,} buildings | Bright & Modern (>=74): {bright_modern_cnt:,} | 3D Renders: {render_cnt:,} | Index: {size_b/1048576:.2f} MiB")
+    pct = (100.0 * bright_modern_cnt / len(socs)) if socs else 0.0
+    print(f"[v27 VIBE] Scored {len(socs):,} buildings | Bright & Modern (>=74): {bright_modern_cnt:,} ({pct:.1f}%) | 3D Renders: {render_cnt:,} | Index: {size_b/1048576:.2f} MiB")
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
