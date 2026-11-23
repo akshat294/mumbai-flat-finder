@@ -82,11 +82,18 @@ jobs:
           APIFY_TOKEN_1: ${{ secrets.APIFY_TOKEN_1 }}
           APIFY_TOKEN_2: ${{ secrets.APIFY_TOKEN_2 }}
           APIFY_TOKEN_3: ${{ secrets.APIFY_TOKEN_3 }}
+          APIFY_TOKEN_4: ${{ secrets.APIFY_TOKEN_4 }}
+          APIFY_TOKEN_5: ${{ secrets.APIFY_TOKEN_5 }}
           FORCE_APIFY_REFRESH: ${{ inputs.force_housing_apify && '1' || '0' }}
           APIFY_RENT_LIMIT: ${{ inputs.housing_rent_limit }}
           APIFY_BUY_LIMIT: ${{ inputs.housing_buy_limit }}
           APIFY_HOUSING_CITIES: "Mumbai,Thane,Navi Mumbai"
           APISH_KEY: ${{ secrets.APISH_KEY }}
+          APISH_KEY_1: ${{ secrets.APISH_KEY_1 }}
+          APISH_KEY_2: ${{ secrets.APISH_KEY_2 }}
+          APISH_KEY_3: ${{ secrets.APISH_KEY_3 }}
+          APISH_KEY_4: ${{ secrets.APISH_KEY_4 }}
+          APISH_KEY_5: ${{ secrets.APISH_KEY_5 }}
           APISH_MAX_CALLS: ${{ inputs.apish_max_calls }}
           APISH_FULL: "1"
           APISH_RESET_QUEUE: "1"

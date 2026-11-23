@@ -125,7 +125,8 @@ def run():
     a_u, a_s = merge_records_into_societies(socs, apify_recs)
 
     apish_budget = int(os.environ.get("APISH_MAX_CALLS") or "28")
-    apish_recs = sync_apish_99acres(max_calls=apish_budget) if os.environ.get("APISH_KEY") else load_cached_apish_99acres()
+    _has_apish = any(os.environ.get(k) for k in ("APISH_KEY", "APISH_KEY_1", "APISH_KEY_2", "APISH_KEY_3", "APISH_KEY_4", "APISH_KEY_5"))
+    apish_recs = sync_apish_99acres(max_calls=apish_budget) if _has_apish else load_cached_apish_99acres()
     _diy99_p = ROOT / "data/diy_99acres_cache.json"
     if _diy99_p.exists():
         try:

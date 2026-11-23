@@ -10,7 +10,7 @@ _APIFY_EXHAUSTED = set()
 
 def _get_apify_tokens():
     out = []
-    for env_k in ("APIFY_TOKEN_1", "APIFY_TOKEN_2", "APIFY_TOKEN_3", "APIFY_TOKEN"):
+    for env_k in ("APIFY_TOKEN_1", "APIFY_TOKEN_2", "APIFY_TOKEN_3", "APIFY_TOKEN_4", "APIFY_TOKEN_5", "APIFY_TOKEN"):
         val = (os.environ.get(env_k) or "").strip()
         if val and val not in out:
             out.append(val)

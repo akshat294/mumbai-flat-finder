@@ -1,0 +1,86 @@
+name: Vision AI Catch-Up (ONNX SigLIP 2)
+
+on:
+  workflow_dispatch:
+    inputs:
+      scan_limit:
+        description: 'Max new unscanned buildings to process with ONNX SigLIP 2 (default 5000)'
+        required: true
+        default: '5000'
+      max_seconds:
+        description: 'Max scan budget in seconds (1800 = 30 min; already-scanned buildings are skipped)'
+        required: true
+        default: '1800'
+      deploy_live:
+        description: 'Deploy updated vibe scores & shards to bombayhomes.pages.dev'
+        type: boolean
+        required: false
+        default: true
+
+concurrency:
+  group: mumbai-mmr-daily-sync
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  vision-catchup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Python + ONNX dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install -q onnxruntime huggingface_hub tokenizers numpy pillow
+
+      - name: Cache Hugging Face ONNX Model
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: hf-siglip2-onnx-v2
+
+      - name: Run ONNX SigLIP 2 Photo Scan Catch-Up
+        env:
+          PYTHONUNBUFFERED: "1"
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          python -u pipeline/vision_scanner.py --limit ${{ inputs.scan_limit }} --max-seconds ${{ inputs.max_seconds }}
+
+      - name: Re-score Vibes & Rebuild Shards (0 portal API calls)
+        env:
+          PYTHONUNBUFFERED: "1"
+        run: |
+          python -u -c "from pipeline.vision_vibe import score_societies; score_societies()"
+          python -u pipeline/verify_build.py | tee verify_out.txt
+          {
+            echo "## ONNX Vision AI Catch-Up Summary"
+            echo '```'
+            cat verify_out.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Deploy refreshed vibe scores to Cloudflare Pages (bombayhomes)
+        if: ${{ inputs.deploy_live }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx --yes wrangler@latest pages deploy web --project-name=bombayhomes --branch=production --commit-dirty=true
+
+      - name: Save vision_tags_cache & shards to Git
+        run: |
+          git config user.name "mumbai-flat-finder-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add data/vision_tags_cache.json web/public/data/manifest.json web/public/data/shards
+          git diff --staged --quiet || (git commit -m "chore: ONNX SigLIP 2 vision catch-up scan" && (git pull --rebase || (git rebase --abort && git pull --no-rebase -X ours --no-edit)) && git push)

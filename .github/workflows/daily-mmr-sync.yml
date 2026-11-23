@@ -67,7 +67,14 @@ jobs:
           APIFY_TOKEN_1: ${{ secrets.APIFY_TOKEN_1 }}
           APIFY_TOKEN_2: ${{ secrets.APIFY_TOKEN_2 }}
           APIFY_TOKEN_3: ${{ secrets.APIFY_TOKEN_3 }}
+          APIFY_TOKEN_4: ${{ secrets.APIFY_TOKEN_4 }}
+          APIFY_TOKEN_5: ${{ secrets.APIFY_TOKEN_5 }}
           APISH_KEY: ${{ secrets.APISH_KEY }}
+          APISH_KEY_1: ${{ secrets.APISH_KEY_1 }}
+          APISH_KEY_2: ${{ secrets.APISH_KEY_2 }}
+          APISH_KEY_3: ${{ secrets.APISH_KEY_3 }}
+          APISH_KEY_4: ${{ secrets.APISH_KEY_4 }}
+          APISH_KEY_5: ${{ secrets.APISH_KEY_5 }}
           APISH_MAX_CALLS: ${{ inputs.apish_max_calls || '28' }}
         run: |
           python -u pipeline/post_build_v18.py

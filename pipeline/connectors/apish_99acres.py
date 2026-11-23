@@ -16,6 +16,15 @@ API_BASE = "https:" + "//api.api.sh/99acres/v1/search"
 CACHE_PATH = ROOT / "data/apish_99acres_cache.json"
 QUEUE_PATH = ROOT / "data/apish_99acres_queue.json"
 RAW_DIR = ROOT / "data/raw_99acres"
+_APISH_EXHAUSTED = set()
+
+def _get_apish_keys():
+    out = []
+    for env_k in ("APISH_KEY", "APISH_KEY_1", "APISH_KEY_2", "APISH_KEY_3", "APISH_KEY_4", "APISH_KEY_5"):
+        val = (os.environ.get(env_k) or "").strip()
+        if val and val not in out:
+            out.append(val)
+    return out
 
 # 72 Verified 99acres Mumbai MMR Slices (Rent + Buy + Direct-Owner)
 SLICE_SPECS = [
@@ -234,40 +243,52 @@ def normalize_apish_item(item, fallback_mode="rent", fallback_label=""):
         rec["rera_ids"] = rera_ids[:3]
     return rec
 
-def _call_apish_search(params, api_key, timeout=90):
+def _call_apish_search(params, api_key="", timeout=90):
     qs = urllib.parse.urlencode({k: v for k, v in params.items() if v is not None and v != ""})
     url = f"{API_BASE}?{qs}"
-    req = urllib.request.Request(
-        url,
-        headers={
-            "x-api-key": api_key,
-            "Accept": "application/json",
-            "User-Agent": "BombayHomes/v32",
-        },
-    )
-    last_err = ""
-    for attempt in range(2):
-        try:
-            with urllib.request.urlopen(req, timeout=timeout) as r:
-                body = r.read().decode("utf-8", errors="ignore")
-                return r.status, json.loads(body)
-        except urllib.error.HTTPError as he:
-            err_body = ""
+    cands = [k for k in _get_apish_keys() if k not in _APISH_EXHAUSTED]
+    if api_key and api_key not in cands and api_key not in _APISH_EXHAUSTED:
+        cands.insert(0, api_key)
+    if not cands:
+        return 402, {"success": False, "error": "All configured APISH_KEY(_1..5) accounts are exhausted"}
+    last_status, last_payload = 599, {"success": False, "error": "no response"}
+    for key in cands:
+        k_tag = key[:8] + "..."
+        req = urllib.request.Request(
+            url,
+            headers={
+                "x-api-key": key,
+                "Accept": "application/json",
+                "User-Agent": "BombayHomes/v35",
+            },
+        )
+        for attempt in range(2):
             try:
-                err_body = he.read().decode("utf-8", errors="ignore")[:300]
-            except Exception:
-                pass
-            if he.code >= 500 and attempt == 0:
-                time.sleep(2.0)
-                continue
-            return he.code, {"success": False, "error": err_body or str(he)}
-        except Exception as e:
-            last_err = str(e)
-            if attempt == 0:
-                time.sleep(2.0)
-                continue
-            return 599, {"success": False, "error": last_err[:300]}
-    return 599, {"success": False, "error": last_err[:300]}
+                with urllib.request.urlopen(req, timeout=timeout) as r:
+                    body = r.read().decode("utf-8", errors="ignore")
+                    return r.status, json.loads(body)
+            except urllib.error.HTTPError as he:
+                err_body = ""
+                try:
+                    err_body = he.read().decode("utf-8", errors="ignore")[:300]
+                except Exception:
+                    pass
+                if he.code in (401, 402, 429):
+                    _APISH_EXHAUSTED.add(key)
+                    print(f"  [APISH 99 FAILOVER] Key {k_tag} hit HTTP {he.code} -> trying next APISH key...")
+                    last_status, last_payload = he.code, {"success": False, "error": err_body or str(he)}
+                    break
+                if he.code >= 500 and attempt == 0:
+                    time.sleep(2.0)
+                    continue
+                return he.code, {"success": False, "error": err_body or str(he)}
+            except Exception as e:
+                last_status, last_payload = 599, {"success": False, "error": str(e)[:300]}
+                if attempt == 0:
+                    time.sleep(2.0)
+                    continue
+                return last_status, last_payload
+    return last_status, last_payload
 
 def _raw_gz_path(slice_id, page_no):
     return RAW_DIR / f"{slice_id}_p{page_no}.json.gz"
@@ -321,11 +342,13 @@ def reparse_raw_archive():
     return recs
 
 def sync_apish_99acres(max_calls=28, incremental=True, reset_queue=False, fresh=False, skip_recent_days=0):
-    api_key = (os.environ.get("APISH_KEY") or "").strip()
-    if not api_key:
+    keys = _get_apish_keys()
+    if not keys:
         cached = load_cached_apish_99acres()
-        print(f"[APISH 99] APISH_KEY not set; returning {len(cached):,} cached listings (0 calls).")
+        print(f"[APISH 99] No APISH_KEY(_1..5) set; returning {len(cached):,} cached listings (0 calls).")
         return cached
+    api_key = keys[0]
+    print(f"[APISH 99] Loaded {len(keys)} api.sh key(s) in auto-failover pool")
 
     if os.environ.get("APISH_FULL") == "1":
         incremental = False
