@@ -12,7 +12,7 @@ from pipeline.index_io import load_index, save_sharded_index
 from pipeline.quality_filter import filter_and_track_societies, REGISTRY_PATH
 from pipeline.mumbai_transit import enrich_transit_context
 
-API_BASE = "[https://api.api.sh/99acres/v1/search](https://api.api.sh/99acres/v1/search)"
+API_BASE = "https:" + "//api.api.sh/99acres/v1/search"
 CACHE_PATH = ROOT / "data/apish_99acres_cache.json"
 QUEUE_PATH = ROOT / "data/apish_99acres_queue.json"
 RAW_DIR = ROOT / "data/raw_99acres"
@@ -246,17 +246,29 @@ def _call_apish_search(params, api_key, timeout=90):
             "User-Agent": "BombayHomes/v31",
         },
     )
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as r:
-            body = r.read().decode("utf-8", errors="ignore")
-            return r.status, json.loads(body)
-    except urllib.error.HTTPError as he:
-        err_body = ""
+    last_err = ""
+    for attempt in range(2):
         try:
-            err_body = he.read().decode("utf-8", errors="ignore")[:300]
-        except Exception:
-            pass
-        return he.code, {"success": False, "error": err_body or str(he)}
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                body = r.read().decode("utf-8", errors="ignore")
+                return r.status, json.loads(body)
+        except urllib.error.HTTPError as he:
+            err_body = ""
+            try:
+                err_body = he.read().decode("utf-8", errors="ignore")[:300]
+            except Exception:
+                pass
+            if he.code >= 500 and attempt == 0:
+                time.sleep(2.0)
+                continue
+            return he.code, {"success": False, "error": err_body or str(he)}
+        except Exception as e:
+            last_err = str(e)
+            if attempt == 0:
+                time.sleep(2.0)
+                continue
+            return 599, {"success": False, "error": last_err[:300]}
+    return 599, {"success": False, "error": last_err[:300]}
 
 def _save_raw_gz(slice_id, page_no, payload):
     RAW_DIR.mkdir(parents=True, exist_ok=True)
