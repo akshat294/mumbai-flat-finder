@@ -1,4 +1,6 @@
 from __future__ import annotations
+import sys; from pathlib import Path as _P; sys.path.insert(0, str(_P(__file__).resolve().parent.parent))
+from pipeline.index_io import load_index
 import argparse, hashlib, io, json, os, time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
@@ -127,11 +129,11 @@ def _get_pooler(sess, outs: List[np.ndarray]) -> np.ndarray:
     return np.asarray(outs[-1], dtype=np.float32)
 
 def scan_photos(limit: int = 800, batch_size: int = 16, max_workers: int = 16, max_seconds: float = 240.0) -> Dict[str, Any]:
-    if not INDEX_PATH.exists():
+    if False:
         print(f"[vision-onnx] Missing {INDEX_PATH}, skipping.", flush=True)
         return {"scanned": 0}
 
-    socs = json.loads(INDEX_PATH.read_text(encoding="utf-8")).get("societies") or []
+    socs = load_index().get("societies") or []
     cache = load_cache()
 
     todo: List[Tuple[str, str, str]] = []

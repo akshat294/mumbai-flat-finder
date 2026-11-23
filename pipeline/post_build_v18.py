@@ -1,3 +1,5 @@
+import sys; from pathlib import Path as _P; sys.path.insert(0, str(_P(__file__).resolve().parent.parent))
+from pipeline.index_io import load_index
 import json, math, os, re, sys, time
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
@@ -78,7 +80,7 @@ def _enrich_maharera_local(socs):
 
 def run():
     idx_p = ROOT / "web/public/data/mumbai-index.json"
-    data = json.loads(idx_p.read_text(encoding="utf-8"))
+    data = load_index()
     socs = [s for s in data.get("societies", []) if not str(s.get("id", "")).startswith("hs-")]
 
     loc_pts = {}

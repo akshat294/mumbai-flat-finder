@@ -1,4 +1,5 @@
 from __future__ import annotations
+from pipeline.index_io import load_index, save_sharded_index
 import csv, json, re
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
@@ -134,9 +135,9 @@ def _merge_duplicates(compiled: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
 
 def _merge_with_previous_index(compiled: List[Dict[str, Any]], vision_cache: Dict[str, Any], prev_path: Path, hist_path: Path = Path("data/price_history.json"), max_days: int = 28) -> List[Dict[str, Any]]:
     import time as _t
-    if not prev_path.exists(): return compiled
-    try: prev_socs = json.loads(prev_path.read_text(encoding="utf-8")).get("societies") or []
+    try: prev_socs = load_index().get('societies') or []
     except Exception: return compiled
+    if not prev_socs: return compiled
     hist = {}
     if hist_path.exists():
         try: hist = json.loads(hist_path.read_text(encoding="utf-8"))
@@ -290,17 +291,28 @@ def build_mumbai(db_path: str | Path = "pipeline/staging/mumbai_raw.db", max_goo
     with_photos = sum(1 for s in compiled if s.get("thumb"))
 
     out = Path("web/public/data"); out.mkdir(parents=True, exist_ok=True)
-    (out / "mumbai-index.json").write_text(json.dumps({"city":"Mumbai MMR","generated_at":now_ist,"count":len(compiled),"societies":compiled}, ensure_ascii=False, separators=(",",":")), encoding="utf-8")
+    save_sharded_index({"city":"Mumbai MMR","generated_at":now_ist,"count":len(compiled),"societies":compiled})
     with (out / "mumbai-societies.csv").open("w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
         w.writerow(["id","name","zone","locality","bhks","carpet_sqft","rent_inr","buy_inr","exact_pin","zero_brok","google","metro","walk_min","flood","features","sources"])
+        def _ftags(soc):
+            f = soc.get("features")
+            if isinstance(f, dict): return f.get("tags") or []
+            return f if isinstance(f, list) else []
         for s in compiled:
-            w.writerow([s["id"],s["name"],s["zone"],s["locality"],"/".join("1 RK" if b==0 else f"{b} BHK" for b in s["bhks"]),s.get("rera_carpet_sqft") or "",(s["units_rent"][0]["p"] if s["units_rent"] else ""),(s["units_buy"][0]["p"] if s["units_buy"] else ""),not s.get("coords_approx"),s["pricing"]["has_zero_brokerage"],(s.get("google") or {}).get("rating",""),(s.get("mumbai_context")["nearest_metro"] or {}).get("name",""),(s.get("mumbai_context")["nearest_metro"] or {}).get("walk_min",""),s.get("mumbai_context")["monsoon_flood_risk"],",".join(s.get("features")["tags"]),",".join(sorted(s["sources"].keys()))])
+            ur = s.get("units_rent") or []
+            ub = s.get("units_buy") or []
+            pr = s.get("pricing") or {}
+            mc = s.get("mumbai_context") or {}
+            nm = mc.get("nearest_metro") or {}
+            srcs = s.get("sources") or {}
+            src_keys = sorted(srcs.keys()) if isinstance(srcs, dict) else (list(srcs) if isinstance(srcs, list) else [])
+            w.writerow([s.get("id",""),s.get("name",""),s.get("zone",""),s.get("locality",""),"/".join("1 RK" if b==0 else f"{b} BHK" for b in (s.get("bhks") or [])),s.get("rera_carpet_sqft") or "",(ur[0]["p"] if ur else ""),(ub[0]["p"] if ub else ""),not s.get("coords_approx"),bool(pr.get("has_zero_brokerage")),((s.get("google") or {}).get("rating","")),nm.get("name",""),nm.get("walk_min",""),mc.get("monsoon_flood_risk",""),",".join(_ftags(s)),",".join(src_keys)])
     return {
         "compiled": len(compiled), "exact_pins": exact_hits, "with_photos": with_photos,
         "great_value_deals": great, "price_drops": drops,
-        "balcony_hits": sum(1 for s in compiled if "balcony" in s.get("features")["tags"]),
-        "terrace_garden_hits": sum(1 for s in compiled if set(s.get("features")["tags"]) & {"terrace","garden"}),
-        "sea_view_hits": sum(1 for s in compiled if "sea_view" in s.get("features")["tags"]),
+        "balcony_hits": sum(1 for s in compiled if "balcony" in _ftags(s)),
+        "terrace_garden_hits": sum(1 for s in compiled if set(_ftags(s)) & {"terrace","garden"}),
+        "sea_view_hits": sum(1 for s in compiled if "sea_view" in _ftags(s)),
         "updated_at": now_ist,
     }

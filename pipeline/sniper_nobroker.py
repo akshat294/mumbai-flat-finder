@@ -1,3 +1,5 @@
+import sys; from pathlib import Path as _P; sys.path.insert(0, str(_P(__file__).resolve().parent.parent))
+from pipeline.index_io import load_index
 import base64, json, os, sys, urllib.request, urllib.parse
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone, timedelta
@@ -64,7 +66,7 @@ def _send_telegram(msg):
 
 def run_sniper():
     idx_p = ROOT / "web/public/data/mumbai-index.json"
-    data = json.loads(idx_p.read_text(encoding="utf-8"))
+    data = load_index()
     socs = data.get("societies", [])
     existing_urls = {u.get("u") for s in socs for u in (s.get("units_rent") or []) if u.get("u")}
 

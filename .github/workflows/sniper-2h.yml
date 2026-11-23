@@ -44,11 +44,11 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
-          if ! git diff --quiet web/public/data/mumbai-index.json; then
+          if ! git diff --quiet web/public/data/manifest.json web/public/data/shards; then
             npx --yes wrangler@latest pages deploy web --project-name=bombayhomes --branch=production --commit-dirty=true
             git config user.name "mumbai-flat-finder-bot"
             git config user.email "bot@users.noreply.github.com"
-            git add web/public/data/mumbai-index.json
+            git add web/public/data/manifest.json web/public/data/shards data/listing_registry.json
             git commit -m "chore: 2h zero-brokerage sniper update"
             git pull --rebase && git push
           else

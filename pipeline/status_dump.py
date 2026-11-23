@@ -1,3 +1,5 @@
+import sys; from pathlib import Path as _P; sys.path.insert(0, str(_P(__file__).resolve().parent.parent))
+from pipeline.index_io import load_index
 import json, os, urllib.request, urllib.parse
 from collections import Counter
 from datetime import datetime, timezone, timedelta
@@ -49,7 +51,7 @@ log(wf_p.read_text(encoding="utf-8").strip() if wf_p.exists() else "  NOT FOUND"
 
 # 3. LIVE INVENTORY SUMMARY
 log("\n[3] LIVE INVENTORY SUMMARY")
-d = json.loads((ROOT / "web/public/data/mumbai-index.json").read_text(encoding="utf-8"))
+d = load_index()
 socs = d.get("societies", [])
 rent_socs = [s for s in socs if s.get("units_rent")]
 buy_socs = [s for s in socs if s.get("units_buy")]

@@ -840,7 +840,7 @@
   }
 
   $("modeRent").onclick = () => { st.mode = "rent"; $("modeRent").classList.add("active"); $("modeBuy").classList.remove("active"); resetPriceScale(); renderAll(); };
-  $("modeBuy").onclick = () => { st.mode = "buy"; $("modeBuy").classList.add("active"); $("modeRent").classList.remove("active"); resetPriceScale(); renderAll(); };
+  $("modeBuy").onclick = () => { st.mode = "buy"; $("modeBuy").classList.add("active"); $("modeRent").classList.remove("active"); resetPriceScale(); renderAll(); ensureBuyShardsLoaded(); };
   $("themeBtn").onclick = () => applyTheme(st.theme === "dark" ? "light" : "dark");
   $("openFilterBtn").onclick = openFilters; $("closeFilterBtn").onclick = closeFilters; $("filterBackdrop").onclick = closeFilters; $("applyFiltersBtn").onclick = closeFilters;
   $("clearFiltersBtn").onclick = resetAll; $("resetMiniBtn").onclick = resetAll;
@@ -1012,10 +1012,59 @@
   };
 
   loadDirectListings();
-  fetch("./public/data/mumbai-index.json", { cache: "no-store" })
-    .then(r => { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+  let _bhManifest = null, _bhBuyLoaded = false, _bhBuyPromise = null;
+  function _mergeShardSocieties(existing, incoming) {
+    const mapById = new Map(existing.map(s => [s.id, s]));
+    for (const s of incoming) {
+      const prev = mapById.get(s.id);
+      if (!prev) {
+        mapById.set(s.id, s);
+      } else {
+        if (s.units_buy && s.units_buy.length) prev.units_buy = s.units_buy;
+        if (s.units_rent && s.units_rent.length) prev.units_rent = s.units_rent;
+        if (s.pricing) prev.pricing = Object.assign({}, prev.pricing || {}, s.pricing);
+        if (s.sources_buy) prev.sources_buy = s.sources_buy;
+        if (s.sources_rent) prev.sources_rent = s.sources_rent;
+      }
+    }
+    return [...mapById.values()];
+  }
+  async function _loadShardList(relPaths) {
+    const parts = await Promise.all(
+      (relPaths || []).map(rel =>
+        fetch("./public/data/" + rel, { cache: "default" }).then(r => {
+          if (!r.ok) throw new Error("Shard HTTP " + r.status);
+          return r.json();
+        })
+      )
+    );
+    const out = [];
+    for (const arr of parts) if (Array.isArray(arr)) out.push(...arr);
+    return out;
+  }
+  async function ensureBuyShardsLoaded() {
+    if (_bhBuyLoaded || !_bhManifest) return;
+    if (!_bhBuyPromise) {
+      _bhBuyPromise = _loadShardList(_bhManifest.buy_shards).then(buyRows => {
+        baseSocieties = _mergeShardSocieties(baseSocieties, buyRows);
+        _bhBuyLoaded = true;
+        rebuildSocietyList(); populateLocalities(); populateSources(); renderAll();
+      }).catch(err => { console.error("Buy shard load failed:", err); _bhBuyPromise = null; });
+    }
+    return _bhBuyPromise;
+  }
+  window.__bhEnsureBuy = ensureBuyShardsLoaded;
+
+  fetch("./public/data/manifest.json", { cache: "no-store" })
+    .then(r => { if (!r.ok) throw new Error("Manifest HTTP " + r.status); return r.json(); })
+    .then(async man => {
+      _bhManifest = man;
+      const rentRows = await _loadShardList(man.rent_shards);
+      return { societies: rentRows, generated_at: man.generated_at, count: man.count };
+    })
     .then(d => {
       baseSocieties = d.societies || []; rebuildSocietyList(); populateLocalities(); populateSources();
+      if (st.mode === "buy") ensureBuyShardsLoaded();
       $("freshBadge").textContent = `${baseSocieties.length.toLocaleString("en-IN")} homes · ${d.generated_at}`;
       renderAll();
       const params = new URLSearchParams(location.search);

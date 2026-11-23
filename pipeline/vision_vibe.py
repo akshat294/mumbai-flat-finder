@@ -1,3 +1,5 @@
+import sys; from pathlib import Path as _P; sys.path.insert(0, str(_P(__file__).resolve().parent.parent))
+from pipeline.index_io import load_index
 import argparse, json, re, sys
 from pathlib import Path
 
@@ -22,7 +24,7 @@ def _load_json(p, default):
 
 def score_societies(run_onnx=False, onnx_limit=200):
     idx_p = ROOT / "web/public/data/mumbai-index.json"
-    data = json.loads(idx_p.read_text(encoding="utf-8"))
+    data = load_index()
     socs = data.get("societies", [])
 
     vtags = _load_json(VISION_CACHE, {})

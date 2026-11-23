@@ -76,5 +76,5 @@ jobs:
         run: |
           git config user.name "mumbai-flat-finder-bot"
           git config user.email "bot@users.noreply.github.com"
-          git add data/google_places_cache.json data/osm_geo_cache.json data/osm_civic_cache.json data/mumbai_osm_buildings.json data/vision_tags_cache.json data/price_history.json data/apify_cache.json data/maharera_cache.json data/seen_timestamps.json web/public/data/mumbai-index.json web/public/data/mumbai-societies.csv
+          git add data/google_places_cache.json data/osm_geo_cache.json data/osm_civic_cache.json data/mumbai_osm_buildings.json data/vision_tags_cache.json data/price_history.json data/apify_cache.json data/maharera_cache.json data/seen_timestamps.json web/public/data/manifest.json web/public/data/shards data/listing_registry.json web/public/data/mumbai-societies.csv
           git diff --staged --quiet || (git commit -m "chore: daily Mumbai MMR sync" && git pull --rebase && git push)

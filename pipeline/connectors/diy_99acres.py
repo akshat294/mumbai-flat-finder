@@ -1,3 +1,5 @@
+import sys; from pathlib import Path as _P; sys.path.insert(0, str(_P(__file__).resolve().parent.parent.parent))
+from pipeline.index_io import load_index
 import argparse, json, re, sys, time
 from pathlib import Path
 
@@ -151,7 +153,7 @@ def scrape_99acres_diy(modes=("rent",), max_hubs=14, pages_per_hub=2, merge_now=
         DIY_CACHE.write_text(json.dumps({"updated": int(time.time()), "records": list(by_u.values())}, separators=(",", ":"), ensure_ascii=False), encoding="utf-8")
         if merge_now:
             idx_p = ROOT / "web/public/data/mumbai-index.json"
-            data = json.loads(idx_p.read_text(encoding="utf-8"))
+            data = load_index()
             socs = data.get("societies", [])
             au, asoc = merge_records_into_societies(socs, list(by_u.values()))
             data["societies"] = socs
