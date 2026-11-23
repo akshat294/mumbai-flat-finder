@@ -4,18 +4,26 @@ on:
   workflow_dispatch:
     inputs:
       apish_max_calls:
-        description: '99acres api.sh pages to harvest (330 = ALL 73 MMR Rent+Buy+Owner slices; ~8,500+ raw flats)'
+        description: 'NEW 99acres api.sh pages to harvest (300 = ~7,500+ NEW flats; already-saved pages are skipped free!)'
         required: true
-        default: '330'
+        default: '300'
       core_limit:
         description: 'Max listings per hub for core DIY portals (MagicBricks, NoBroker, SquareYards, Makaan)'
         required: true
         default: '220'
       force_housing_apify:
-        description: 'Force a brand-new Apify Housing.com sweep (otherwise reuses 3,207 cached Housing records)'
+        description: 'Run a fresh high-volume Housing.com Apify sweep (Mumbai + Thane + Navi Mumbai)'
         type: boolean
         required: false
-        default: false
+        default: true
+      housing_rent_limit:
+        description: 'Housing.com Apify max Rent results for Mumbai (Thane & Navi Mumbai get half each)'
+        required: true
+        default: '1000'
+      housing_buy_limit:
+        description: 'Housing.com Apify max Buy results for Mumbai (Thane & Navi Mumbai get half each)'
+        required: true
+        default: '500'
       deploy_live:
         description: 'Deploy harvested inventory to bombayhomes.pages.dev after summary'
         type: boolean
@@ -65,17 +73,21 @@ jobs:
       - name: Optionally expire Apify Housing cache timestamp if force_housing_apify=true
         if: ${{ inputs.force_housing_apify }}
         run: |
-          python -c "import json; from pathlib import Path; p=Path('data/apify_cache.json'); d=json.loads(p.read_text(encoding='utf-8-sig')) if p.exists() else {}; d['updated']=0; d['ts']=0; p.write_text(json.dumps(d), encoding='utf-8'); print('[harvest] Marked Apify Housing cache for fresh pull')"
+          python -c "import json; from pathlib import Path; p=Path('data/apify_cache.json'); d=json.loads(p.read_text(encoding='utf-8-sig')) if p.exists() else {}; d['last_sync']=0; p.write_text(json.dumps(d), encoding='utf-8'); print('[harvest] Marked Apify Housing cache for fresh pull')"
 
-      - name: Full Harvest Merge (NoBroker 44-Hubs + Housing Apify + 99acres api.sh Full MMR + MahaRERA + Quality Filter + Shards)
+      - name: Full Harvest Merge (NoBroker 44-Hubs + Housing Apify MMR + 99acres api.sh Verified 72 Slices + MahaRERA + Quality Filter + Shards)
         env:
           PYTHONUNBUFFERED: "1"
           APIFY_TOKEN: ${{ secrets.APIFY_TOKEN }}
           FORCE_APIFY_REFRESH: ${{ inputs.force_housing_apify && '1' || '0' }}
+          APIFY_RENT_LIMIT: ${{ inputs.housing_rent_limit }}
+          APIFY_BUY_LIMIT: ${{ inputs.housing_buy_limit }}
+          APIFY_HOUSING_CITIES: "Mumbai,Thane,Navi Mumbai"
           APISH_KEY: ${{ secrets.APISH_KEY }}
           APISH_MAX_CALLS: ${{ inputs.apish_max_calls }}
           APISH_FULL: "1"
           APISH_RESET_QUEUE: "1"
+          APISH_SKIP_RECENT_DAYS: "3"
         run: |
           python -u pipeline/post_build_v18.py
 

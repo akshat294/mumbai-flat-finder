@@ -31,7 +31,7 @@ def _call_apify_actor(actor_id, payload, token, timeout=600):
         st_data = _api_get(f"https://api.apify.com/v2/actor-runs/{rid}?token={urllib.parse.quote(token)}", timeout=30).get("data") or {}
         status = st_data.get("status")
         if status == "SUCCEEDED":
-            items = _api_get(f"https://api.apify.com/v2/datasets/{ds_id}/items?token={urllib.parse.quote(token)}&clean=true&limit=2500", timeout=90)
+            items = _api_get(f"https://api.apify.com/v2/datasets/{ds_id}/items?token={urllib.parse.quote(token)}&clean=true&limit=5000", timeout=90)
             try:
                 import gzip as _gz
                 _rdir = ROOT / "data/raw_housing"
@@ -231,7 +231,7 @@ def recover_recent_runs():
         if not ds_id:
             continue
         try:
-            items = _api_get(f"https://api.apify.com/v2/datasets/{ds_id}/items?token={urllib.parse.quote(token)}&clean=true&limit=2500")
+            items = _api_get(f"https://api.apify.com/v2/datasets/{ds_id}/items?token={urllib.parse.quote(token)}&clean=true&limit=5000")
         except Exception as e:
             print(f"    Run {rid} read error: {e}")
             continue
@@ -262,29 +262,38 @@ def sync_apify(rent_limit=250, buy_limit=125, sources=("housing", "99acres"), fo
     if CACHE_PATH.exists():
         try: last_ts = json.loads(CACHE_PATH.read_text(encoding="utf-8")).get("last_sync", 0)
         except Exception: pass
+    if os.environ.get("FORCE_APIFY_REFRESH") == "1":
+        force = True
+    if os.environ.get("APIFY_RENT_LIMIT"):
+        rent_limit = int(os.environ["APIFY_RENT_LIMIT"])
+    if os.environ.get("APIFY_BUY_LIMIT"):
+        buy_limit = int(os.environ["APIFY_BUY_LIMIT"])
     if not force and existing and (time.time() - last_ts) < 6 * 86400:
         print(f"  [apify] Cache fresh (<6d) -> reusing {len(existing)} records")
         return existing
 
     fresh = []
     if "housing" in sources:
-        for mode, lim in (("rent", rent_limit), ("buy", buy_limit)):
-            if lim <= 0: continue
-            try:
-                rows = _call_apify_actor(
-                    "themineworks~housing-com-scraper",
-                    {"city": "Mumbai", "listingType": mode, "maxResults": lim, "proxyConfiguration": {"useApifyProxy": True}},
-                    token,
-                )
-                n_ok = 0
-                for r in (rows or []):
-                    rec = _norm_any_item(r, source_hint="housing", mode_hint=mode)
-                    if rec:
-                        fresh.append(rec)
-                        n_ok += 1
-                print(f"  [apify] Housing.com ({mode}): kept {n_ok}/{len(rows or [])} clean Mumbai listings")
-            except Exception as e:
-                print(f"  [apify] Housing.com ({mode}) error: {e}")
+        h_cities = [c.strip() for c in (os.environ.get("APIFY_HOUSING_CITIES") or "Mumbai").split(",") if c.strip()]
+        for h_city in h_cities:
+            city_div = 1 if h_city.lower() == "mumbai" else 2
+            for mode, lim in (("rent", rent_limit // city_div), ("buy", buy_limit // city_div)):
+                if lim <= 0: continue
+                try:
+                    rows = _call_apify_actor(
+                        "themineworks~housing-com-scraper",
+                        {"city": h_city, "listingType": mode, "maxResults": lim, "proxyConfiguration": {"useApifyProxy": True}},
+                        token,
+                    )
+                    n_ok = 0
+                    for r in (rows or []):
+                        rec = _norm_any_item(r, source_hint="housing", mode_hint=mode)
+                        if rec:
+                            fresh.append(rec)
+                            n_ok += 1
+                    print(f"  [apify] Housing.com {h_city} ({mode}, lim={lim}): kept {n_ok}/{len(rows or [])} clean listings")
+                except Exception as e:
+                    print(f"  [apify] Housing.com {h_city} ({mode}) error: {e}")
 
     if "99acres" in sources:
         for mode, lim in (("rent", rent_limit), ("buy", buy_limit)):

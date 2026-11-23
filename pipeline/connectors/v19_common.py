@@ -98,6 +98,20 @@ MUMBAI_LOCS = [
     ("Ghansoli", "Navi Mumbai", 19.1240, 73.0010),
     ("Turbhe", "Navi Mumbai", 19.0760, 73.0180),
     ("Panvel", "Navi Mumbai", 18.9894, 73.1175),
+    ("Mahalaxmi", "South Bombay", 18.9827, 72.8189),
+    ("Antop Hill", "South Bombay", 19.0265, 72.8665),
+    ("Dharavi", "South Bombay", 19.0438, 72.8534),
+    ("Mohamed Ali Road", "South Bombay", 18.9582, 72.8336),
+    ("Vidyavihar", "Powai-Central", 19.0796, 72.8975),
+    ("Nehru Nagar", "Powai-Central", 19.0645, 72.8825),
+    ("Bhandup East", "Powai-Central", 19.1462, 72.9420),
+    ("Karanjade", "Navi Mumbai", 18.9815, 73.1065),
+    ("Pushpak Nagar", "Navi Mumbai", 18.9830, 73.0810),
+    ("Dronagiri", "Navi Mumbai", 18.8860, 72.9460),
+    ("Shilphata", "Thane", 19.1480, 73.0460),
+    ("Balkum", "Thane", 19.2225, 72.9945),
+    ("Kasarvadavali", "Thane", 19.2665, 72.9665),
+    ("Manpada", "Thane", 19.2285, 72.9745),
 ]
 
 LOC_MAP = {name.lower(): (name, zone, lat, lng) for name, zone, lat, lng in MUMBAI_LOCS}
