@@ -1,0 +1,2 @@
+[v25.1] Removed ZoloStays from pipeline/connectors/native_boost.py
+[v25.1] Purged 17 ZoloStays units & 13 empty buildings | Remaining: 10,735 buildings | Index: 22.39 MiB

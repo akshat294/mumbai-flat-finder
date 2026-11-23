@@ -195,6 +195,13 @@ def clean_soc_name(name, locality=""):
     raw = re.sub(r"\bfor\s+(?:rent|sale)\s+in\b.*$", "", raw, flags=re.I).strip(" -|,")
     return raw[:72] if raw else f"{locality} Flat"
 
+def is_generic_name(name, locality):
+    nl = re.sub(r"\s+", " ", str(name or "")).strip().lower()
+    ll = re.sub(r"\s+", " ", str(locality or "")).strip().lower()
+    if not nl or nl == ll: return True
+    if re.match(r"^(?:\d(?:\.5)?\s*[-]?\s*bhk|1\s*rk|studio)\b", nl): return True
+    return any(nl.startswith(p) for p in ("shared room", "direct flat", "nextflat ", "flat in ", "apartment in "))
+
 def norm_key(name, locality):
     n = re.sub(r"[^a-z0-9]+", "", (name or "").lower())
     l = re.sub(r"[^a-z0-9]+", "", (locality or "").lower())
@@ -300,7 +307,7 @@ def merge_records_into_societies(socs, records):
 
         list_k = "units_buy" if mode == "buy" else "units_rent"
         src_list_k = "sources_buy" if mode == "buy" else "sources_rent"
-        key = norm_key(name, loc)
+        key = f"solo::{abs(hash(u_url))}" if is_generic_name(name, loc) else norm_key(name, loc)
         if key in soc_by_key:
             s = soc_by_key[key]
             s.setdefault(list_k, []).append(unit)

@@ -172,7 +172,8 @@
         const url = card.dataset.url || "";
         const soc = socById.get(sid);
         const body = card.querySelector(".fc-body") || card;
-        const metaRow = card.querySelector(".fc-price, .fc-top") || body;
+        let metaRow = card.querySelector(".bh-badge-row");
+        if (!metaRow) { metaRow = document.createElement("div"); metaRow.className = "bh-badge-row"; const anchor = card.querySelector(".fc-price, .fc-top"); if (anchor) anchor.insertAdjacentElement("afterend", metaRow); else body.appendChild(metaRow); }
 
         const cnt = card.querySelector(".fc-cnt");
         if (cnt && /^\s*1\s*\/\s*(?:\+|1)\s*$/.test(cnt.textContent || "")) cnt.dataset.single = "1";
@@ -493,14 +494,25 @@
       ["Thane West",19.2183,72.9781],["Vashi",19.0771,72.9986],["Nerul",19.0330,73.0297],
       ["Kharghar",19.0473,73.0699],["Airoli",19.1590,72.9986]
     ];
-    const lblLayer = L.layerGroup();
+    const MAJOR_NAMES = new Set(["Colaba", "Worli", "Dadar", "Bandra West", "Andheri West", "Powai", "Goregaon West", "Borivali", "Thane West", "Vashi"]);
+    const majorLbls = L.layerGroup();
+    const detailLbls = L.layerGroup();
     AREA_LABELS.forEach(([name, lat, lng]) => {
-      L.marker([lat, lng], {
+      const mk = L.marker([lat, lng], {
         pane: "bhAreaPane", interactive: false,
         icon: L.divIcon({ className: "", html: '<div class="bh-area-lbl">' + escHtml(name) + '</div>', iconSize: [0, 0] })
-      }).addTo(lblLayer);
+      });
+      if (MAJOR_NAMES.has(name)) mk.addTo(majorLbls);
+      else mk.addTo(detailLbls);
     });
-    lblLayer.addTo(m);
+    const syncZoomLabels = () => {
+      const z = m.getZoom ? m.getZoom() : 11;
+      if (!m.hasLayer(majorLbls)) majorLbls.addTo(m);
+      if (z >= 12 && !m.hasLayer(detailLbls)) detailLbls.addTo(m);
+      else if (z < 12 && m.hasLayer(detailLbls)) m.removeLayer(detailLbls);
+    };
+    m.on("zoomend", syncZoomLabels);
+    syncZoomLabels();
 
     const METRO_LINES = [
       { color: "#38bdf8", pts: [[19.1314,72.8213],[19.1243,72.8315],[19.1197,72.8464],[19.1155,72.8562],[19.1103,72.8750],[19.1079,72.8834],[19.1045,72.8886],[19.0868,72.9082]] },
@@ -584,7 +596,8 @@
       const isRender = !!soc.vr;
       card.style.display = (brightOnly && (vs < 74 || isRender)) ? "none" : "";
 
-      const metaRow = card.querySelector(".fc-price, .fc-top") || card.querySelector(".fc-body") || card;
+      let metaRow = card.querySelector(".bh-badge-row");
+      if (!metaRow) { metaRow = document.createElement("div"); metaRow.className = "bh-badge-row"; const anchor = card.querySelector(".fc-price, .fc-top"); if (anchor) anchor.insertAdjacentElement("afterend", metaRow); else (card.querySelector(".fc-body") || card).appendChild(metaRow); }
       if (vs >= 78 && !isRender && !card.querySelector(".bh-vibe-badge")) {
         const vb = document.createElement("span");
         vb.className = "bh-vibe-badge";

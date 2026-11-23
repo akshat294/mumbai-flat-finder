@@ -443,7 +443,6 @@ def fetch_playwright_coliving():
         ("nextflat", "https://nextflat.in/flatmates/flatmates-in-mumbai", "shared", True),
         ("nextflat", "https://nextflat.in/flats/flats-for-rent-in-mumbai", "owner", True),
         ("nestaway", "https://www.nestaway.com/mumbai", "shared", True),
-        ("stanza", "https://www.stanzaliving.com/mumbai", "shared", True),
     ]
     eval_js = (
         "() => {"
@@ -560,8 +559,6 @@ def run_native_boost():
         ("makaan_rent_cffi", fetch_makaan_rent_cffi),
         ("squareyards_20hubs_rent", fetch_squareyards_rent),
         ("flatmate_in", fetch_flatmate_in),
-        ("stanza_zolo_ssr", fetch_stanza_zolo_ssr),
-        ("dwelo", fetch_dwelo_clean),
         ("playwright_coliving", fetch_playwright_coliving),
     ):
         try:

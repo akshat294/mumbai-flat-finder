@@ -39,7 +39,7 @@ jobs:
           GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLEPLACESAPI }}
           PROXY_URL: ${{ secrets.PROXY_URL }}
         run: |
-          python -u run_pipeline.py --all-mmr --sources magicbricks,nobroker,squareyards,commonfloor,makaan,nobrokerage,community --limit 90 --fresh-hours 1 --max-google-calls 25
+          python -u run_pipeline.py --all-mmr --sources magicbricks,nobroker,squareyards,makaan,nobrokerage,community --limit 90 --fresh-hours 1 --max-google-calls 25
 
       - name: Cache Hugging Face ONNX Model
         uses: actions/cache@v4

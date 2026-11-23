@@ -8,6 +8,7 @@ from pipeline.connectors.v19_common import haversine_km, clean_soc_name, merge_r
 from pipeline.connectors.native_boost import run_native_boost, backfill_nobroker_photos
 from pipeline.connectors.apify_portals import sync_apify, load_cached_apify
 from pipeline.compact_index import save_compacted_index
+from pipeline.mumbai_transit import enrich_transit_context
 from pipeline.connectors.maharera_enricher import enrich_societies as enrich_maharera
 
 SEEN_PATH = ROOT / "data/seen_timestamps.json"
@@ -161,6 +162,7 @@ def run():
     data["generated_ts"] = int(now_ist.timestamp())
     data["count"] = len(socs)
     data["societies"] = socs
+    enrich_transit_context(socs)
     save_compacted_index(idx_p, data)
     try:
         from pipeline.vision_vibe import score_societies

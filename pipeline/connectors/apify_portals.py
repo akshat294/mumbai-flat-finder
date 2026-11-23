@@ -65,6 +65,7 @@ def _find_first_url(obj):
 def _find_imgs(obj):
     out = []
     def _add(u):
+        if isinstance(u, str) and "housingcdn.com" in u and "/version/" in u: u = u.replace("/version/", "/fs/")
         if isinstance(u, str) and u.startswith("http") and "logo" not in u.lower() and u not in out:
             out.append(u)
     for k in ("coverImage", "cover_image", "mainImage", "main_image", "imageUrl", "image_url", "photo_url", "thumbnail", "thumbnail_url", "image", "photo"):

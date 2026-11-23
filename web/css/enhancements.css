@@ -11,12 +11,12 @@ button[data-act="save"], [aria-label*="Save" i].fc-act {
 }
 .bh-head-acts { display: flex; align-items: center; gap: 6px; margin-left: auto; flex-shrink: 0; }
 .bh-sort, .bh-share-btn {
-  height: 28px; border-radius: 8px; border: 1px solid var(--border, rgba(128, 128, 128, 0.25));
-  background: var(--surface, #fff); color: var(--text, #18181b); font-size: 12px; cursor: pointer;
+  height: 28px; border-radius: 8px; border: 1px solid var(--line, rgba(128, 128, 128, 0.25));
+  background: var(--card, #fff); color: var(--txt, #18181b); font-size: 12px; cursor: pointer;
 }
 .bh-sort { padding: 0 8px; font-weight: 500; }
 .bh-share-btn { padding: 0 10px; font-weight: 600; }
-.bh-share-btn:hover { background: var(--surface-2, rgba(128, 128, 128, 0.12)); }
+.bh-share-btn:hover { background: var(--hover, rgba(128, 128, 128, 0.12)); }
 
 .fc-cnt[data-single="1"] { display: none; }
 .bh-more-pill {
@@ -33,7 +33,7 @@ button[data-act="save"], [aria-label*="Save" i].fc-act {
 }
 .bh-fresh.new { background: rgba(22, 163, 74, 0.14); color: #15803d; }
 [data-theme="dark"] .bh-fresh.new { color: #4ade80; }
-.bh-fresh.act { background: rgba(128, 128, 128, 0.13); color: var(--muted, #666); }
+.bh-fresh.act { background: rgba(128, 128, 128, 0.13); color: var(--mut, #666); }
 
 .bh-rera-chip {
   display: inline-flex; align-items: center; padding: 2px 7px; border-radius: 999px;
@@ -89,7 +89,7 @@ button[data-act="save"], [aria-label*="Save" i].fc-act {
 
 .bh-flag-bar {
   margin: 14px 0 6px; padding: 10px 12px; border-radius: 10px;
-  border: 1px solid var(--border, rgba(128, 128, 128, 0.22));
+  border: 1px solid var(--line, rgba(128, 128, 128, 0.22));
   display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; font-size: 12px;
 }
 .bh-flag-btns { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -106,8 +106,8 @@ button[data-act="save"], [aria-label*="Save" i].fc-act {
 .v17-wa-box label { font-size: 11px; font-weight: 700; color: #15803d; }
 [data-theme="dark"] .v17-wa-box label { color: #4ade80; }
 .v17-wa-box textarea {
-  width: 100%; border-radius: 8px; border: 1px solid var(--border, rgba(128, 128, 128, 0.25));
-  padding: 7px 9px; font-size: 12px; background: var(--surface, #fff); color: var(--text, #18181b);
+  width: 100%; border-radius: 8px; border: 1px solid var(--line, rgba(128, 128, 128, 0.25));
+  padding: 7px 9px; font-size: 12px; background: var(--card, #fff); color: var(--txt, #18181b);
   resize: vertical; font-family: inherit;
 }
 .v17-wa-btn {
@@ -163,14 +163,14 @@ button[data-act="save"], [aria-label*="Save" i].fc-act {
 .bh-ai-bar {
   display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
   padding: 6px 14px; background: rgba(18, 37, 29, 0.04);
-  border-bottom: 1px solid var(--border, rgba(128, 128, 128, 0.18));
+  border-bottom: 1px solid var(--line, rgba(128, 128, 128, 0.18));
   font-size: 12px;
 }
 [data-theme="dark"] .bh-ai-bar { background: rgba(230, 194, 120, 0.05); }
 .bh-ai-input {
   flex: 1; min-width: 220px; height: 30px; padding: 0 11px; border-radius: 999px;
-  border: 1px solid rgba(196, 154, 69, 0.45); background: var(--surface, #fff);
-  color: var(--text, #18181b); font-size: 12px; outline: none;
+  border: 1px solid rgba(196, 154, 69, 0.45); background: var(--card, #fff);
+  color: var(--txt, #18181b); font-size: 12px; outline: none;
 }
 .bh-ai-input:focus { border-color: #c49a45; box-shadow: 0 0 0 2px rgba(196, 154, 69, 0.18); }
 .bh-ai-go {
@@ -179,9 +179,29 @@ button[data-act="save"], [aria-label*="Save" i].fc-act {
 }
 .bh-ai-go:hover { background: #1e3d30; }
 .bh-ai-preset {
-  padding: 3px 9px; border-radius: 999px; border: 1px solid var(--border, rgba(128, 128, 128, 0.28));
-  background: var(--surface, #fff); color: var(--text, #18181b); font-size: 11px; cursor: pointer;
+  padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line, rgba(128, 128, 128, 0.28));
+  background: var(--card, #fff); color: var(--txt, #18181b); font-size: 11px; cursor: pointer;
 }
 .bh-ai-preset:hover { border-color: #c49a45; }
 .bh-ai-status { font-size: 11px; font-weight: 600; color: #15803d; }
 [data-theme="dark"] .bh-ai-status { color: #4ade80; }
+
+
+/* === V26 DARK-MODE & CARD POLISH === */
+.heart-btn, button[data-sv], button[aria-label="Save"], .fc-sv, .fc-heart { display: none !important; }
+.fc-cnt[data-single="1"] { display: none !important; }
+[data-theme="dark"] .bh-ai-bar { background: var(--surf, #151b19) !important; border-bottom: 1px solid var(--line, #283430) !important; }
+[data-theme="dark"] .bh-ai-input { background: var(--card, #1a221f) !important; color: var(--txt, #f2ede2) !important; border-color: rgba(230, 194, 120, 0.35) !important; }
+[data-theme="dark"] .bh-ai-input::placeholder { color: var(--mut, #98a19c) !important; }
+[data-theme="dark"] .bh-ai-go { background: #c49a45 !important; color: #111715 !important; }
+[data-theme="dark"] .bh-ai-preset,
+[data-theme="dark"] .bh-sort,
+[data-theme="dark"] .bh-share-btn { background: var(--card, #1a221f) !important; color: var(--txt, #f2ede2) !important; border-color: var(--line, #283430) !important; }
+[data-theme="dark"] .bh-ai-preset:hover,
+[data-theme="dark"] .bh-share-btn:hover { background: var(--hover, #222c28) !important; border-color: rgba(230, 194, 120, 0.5) !important; }
+.bh-badge-row { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-top: 4px; }
+.bh-badge-row .bh-fresh,
+.bh-badge-row .bh-vibe-badge,
+.bh-badge-row .bh-rera-chip,
+.bh-badge-row .bh-render-badge,
+.bh-badge-row .bh-flag-pill { margin-left: 0 !important; }
