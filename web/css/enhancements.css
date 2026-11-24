@@ -450,3 +450,20 @@ button[data-act="save"], [aria-label*="Save" i].fc-act {
 
 /* === V44 VIDEO CARD PILL === */
 .bh-vid-pill { position: absolute; top: 10px; left: 10px; z-index: 6; padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: 0.02em; background: rgba(18, 37, 29, 0.9); color: #f6e3b4; border: 1px solid rgba(196, 158, 92, 0.65); pointer-events: none; }
+
+/* === V45 UNIFIED SEARCH === */
+.search-wrap { position: relative; }
+.search-wrap #searchBox { padding-right: 64px !important; }
+.bh-uni-ai {
+  position: absolute; right: 7px; top: 50%; transform: translateY(-50%);
+  padding: 4px 9px; border-radius: 999px; font-size: 11px; font-weight: 700;
+  background: rgba(196,158,92,0.14); color: #d7b97c;
+  border: 1px solid rgba(196,158,92,0.35); cursor: pointer; z-index: 4;
+  transition: all 0.14s ease;
+}
+.bh-uni-ai.hot, .bh-uni-ai:hover {
+  background: rgba(196,158,92,0.92); color: #12251d; border-color: #c49e5c;
+}
+@media (max-width: 768px) {
+  .bh-ask-row, .bh-ask-form, .ask-form, #bhAskForm { display: none !important; }
+}

@@ -239,9 +239,12 @@ def _norm_housing_src(src):
 
 def _extract_housing_gql(url):
     m_rent = re.search(r"/rent/(\d+)(?:-|/|$)", url)
+    m_proj = re.search(r"/projects/page/(\d+)(?:-|/|$)", url)
     m_buy = re.search(r"/(?:buy|resale)/(?:[^/]+/)*(\d+)(?:-|/|$)", url) or re.search(r"/page/(\d+)(?:-|/|$)", url)
     if m_rent:
         pid, ptype = int(m_rent.group(1)), "rent"
+    elif m_proj:
+        pid, ptype = int(m_proj.group(1)), "project"
     elif m_buy:
         pid, ptype = int(m_buy.group(1)), "resale"
     else:
@@ -348,7 +351,7 @@ def fetch_one(item):
     except Exception as e:
         return url, {"imgs": [], "vids": [], "furn": "", "st": -1, "err": str(e)[:60], "ts": int(time.time())}
 
-def collect_targets(socs_all, cache, limit=400, focus_names=None):
+def collect_targets(socs_all, cache, limit=400, focus_names=None, allowed_portals=None):
     prio, seen_u = [], set()
     focus_low = [x.lower() for x in (focus_names or [])]
 
@@ -358,7 +361,8 @@ def collect_targets(socs_all, cache, limit=400, focus_names=None):
         for uk in ("units_rent", "units_buy"):
             for u in (s.get(uk) or []):
                 src, url = u.get("s"), u.get("u")
-                if src not in ("housing", "nobroker", "magicbricks", "99acres") or not url or url in seen_u:
+                _ok_p = allowed_portals or {"housing", "nobroker", "magicbricks", "99acres"}
+                if src not in _ok_p or not url or url in seen_u:
                     continue
                 if url in cache and not is_focus:
                     continue
@@ -454,7 +458,7 @@ def apply_cache_to_societies(socs, cache):
                 s["videos"] = soc_vids[:4]
     return updated_units, vids_added, furn_added
 
-def run(limit=400, workers=6, max_seconds=600, focus=None, apply_only=False):
+def run(limit=400, workers=6, max_seconds=600, focus=None, apply_only=False, portals=None):
     man_p = ROOT / "web/public/data/manifest.json"
     man = json.loads(man_p.read_text(encoding="utf-8-sig"))
     shard_groups, all_socs = [], []
@@ -469,7 +473,7 @@ def run(limit=400, workers=6, max_seconds=600, focus=None, apply_only=False):
 
     cache = load_cache()
     if not apply_only and limit > 0:
-        targets = collect_targets(all_socs, cache, limit=limit, focus_names=focus)
+        targets = collect_targets(all_socs, cache, limit=limit, focus_names=focus, allowed_portals=portals)
         print(f"[MEDIA HARVEST] Cache={len(cache):,} | Targets={len(targets):,} | workers={workers}")
         t0 = time.time()
         ok_n, img_n, vid_n, done_n = 0, 0, 0, 0
@@ -507,6 +511,8 @@ if __name__ == "__main__":
     ap.add_argument("--max-seconds", type=int, default=600)
     ap.add_argument("--focus", type=str, default="")
     ap.add_argument("--apply-only", action="store_true")
+    ap.add_argument("--portals", type=str, default="")
     args = ap.parse_args()
     flist = [x.strip() for x in args.focus.split(",") if x.strip()]
-    run(limit=args.limit, workers=args.workers, max_seconds=args.max_seconds, focus=flist, apply_only=args.apply_only)
+    pset = {x.strip().lower() for x in args.portals.split(",") if x.strip()} or None
+    run(limit=args.limit, workers=args.workers, max_seconds=args.max_seconds, focus=flist, apply_only=args.apply_only, portals=pset)

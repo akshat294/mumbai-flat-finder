@@ -13,6 +13,13 @@ ACRONYMS = {
     "jvpd", "midc", "seepz", "ic", "sv", "mg", "lbs", "db", "jp", "rn",
     "nk", "gs", "ii", "iii", "iv", "vi", "vii", "viii", "sr", "jr", "it", "ai", "rd",
 }
+COMMON_PREFIX_WORDS = {
+    "sai", "om", "shree", "shri", "sri", "shiv", "ganesh", "ram", "krishna",
+    "lakshmi", "mahalaxmi", "siddhi", "riddhi", "guru", "jai", "dev", "radha",
+    "gokul", "tulsi", "new", "royal", "green", "silver", "golden", "grand",
+    "blue", "sun", "star", "lake", "sea", "palm", "crystal", "diamond", "pearl",
+    "baba", "mata", "maa", "mahadev", "balaji", "tirupati", "hanuman", "durga",
+}
 STOP_WORDS = {
     "chs", "chsl", "society", "tower", "towers", "heights", "apartment", "apartments",
     "residency", "residences", "complex", "building", "wing", "phase", "sector",
@@ -188,8 +195,11 @@ def repair_societies(socs, mode="rent"):
             if not u.get("sq") and u.get("u"):
                 sm = re.search(r"(\d{3,4})\s*[-_]?\s*sq[-_]?ft", str(u["u"]), re.I)
                 if sm and 150 <= int(sm.group(1)) <= 9000:
-                    u["sq"] = int(sm.group(1))
-                    stats["sqft_from_url"] += 1
+                    cand_sq = int(sm.group(1))
+                    ok_psf = (mode == "rent" and 12 <= p / cand_sq <= 450) or (mode == "buy" and 2500 <= p / cand_sq <= 250000)
+                    if ok_psf:
+                        u["sq"] = cand_sq
+                        stats["sqft_from_url"] += 1
             if not u.get("f") and u.get("u"):
                 inf_f = _infer_furn_from_url(u["u"])
                 if inf_f:
@@ -335,18 +345,36 @@ def repair_societies(socs, mode="rent"):
 
         g = s.get("google")
         if isinstance(g, dict) and (g.get("reviews") or g.get("rating")):
-            s_words = {w for w in re.findall(r"[a-z]{3,}", str(s.get("name") or "").lower()) if w not in STOP_WORDS}
+            s_all = {w for w in re.findall(r"[a-z]{3,}", str(s.get("name") or "").lower()) if w not in STOP_WORDS}
+            s_dist = s_all - COMMON_PREFIX_WORDS
             gu = str(g.get("url") or "").strip()
             cm = re.search(r"cid=(\d+)", gu)
             g_disp = str(g.get("name") or g_by_id.get(s.get("id") or "") or g_by_url.get(gu) or (g_by_url.get("cid:" + cm.group(1)) if cm else "") or "").lower()
-            if s_words and g_disp:
+            bad_g = False
+            if s_all and g_disp:
                 g_words = {w for w in re.findall(r"[a-z]{3,}", g_disp) if w not in STOP_WORDS}
-                if g_words and not (s_words & g_words):
-                    g.pop("reviews", None)
-                    g.pop("rating", None)
-                    g.pop("review_count", None)
-                    g.pop("url", None)
-                    stats["bad_google_reviews_purged"] += 1
+                if g_words:
+                    if s_dist and not (s_dist & g_words):
+                        bad_g = True
+                    elif not (s_all & g_words):
+                        bad_g = True
+            if not bad_g and s_dist and g.get("reviews"):
+                rblob = " ".join(str(r.get("text") or "") for r in (g.get("reviews") or []) if isinstance(r, dict)).lower()
+                for rm in re.finditer(r"\b([a-z]{3,}(?:\s+[a-z]{3,}){0,2})\s+(?:apartment|apartments|chs|chsl|society|tower|towers|heights|residency|complex)\b", rblob):
+                    rw = {w for w in re.findall(r"[a-z]{3,}", rm.group(1)) if w not in STOP_WORDS}
+                    r_dist = rw - COMMON_PREFIX_WORDS
+                    if r_dist and not (r_dist & s_dist):
+                        bad_g = True
+                        break
+                    if not r_dist and rw and rw.isdisjoint(s_dist) and any(x in rw for x in ("baba", "mata", "ganesh", "shiv", "krishna", "ram")) and not (rw <= s_all):
+                        bad_g = True
+                        break
+            if bad_g:
+                g.pop("reviews", None)
+                g.pop("rating", None)
+                g.pop("review_count", None)
+                g.pop("url", None)
+                stats["bad_google_reviews_purged"] += 1
 
         raw_soc = ([s["thumb"]] if s.get("thumb") else []) + list(s.get("photos") or [])
         for u in us:
