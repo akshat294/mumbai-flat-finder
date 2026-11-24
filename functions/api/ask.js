@@ -48,7 +48,7 @@ function extractJsonObject(rawText) {
   }
 }
 
-const GEMINI_MODELS = ["gemini-flash-latest", "gemini-3.5-flash-lite", "gemini-2.5-flash-lite"];
+const GEMINI_MODELS = ["gemini-3.5-flash-lite", "gemini-2.5-flash-lite", "gemini-3.8-flash"];
 
 async function callGemini(apiKey, systemPrompt, userPrompt, expectJson) {
   let lastErr = "no_models";
@@ -63,7 +63,6 @@ async function callGemini(apiKey, systemPrompt, userPrompt, expectJson) {
       systemInstruction: { parts: [{ text: systemPrompt }] },
       contents: [{ role: "user", parts: [{ text: userPrompt }] }],
       generationConfig: {
-        temperature: expectJson ? 0.1 : 0.35,
         maxOutputTokens: expectJson ? 380 : 280,
         ...(expectJson ? { responseMimeType: "application/json" } : {}),
       },
@@ -148,7 +147,6 @@ async function callWorkersAI(aiBinding, systemPrompt, userPrompt, expectJson) {
       { role: "system", content: systemPrompt },
       { role: "user", content: userPrompt },
     ],
-    temperature: expectJson ? 0.1 : 0.35,
     max_tokens: expectJson ? 360 : 300,
   });
   const txt = typeof res === "string" ? res : (res?.response || res?.result?.response || "");
