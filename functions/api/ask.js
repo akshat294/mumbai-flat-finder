@@ -137,6 +137,8 @@ function localParseQuery(query, knownLocalities, currentMode) {
   if (/\bbkc\b/.test(q)) out.hub = "bkc";
   if (/\b(cheapest|lowest|budget)\b/.test(q)) out.sort = "p_asc";
   else if (/\b(best\s*deal|great\s*value|bargain)\b/.test(q)) out.sort = "deal";
+  // BH_V58_ZERO_FIX
+  if (/\b(?:zero\s*brok\w*|no\s*brok\w*|brok\w*\s*free|without\s*brok\w*|direct\s*owner|owner\s*only)\b/i.test(String(query || ""))) out.zero = true;
   return out;
 }
 

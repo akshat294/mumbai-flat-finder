@@ -64,6 +64,8 @@ def upgrade_media_url(raw):
     return u
 
 def _res_tier(url):
+    if "squareyards.com" in str(url or "").lower():
+        return 99
     u = str(url or "")
     if "Photo_h180_w240" in u or "_180_240." in u:
         return 1

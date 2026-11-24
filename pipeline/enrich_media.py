@@ -458,7 +458,7 @@ def apply_cache_to_societies(socs, cache):
                 s["videos"] = soc_vids[:4]
     return updated_units, vids_added, furn_added
 
-def run(limit=400, workers=6, max_seconds=600, focus=None, apply_only=False, portals=None):
+def run(limit=400, workers=6, max_seconds=600, focus=None, apply_only=False, portals=None, delay=0.0):
     man_p = ROOT / "web/public/data/manifest.json"
     man = json.loads(man_p.read_text(encoding="utf-8-sig"))
     shard_groups, all_socs = [], []
@@ -512,7 +512,8 @@ if __name__ == "__main__":
     ap.add_argument("--focus", type=str, default="")
     ap.add_argument("--apply-only", action="store_true")
     ap.add_argument("--portals", type=str, default="")
+    ap.add_argument("--delay", type=float, default=0.0)
     args = ap.parse_args()
     flist = [x.strip() for x in args.focus.split(",") if x.strip()]
     pset = {x.strip().lower() for x in args.portals.split(",") if x.strip()} or None
-    run(limit=args.limit, workers=args.workers, max_seconds=args.max_seconds, focus=flist, apply_only=args.apply_only, portals=pset)
+    run(limit=args.limit, workers=args.workers, max_seconds=args.max_seconds, focus=flist, apply_only=args.apply_only, portals=pset, delay=args.delay)

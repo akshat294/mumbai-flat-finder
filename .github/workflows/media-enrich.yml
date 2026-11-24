@@ -3,6 +3,12 @@ name: Media & Video Catch-Up (HD Galleries + Fleet Repair)
 on:
   workflow_dispatch:
     inputs:
+      portals:
+        description: 'Comma-separated portals (blank=all, or 99acres for slow trickle)'
+        default: ''
+      delay:
+        description: 'Polite per-request delay seconds (e.g. 1.5 for 99acres)'
+        default: '0'
       limit:
         description: 'Max listing pages to enrich this run (NoBroker/MagicBricks/99acres)'
         required: true
@@ -43,7 +49,7 @@ jobs:
         env:
           PYTHONUNBUFFERED: "1"
         run: |
-          python -u pipeline/enrich_media.py --limit ${{ inputs.limit }} --workers ${{ inputs.workers }} --max-seconds 1800
+          python -u pipeline/enrich_media.py --limit ${{ inputs.limit }} --workers ${{ inputs.workers }} --max-seconds 1800 --portals "${{ inputs.portals }}" --delay "${{ inputs.delay || '0' }}" 
       - name: Run Full-Fleet Hygiene & Repair Pass
         run: |
           python -u pipeline/fleet_repair.py

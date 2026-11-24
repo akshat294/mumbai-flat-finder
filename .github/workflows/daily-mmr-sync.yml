@@ -80,6 +80,9 @@ jobs:
           python -u pipeline/post_build_v18.py
           python -u pipeline/inventory_report.py
 
+      - name: Sync 18-Hub Mumbai Zero-Brokerage Flatmates (0 credits)
+        run: python -u pipeline/sync_flatmates.py
+
       - name: Verify final build integrity
         run: python -u pipeline/enrich_media.py --limit 300 --workers 6 --max-seconds 300
           python -u pipeline/fleet_repair.py

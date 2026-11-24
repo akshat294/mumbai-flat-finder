@@ -9,7 +9,8 @@
   const BUY_STOPS  = [0,4000000,6000000,8000000,10000000,12500000,15000000,17500000,20000000,25000000,30000000,35000000,40000000,50000000,60000000,75000000,100000000,125000000,150000000];
   const SQFT_MAX = 4000;
   const HUB_LABELS = { bkc:"BKC", lower_parel:"Lower Parel", andheri_seepz:"Andheri", powai:"Powai", goregaon_nesco:"Goregaon", nariman_point:"Nariman Pt" };
-  const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyards:"Square Yards", commonfloor:"CommonFloor", makaan:"Makaan", nobrokerage:"NoBrokerage", community:"Flatmates", reddit:"Reddit", "99acres":"99acres", housing:"Housing.com", owner:"Direct Owner", nextflat:"NextFlat", dwelo:"Dwelo", nestaway:"NestAway", zolostays:"ZoloStays", telegram:"Telegram Direct", stanza:"Stanza Living", flatmate:"FlatMate.in", settl:"Settl.", other:"Direct" };
+  const bhProxySy = u => (typeof u === "string" && /^https:\/\/static\.squareyards\.com\//i.test(u)) ? ("/api/img?u=" + encodeURIComponent(u)) : u;
+const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyards:"Square Yards", commonfloor:"CommonFloor", makaan:"Makaan", nobrokerage:"NoBrokerage", community:"Flatmates", reddit:"Reddit", "99acres":"99acres", housing:"Housing.com", owner:"Direct Owner", nextflat:"NextFlat", dwelo:"Dwelo", nestaway:"NestAway", zolostays:"ZoloStays", telegram:"Telegram Direct", stanza:"Stanza Living", flatmate:"FlatMate.in", settl:"Settl.", other:"Direct" };
 
   function readJSON(k, fb) { try { return JSON.parse(localStorage.getItem(k) || "null") || fb; } catch { return fb; } }
   const savedInit = readJSON("mhf_s3", { ids:[], notes:{} });
@@ -501,7 +502,7 @@
 
   function renderList() {
   if (!window.__bhById) window.__bhById = new Map();
-  if (Array.isArray(filtered)) { for (const _s of filtered) { if (_s && _s.id) window.__bhById.set(_s.id, _s); } }
+  if (Array.isArray(filtered)) { for (const _s of filtered) { if (!_s) continue; if (_s.id) window.__bhById.set(_s.id, _s); if (_s.thumb) _s.thumb = bhProxySy(_s.thumb); if (Array.isArray(_s.photos)) _s.photos = _s.photos.map(bhProxySy); for (const _uk of ['units_rent','units_buy']) { if (Array.isArray(_s[_uk])) { for (const _u of _s[_uk]) { if (_u.img) _u.img = bhProxySy(_u.img); if (Array.isArray(_u.imgs)) _u.imgs = _u.imgs.map(bhProxySy); } } } } }
     const isBuy = st.mode === "buy";
     const PORTALS = {
       magicbricks:"MagicBricks", nobroker:"NoBroker", squareyards:"Square Yards",
