@@ -28,6 +28,62 @@
     }
   }
 
+  const BH_BAD_IMG_RE = /(floor[-_]?plan|master[-_]?plan|site[-_]?plan|unit[-_]?plan|location[-_]?map|3d[-_]?plan|3d[-_]?render|layout|blueprint|brochure|elevation|under_screening|fbshare|static\.99acres\.com|assets\.nobroker\.in|no[-_]?image|no[-_]?photo|placeholder|default[-_]?img|avatar|logo)/i;
+
+  function bhMediaInfo(raw) {
+    const su = safeUrl(raw);
+    if (!su || BH_BAD_IMG_RE.test(su)) return null;
+    let url = su;
+    if (url.includes("housingcdn.com/") || url.includes("housing-images.n7net.in/")) {
+      url = url.replace(/\/v(\d+)\/(?:version|fs_medium|medium|small|thumb)\//i, "/v$1/fs/");
+    } else if (url.includes("images.nobroker.in/images/")) {
+      url = url.replace(/_thumbnail\./i, "_large.").replace(/_small\./i, "_large.");
+    }
+    const clean = url.split("?")[0];
+    const m99 = clean.match(/imagecdn\.99acres\.com\/.*\/(\d+)([A-Z])-\d+\./i);
+    if (m99) {
+      const c = m99[2].toUpperCase();
+      const rank = c === "O" ? 5 : (c === "L" ? 4 : (c === "M" ? 3 : (c === "F" ? 2 : 1)));
+      return { url, key: "99:" + m99[1], rank };
+    }
+    if (clean.includes("images.nobroker.in/images/")) {
+      const k = clean.replace(/_(?:thumbnail|small|medium|large|original|enhance_large|enhance_medium)(?=\.[a-z]+$)/i, "").toLowerCase();
+      const rank = /_original\./i.test(clean) ? 4 : (/_large\./i.test(clean) ? 3 : (/_medium\./i.test(clean) ? 2 : 1));
+      return { url, key: "nb:" + k, rank };
+    }
+    if (clean.includes("housingcdn.com") || clean.includes("n7net.in")) {
+      const mH = clean.match(/\/([a-f0-9]{16,40})\/v\d+\/([^/]+)\//i);
+      if (mH) {
+        const vn = mH[2].toLowerCase();
+        const rank = vn === "fs" ? 4 : (vn.includes("large") ? 3 : 2);
+        return { url, key: "hs:" + mH[1].toLowerCase(), rank };
+      }
+    }
+    const k = clean
+      .replace(/\/(thumb|medium|small|large|original|cropped|resized|fs|fs_medium|version)\//gi, "/")
+      .replace(/[_\-]\d+x\d+(?=\.[a-z]+$)/i, "")
+      .replace(/[_\-](?:small|medium|large|thumb|thumbnail|original)(?=\.[a-z]+$)/i, "")
+      .toLowerCase();
+    return { url, key: k, rank: 2 };
+  }
+
+  function bhBuildCleanPhotos(urls) {
+    const byKey = new Map();
+    const order = [];
+    for (const raw of (urls || [])) {
+      const info = bhMediaInfo(raw);
+      if (!info) continue;
+      const prev = byKey.get(info.key);
+      if (!prev) {
+        byKey.set(info.key, info);
+        order.push(info.key);
+      } else if (info.rank > prev.rank) {
+        byKey.set(info.key, info);
+      }
+    }
+    return order.map(k => byKey.get(k).url);
+  }
+
   function rafDebounce(fn) {
     let scheduled = false;
     return () => {
@@ -202,16 +258,15 @@
           }
 
           const photos = [];
-          const _upImg = u => String(u || "").replace(/(imagecdn\.99acres\.com\/[^?#]*?\d+)T(-\d+\.)/i, "$1M$2");
-          const _imgKey = u => u.replace(/(imagecdn\.99acres\.com\/[^?#]*?\d+)[A-Z](-\d+\.)/i, "$1_$2");
-          const _seenK = new Set();
-          const addP = u => { const su = safeUrl(_upImg(u)); if (!su) return; const k = _imgKey(su); if (!_seenK.has(k)) { _seenK.add(k); photos.push(su); } };
+          const _rawP = [];
+          const addP = u => { if (u) _rawP.push(u); };
           if (imgEl) addP(imgEl.src);
           addP(soc.thumb);
           (soc.photos || []).forEach(addP);
           const us = (typeof st !== "undefined" && st.mode === "buy" ? soc.units_buy : soc.units_rent) || [];
           us.forEach(u => { addP(u.img); (u.imgs || []).forEach(addP); });
 
+          bhBuildCleanPhotos(_rawP).forEach(u => photos.push(u));
           if (imgEl && photos.length && imgEl.src !== photos[0]) imgEl.src = photos[0];
           if (cnt) { if (photos.length > 1) { delete cnt.dataset.single; cnt.textContent = "1/" + photos.length; } else { cnt.dataset.single = "1"; cnt.textContent = ""; } }
           if (imgEl && photos.length > 1) {
@@ -286,9 +341,9 @@
 
     document.addEventListener("keydown", e => {
       const wrap = dBody.querySelector(".bh-dgal");
-      if (!wrap || galPhotos.length < 2) return;
-      if (e.key === "ArrowLeft") { galIdx--; updateGalView(wrap); }
-      else if (e.key === "ArrowRight") { galIdx++; updateGalView(wrap); }
+      if (!wrap || !wrap._bhNav) return;
+      if (e.key === "ArrowLeft") wrap._bhNav(-1);
+      else if (e.key === "ArrowRight") wrap._bhNav(1);
     });
 
     new MutationObserver(() => {
@@ -302,54 +357,118 @@
         const socId = (bh().st && bh().st.sel) || "";
         const soc = (bh().societies || []).find(x => x.id === socId);
 
+        const heroSlot = dBody.querySelector(".d-hero-slot");
         const firstImg = dBody.querySelector("img");
-        if (firstImg && !dBody.querySelector(".bh-dgal")) {
-          const seed = [];
-          const addUrl = u => { const su = safeUrl(u); if (su && !seed.includes(su)) seed.push(su); };
-          addUrl(firstImg.src);
+        const mountTarget = heroSlot || firstImg;
+        if (mountTarget && !dBody.querySelector(".bh-dgal")) {
+          const openedSocId = socId;
+          const rawSeed = [];
+          if (firstImg && firstImg.getAttribute("src")) rawSeed.push(firstImg.getAttribute("src"));
           if (soc) {
-            addUrl(soc.thumb);
-            (soc.photos || []).forEach(addUrl);
+            if (soc.thumb) rawSeed.push(soc.thumb);
+            (soc.photos || []).forEach(p => rawSeed.push(p));
             const us = bh().matchingUnits ? bh().matchingUnits(soc) : (soc.units_rent || []);
-            us.forEach(u => { addUrl(u.img); (u.imgs || []).forEach(addUrl); });
+            us.forEach(u => { if (u.img) rawSeed.push(u.img); (u.imgs || []).forEach(p => rawSeed.push(p)); });
           }
-          galPhotos = seed;
+
+          let mediaItems = bhBuildCleanPhotos(rawSeed).map(url => ({ type: "img", url }));
+          let mIdx = 0;
+          galPhotos = mediaItems.map(x => x.url);
           galIdx = 0;
 
           const wrap = document.createElement("div");
-          wrap.className = "bh-dgal";
+          wrap.className = "bh-dgal" + (mediaItems.length ? "" : " is-empty");
           wrap.innerHTML =
-            '<img src="' + escHtml(galPhotos[0] || "") + '" alt="Property photo" decoding="async" />' +
-            '<button type="button" class="bh-dgal-btn bh-dgal-prev" aria-label="Previous photo">\u2039</button>' +
-            '<button type="button" class="bh-dgal-btn bh-dgal-next" aria-label="Next photo">\u203a</button>' +
+            '<div class="bh-dgal-stage"></div>' +
+            '<button type="button" class="bh-dgal-btn bh-dgal-prev" aria-label="Previous media">\u2039</button>' +
+            '<button type="button" class="bh-dgal-btn bh-dgal-next" aria-label="Next media">\u203a</button>' +
             '<span class="bh-dgal-cnt"></span>' +
             '<div class="bh-dgal-dots"></div>';
 
-          const oldWrap = firstImg.closest(".d-hero, .d-gal, .gallery, .hero-wrap") || firstImg;
+          const oldWrap = heroSlot || firstImg.closest(".d-hero, .d-gal, .gallery, .hero-wrap") || firstImg;
           oldWrap.replaceWith(wrap);
-          updateGalView(wrap);
 
-          wrap.querySelector(".bh-dgal-prev").addEventListener("click", () => { galIdx--; updateGalView(wrap); });
-          wrap.querySelector(".bh-dgal-next").addEventListener("click", () => { galIdx++; updateGalView(wrap); });
+          const renderSlide = () => {
+            const stage = wrap.querySelector(".bh-dgal-stage");
+            const prevB = wrap.querySelector(".bh-dgal-prev");
+            const nextB = wrap.querySelector(".bh-dgal-next");
+            const cntEl = wrap.querySelector(".bh-dgal-cnt");
+            const dotsEl = wrap.querySelector(".bh-dgal-dots");
+            if (!mediaItems.length) {
+              wrap.classList.add("is-empty");
+              return;
+            }
+            wrap.classList.remove("is-empty");
+            mIdx = ((mIdx % mediaItems.length) + mediaItems.length) % mediaItems.length;
+            const cur = mediaItems[mIdx];
+            if (cur.type === "video") {
+              stage.innerHTML =
+                '<video class="bh-dgal-vid" controls playsinline preload="metadata" src="' + escHtml(cur.url) + '"></video>' +
+                '<span class="bh-dgal-vidtag">Video Tour</span>';
+            } else if (cur.type === "youtube") {
+              stage.innerHTML =
+                '<iframe class="bh-dgal-yt" src="' + escHtml(cur.url) + '" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>' +
+                '<span class="bh-dgal-vidtag">Video Tour</span>';
+            } else {
+              stage.innerHTML = '<img src="' + escHtml(cur.url) + '" referrerpolicy="no-referrer" alt="Property photo" decoding="async" />';
+              const im = stage.querySelector("img");
+              if (im) {
+                im.addEventListener("error", () => {
+                  mediaItems.splice(mIdx, 1);
+                  if (mIdx >= mediaItems.length) mIdx = 0;
+                  renderSlide();
+                }, { once: true });
+              }
+            }
+            const multi = mediaItems.length > 1;
+            if (prevB) prevB.style.display = multi ? "" : "none";
+            if (nextB) nextB.style.display = multi ? "" : "none";
+            if (cntEl) {
+              cntEl.style.display = multi ? "" : "none";
+              cntEl.textContent = (mIdx + 1) + "/" + mediaItems.length + (cur.type !== "img" ? " \u00b7 Video" : "");
+            }
+            if (dotsEl) {
+              dotsEl.style.display = multi ? "flex" : "none";
+              const dotCap = Math.min(mediaItems.length, 10);
+              dotsEl.innerHTML = Array.from({ length: dotCap }, (_, i) =>
+                '<span class="bh-dgal-dot' + (i === (mIdx % dotCap) ? " on" : "") + '"></span>'
+              ).join("");
+            }
+          };
+
+          renderSlide();
+          wrap._bhNav = d => { mIdx += d; renderSlide(); };
+          wrap.querySelector(".bh-dgal-prev").addEventListener("click", () => { mIdx--; renderSlide(); });
+          wrap.querySelector(".bh-dgal-next").addEventListener("click", () => { mIdx++; renderSlide(); });
 
           let startX = null;
-          wrap.addEventListener("pointerdown", e => { if (!e.target.closest("button")) startX = e.clientX; });
+          wrap.addEventListener("pointerdown", e => { if (!e.target.closest("button, video, iframe")) startX = e.clientX; });
           wrap.addEventListener("pointerup", e => {
             if (startX === null) return;
             const dx = e.clientX - startX;
             startX = null;
-            if (Math.abs(dx) > 35 && galPhotos.length > 1) { galIdx += (dx < 0 ? 1 : -1); updateGalView(wrap); }
+            if (Math.abs(dx) > 35 && mediaItems.length > 1) { mIdx += (dx < 0 ? 1 : -1); renderSlide(); }
           });
 
-          const portalLink = dBody.querySelector('a[href*="magicbricks"], a[href*="nobroker"], a[href*="squareyards"], a[href*="makaan"], a[href*="commonfloor"], a[href*="99acres"], a[href*="housing.com"]')?.href;
-          if (portalLink && galPhotos.length < 5) {
+          const portalLinks = [...dBody.querySelectorAll('a[href*="magicbricks"], a[href*="nobroker"], a[href*="squareyards"], a[href*="makaan"], a[href*="commonfloor"], a[href*="99acres"], a[href*="housing.com"]')].map(a => a.href);
+          const portalLink = portalLinks[0];
+          const shouldFetch = !!portalLink && (mediaItems.length < 6 || /housing\.com|nobroker\.in|99acres\.com/i.test(portalLink));
+          if (shouldFetch) {
             fetch("/api/photos?url=" + encodeURIComponent(portalLink))
               .then(r => (r.ok ? r.json() : null))
               .then(d => {
-                if (d && Array.isArray(d.photos)) {
-                  let changed = false;
-                  d.photos.forEach(p => { const su = safeUrl(p); if (su && !galPhotos.includes(su)) { galPhotos.push(su); changed = true; } });
-                  if (changed) updateGalView(wrap);
+                if (!d || !wrap.isConnected || ((bh().st && bh().st.sel) !== openedSocId)) return;
+                const existingImgs = mediaItems.filter(x => x.type === "img").map(x => x.url);
+                const mergedImgs = bhBuildCleanPhotos(existingImgs.concat(Array.isArray(d.photos) ? d.photos : []));
+                const vids = Array.isArray(d.videos) ? d.videos.filter(v => v && v.url).map(v => ({ type: v.kind === "youtube" ? "youtube" : "video", url: v.url })) : [];
+                const nextItems = [];
+                if (mergedImgs.length) nextItems.push({ type: "img", url: mergedImgs[0] });
+                vids.forEach(v => nextItems.push(v));
+                mergedImgs.slice(1).forEach(u => nextItems.push({ type: "img", url: u }));
+                if (nextItems.length > mediaItems.length || (vids.length && !mediaItems.some(x => x.type !== "img"))) {
+                  mediaItems = nextItems;
+                  galPhotos = mediaItems.map(x => x.url);
+                  renderSlide();
                 }
               })
               .catch(() => {});

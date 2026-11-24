@@ -10,7 +10,7 @@ from pipeline.connectors.apify_portals import _norm_any_item, _save_merged_cache
 from pipeline.connectors.apish_99acres import reparse_raw_archive
 from pipeline.connectors.native_boost import backfill_nobroker_photos
 from pipeline.connectors.v19_common import is_generic_name
-from pipeline.data_hygiene import run_data_hygiene
+from pipeline.data_hygiene import run_data_hygiene, clean_fleet_media
 from pipeline.mumbai_transit import enrich_transit_context
 from pipeline.quality_filter import filter_and_track_societies
 
@@ -83,6 +83,7 @@ def run():
             if len(gal) > 1:
                 s["photos"] = gal[:6]
 
+    clean_fleet_media(socs)
     enrich_transit_context(socs)
     cleaned, _ = filter_and_track_societies(socs)
     IST = timezone(timedelta(hours=5, minutes=30))

@@ -352,7 +352,7 @@
   function onPinClick(s) {
     st.sel = s.id; filtered = filtered.filter(passesV15SocietyFilter); /* v15_filter_hook */
     renderMap();
-    if (window.innerWidth <= 1024) showMapPreview(s); else openDetail(s);
+    openDetail(s);
   }
 
   function showMapPreview(s) {
@@ -595,7 +595,9 @@
 
     listEl.innerHTML = slice.map(({ s, u }) => {
       const _rawImg = u.img || s.thumb || "";
-      const img = _rawImg.replace(/(imagecdn\.99acres\.com\/[^?#]*?\d+)T(-\d+\.)/i, "$1M$2");
+      const _m99 = _rawImg.match(/imagecdn\.99acres\.com\/.*\/(\d+)T-\d+\./i);
+      const _hi99 = _m99 ? (s.photos || []).find(p => typeof p === "string" && new RegExp("/" + _m99[1] + "[MLO]-\\d+\\.", "i").test(p)) : null;
+      const img = _hi99 || _rawImg;
       const bhkTxt = u.b === 0 ? "1 RK" : (u.b ? `${u.b} BHK` : "");
       const sq = u.sq || s.rera_carpet_sqft;
       const specTxt = [bhkTxt, sq ? `${sq} sq ft` : ""].filter(Boolean).join(" · ");
@@ -732,7 +734,7 @@
     $("dName").textContent = s.name;
     $("dSub").textContent = `${s.locality} · ${s.coords_approx ? "Locality Area Pin" : "Verified Building Pin"}${g.rating ? ` · ★ ${g.rating}` : ""}`;
     $("dBody").innerHTML = `
-      ${s.thumb ? `<img class="d-hero" src="${esc(s.thumb)}" referrerpolicy="no-referrer" alt="" onerror="this.remove()" />` : ""}
+      <div class="d-hero-slot">${s.thumb ? `<img class="d-hero" src="${esc(s.thumb)}" referrerpolicy="no-referrer" alt="" onerror="this.remove()" />` : ""}</div>
       <div class="d-actions">
         <button class="btn ${isS ? "active" : ""}" id="dSv">${isS ? "Saved" : "Save"}</button>
         <a class="btn" target="_blank" href="${mapsUrl}">Google Maps ↗</a>

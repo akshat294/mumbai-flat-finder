@@ -199,3 +199,124 @@ def run_data_hygiene(socs):
     socs[:] = [s for s in socs if (s.get("units_rent") or s.get("units_buy"))] + extra_socs
     print(f"[v37 HYGIENE] Re-homed: {rehomed} | Split buckets: {split_b} (+{len(extra_socs)} cards) | Named from URL: {renamed} | Approx-pin fixed: {approx_f} | Typos dropped: {typos}")
     return socs
+_BAD_IMG_RE = re.compile(
+    r"(floor[-_]?plan|master[-_]?plan|site[-_]?plan|unit[-_]?plan|location[-_]?map|"
+    r"3d[-_]?plan|3d[-_]?render|layout|blueprint|brochure|elevation|under_screening|"
+    r"fbshare|static\.99acres\.com|assets\.nobroker\.in|no[-_]?image|no[-_]?photo|"
+    r"placeholder|default[-_]?img|avatar|logo|\.svg(?:\?|$)|\.gif(?:\?|$))",
+    re.I,
+)
+_RE_99_ID = re.compile(r"imagecdn\.99acres\.com/.*/(\d+)([A-Z])-\d+\.", re.I)
+_RE_NB_VAR = re.compile(r"_(?:thumbnail|small|medium|large|original|enhance_large|enhance_medium)(?=\.[a-z]+$)", re.I)
+_RE_HS_ID = re.compile(r"/([a-f0-9]{16,40})/v\d+/([^/]+)/", re.I)
+_RE_FLOAT_BHK = re.compile(r"\b(\d+)\.0\s*(BHK|RK)\b", re.I)
+
+def _media_key_rank(raw):
+    if not isinstance(raw, str):
+        return None
+    u = raw.strip()
+    if not re.match(r"^https?://", u, re.I) or len(u) < 24 or _BAD_IMG_RE.search(u):
+        return None
+    if "housingcdn.com/" in u or "housing-images.n7net.in/" in u:
+        u = re.sub(r"/v(\d+)/(?:version|fs_medium|medium|small|thumb)/", r"/v\1/fs/", u, flags=re.I)
+    elif "images.nobroker.in/images/" in u:
+        u = re.sub(r"_(?:thumbnail|small)\.", "_large.", u, flags=re.I)
+
+    clean = u.split("?")[0]
+    m99 = _RE_99_ID.search(clean)
+    if m99:
+        c = m99.group(2).upper()
+        rank = {"O": 5, "L": 4, "M": 3, "F": 2}.get(c, 1)
+        return u, "99:" + m99.group(1), rank
+    if "images.nobroker.in/images/" in clean:
+        k = _RE_NB_VAR.sub("", clean).lower()
+        rank = 4 if "_original." in clean.lower() else (3 if "_large." in clean.lower() else (2 if "_medium." in clean.lower() else 1))
+        return u, "nb:" + k, rank
+    if "housingcdn.com" in clean or "n7net.in" in clean:
+        mh = _RE_HS_ID.search(clean)
+        if mh:
+            vn = mh.group(2).lower()
+            rank = 4 if vn == "fs" else (3 if "large" in vn else 2)
+            return u, "hs:" + mh.group(1).lower(), rank
+    dk = re.sub(r"/(?:thumb|medium|small|large|original|cropped|resized|fs|fs_medium|version)/", "/", clean, flags=re.I)
+    dk = re.sub(r"[_\-]\d+x\d+(?=\.[a-z]+$)", "", dk, flags=re.I)
+    dk = re.sub(r"[_\-](?:small|medium|large|thumb|thumbnail|original)(?=\.[a-z]+$)", "", dk, flags=re.I).lower()
+    return u, dk, 2
+
+def _dedupe_urls(urls, cap=8):
+    by_k, order = {}, []
+    for raw in (urls or []):
+        info = _media_key_rank(raw)
+        if not info:
+            continue
+        u, k, rank = info
+        if k not in by_k:
+            by_k[k] = (u, rank)
+            order.append(k)
+        elif rank > by_k[k][1]:
+            by_k[k] = (u, rank)
+    return [by_k[k][0] for k in order][:cap], {k: v[0] for k, v in by_k.items()}
+
+def clean_fleet_media(socs):
+    stats = {"float_names": 0, "urls_before": 0, "urls_after": 0, "thumbs_upgraded": 0}
+    for s in socs:
+        if not isinstance(s, dict):
+            continue
+        nm = str(s.get("name") or "")
+        nm2 = _RE_FLOAT_BHK.sub(r"\1 \2", nm)
+        if nm2 != nm:
+            s["name"] = nm2
+            stats["float_names"] += 1
+
+        raw_soc = []
+        if s.get("thumb"):
+            raw_soc.append(s["thumb"])
+        raw_soc.extend(s.get("photos") or [])
+
+        us = list(s.get("units_rent") or []) + list(s.get("units_buy") or [])
+        for u in us:
+            if not isinstance(u, dict):
+                continue
+            if u.get("img"):
+                raw_soc.append(u["img"])
+            raw_soc.extend(u.get("imgs") or [])
+
+        stats["urls_before"] += len(s.get("photos") or []) + (1 if s.get("thumb") else 0)
+        old_thumb = s.get("thumb")
+        soc_clean, best_by_k = _dedupe_urls(raw_soc, cap=8)
+        stats["urls_after"] += len(soc_clean)
+
+        for u in us:
+            if not isinstance(u, dict):
+                continue
+            u_raw = ([u.get("img")] if u.get("img") else []) + list(u.get("imgs") or [])
+            stats["urls_before"] += len(u_raw)
+            u_up = []
+            for r in u_raw:
+                info = _media_key_rank(r)
+                if info:
+                    u_up.append(best_by_k.get(info[1], info[0]))
+            u_clean, _ = _dedupe_urls(u_up, cap=6)
+            stats["urls_after"] += len(u_clean)
+            if u_clean:
+                u["img"] = u_clean[0]
+                if len(u_clean) > 1:
+                    u["imgs"] = u_clean
+                else:
+                    u.pop("imgs", None)
+            else:
+                u.pop("img", None)
+                u.pop("imgs", None)
+
+        if soc_clean:
+            s["thumb"] = soc_clean[0]
+            if old_thumb and old_thumb != soc_clean[0]:
+                stats["thumbs_upgraded"] += 1
+            if len(soc_clean) > 1:
+                s["photos"] = soc_clean
+            else:
+                s.pop("photos", None)
+        else:
+            s.pop("thumb", None)
+            s.pop("photos", None)
+    return stats
