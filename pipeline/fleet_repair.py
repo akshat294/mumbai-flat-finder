@@ -147,11 +147,26 @@ def _load_dead_urls():
         pass
     return dead
 
+def _load_99acres_floors():
+    p = ROOT / "data/99acres_floors_cache.json"
+    if not p.exists():
+        return {}
+    try:
+        d = json.loads(p.read_text(encoding="utf-8-sig"))
+        return d if isinstance(d, dict) else {}
+    except Exception:
+        return {}
+
+def _extract_99_spid(u_str):
+    m = re.search(r"spid-([A-Z]\d{6,10})", str(u_str or ""), re.I)
+    return m.group(1).upper() if m else ""
+
 def repair_societies(socs, mode="rent"):
     stats = Counter()
     unit_k = "units_buy" if mode == "buy" else "units_rent"
     g_by_id, g_by_url = _load_google_place_names()
     dead_urls = _load_dead_urls()
+    a99_floors = _load_99acres_floors()
 
     for s in socs:
         loc = str(s.get("locality") or "").strip()
@@ -458,6 +473,38 @@ def run_on_shards():
 if __name__ == "__main__":
     run_on_shards()
 
+def _apply_v59_floors_and_bright():
+    # V59_FLOORS_AND_BRIGHT: permanently restore 99acres floors from cache & sync features.bright (vs>=97)
+    import math as _math
+    mp = ROOT / "web/public/data/manifest.json"
+    if not mp.exists():
+        return
+    flr_p = ROOT / "data/99acres_floors_cache.json"
+    flr_map = json.loads(flr_p.read_text(encoding="utf-8-sig")) if flr_p.exists() else {}
+    m = json.loads(mp.read_text(encoding="utf-8-sig"))
+    added_flr = 0
+    for sk, uk in (("rent_shards", "units_rent"), ("buy_shards", "units_buy")):
+        paths = [ROOT / "web/public/data" / sf for sf in (m.get(sk) or []) if (ROOT / "web/public/data" / sf).exists()]
+        if not paths:
+            continue
+        socs = [x for sp in paths for x in json.loads(sp.read_text(encoding="utf-8-sig"))]
+        for s in socs:
+            if isinstance(s.get("features"), dict):
+                s["features"]["bright"] = bool((s.get("vs") or 0) >= 97 and not s.get("vr"))
+            if flr_map:
+                for u in (s.get(uk) or []):
+                    if u.get("s") == "99acres" and not u.get("flr"):
+                        mm = re.search(r"spid-([A-Z]\d{6,10})", str(u.get("u") or ""), re.I)
+                        if mm:
+                            fv = flr_map.get(mm.group(1).upper())
+                            if fv:
+                                u["flr"] = fv
+                                added_flr += 1
+        chunk = _math.ceil(len(socs) / max(1, len(paths)))
+        for i, sp in enumerate(paths):
+            sp.write_text(json.dumps(socs[i * chunk : (i + 1) * chunk], ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    print(f"[FLEET REPAIR V59] 99acres floors restored=+{added_flr:,} | features.bright synced (vs>=97)", flush=True)
+
 def _sync_manifest_v54():
     # SYNC_MANIFEST_V54: align ALL manifest.json totals & IST timestamp with repaired shards
     import time as _t
@@ -489,4 +536,5 @@ def _sync_manifest_v54():
     mp.write_text(json.dumps(m, ensure_ascii=False, indent=2), encoding="utf-8")
 
 if __name__ == '__main__':
+    _apply_v59_floors_and_bright()
     _sync_manifest_v54()

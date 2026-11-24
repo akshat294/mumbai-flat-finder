@@ -186,7 +186,7 @@
         const out = totalFlats > 0
           ? (bldgs + " buildings \u00b7 " + totalFlats.toLocaleString("en-IN") + " flats " + modeWord)
           : (bldgs + " buildings " + modeWord);
-        if (resSumEl.textContent !== out) resSumEl.textContent = out;
+        if (window.__bhModeLoading === "buy" && /^0\s+buildings\s+for\s+sale/i.test(out)) out = "Loading homes for sale..."; if (resSumEl.textContent !== out) resSumEl.textContent = out;
       }
     }
   }

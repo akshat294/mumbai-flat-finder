@@ -106,8 +106,7 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
       if (!cm || cm > st.hubMin) return false;
     }
     if (st.brightOnly) {
-      const _vs = typeof s.vs === "number" ? s.vs : 50;
-      if (_vs < 74 || s.vr) return false;
+      if (s.vr || (Number(s.vs) || 0) < 97) return false;
     }
     if (st.reraOnly) {
       const _hasRera = !!(s.rera || s.rera_id || (Array.isArray(s.rera_ids) && s.rera_ids.length) || (s.units_buy || []).some(u => u && u.rera));
@@ -447,7 +446,12 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
 
     filtered = filtered.filter(passesV15SocietyFilter); /* v15_filter_hook */
     const exactCnt = filtered.filter(s => !s.coords_approx).length;
-    $("resSum").textContent = `${filtered.length.toLocaleString("en-IN")} homes \u00b7 ${exactCnt.toLocaleString("en-IN")} exact pins`;
+    // BH_V59_SMOOTH_BUY: show smooth loading text while Buy/Rent shards download
+    if (window.__bhModeLoading && window.__bhModeLoading === st.mode && filtered.length === 0) {
+      $("resSum").textContent = st.mode === "buy" ? "Loading homes for sale..." : "Loading homes for rent...";
+    } else {
+      $("resSum").textContent = `${filtered.length.toLocaleString("en-IN")} homes \u00b7 ${exactCnt.toLocaleString("en-IN")} exact pins`;
+    }
     $("applyFiltersBtn").textContent = `Show ${filtered.length.toLocaleString("en-IN")} Homes`;
     renderActiveBar();
     renderMap(); renderList();
@@ -862,7 +866,7 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
   }
 
   $("modeRent").onclick = () => { st.mode = "rent"; $("modeRent").classList.add("active"); $("modeBuy").classList.remove("active"); resetPriceScale(); renderAll(); };
-  $("modeBuy").onclick = () => { st.mode = "buy"; $("modeBuy").classList.add("active"); $("modeRent").classList.remove("active"); resetPriceScale(); renderAll(); ensureBuyShardsLoaded(); };
+  $("modeBuy").onclick = () => { if (!window.__bhBuyDone) window.__bhModeLoading = "buy"; st.mode = "buy"; $("modeBuy").classList.add("active"); $("modeRent").classList.remove("active"); resetPriceScale(); renderAll(); ensureBuyShardsLoaded(); };
   $("themeBtn").onclick = () => applyTheme(st.theme === "dark" ? "light" : "dark");
   $("openFilterBtn").onclick = openFilters; $("closeFilterBtn").onclick = closeFilters; $("filterBackdrop").onclick = closeFilters; $("applyFiltersBtn").onclick = closeFilters;
   $("clearFiltersBtn").onclick = resetAll; $("resetMiniBtn").onclick = resetAll;
@@ -1065,9 +1069,11 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
     return out;
   }
   async function ensureBuyShardsLoaded() {
+    // BH_V59B_BUY_SMOOTH
+    if (!window.__bhBuyDone) window.__bhModeLoading = "buy";
     if (_bhBuyLoaded || !_bhManifest) return;
     if (!_bhBuyPromise) {
-      _bhBuyPromise = _loadShardList(_bhManifest.buy_shards).then(buyRows => {
+      _bhBuyPromise = _loadShardList(_bhManifest.buy_shards).then(buyRows => { window.__bhBuyDone = true; window.__bhModeLoading = null;
         baseSocieties = _mergeShardSocieties(baseSocieties, buyRows);
         _bhBuyLoaded = true;
         rebuildSocietyList(); populateLocalities(); populateSources(); renderAll();
@@ -1076,6 +1082,8 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
     return _bhBuyPromise;
   }
   window.__bhEnsureBuy = ensureBuyShardsLoaded;
+  // BH_V59B_PREFETCH: quietly pre-load Buy shards after Rent renders so Rent->Buy is instant
+  setTimeout(() => { try { if (typeof ensureBuyShardsLoaded === 'function') ensureBuyShardsLoaded(); } catch {} }, 2200);
 
   fetch("./public/data/manifest.json", { cache: "no-store" })
     .then(r => { if (!r.ok) throw new Error("Manifest HTTP " + r.status); return r.json(); })
