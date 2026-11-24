@@ -201,7 +201,7 @@ def run_data_hygiene(socs):
     return socs
 _BAD_IMG_RE = re.compile(
     r"(floor[-_]?plan|master[-_]?plan|site[-_]?plan|unit[-_]?plan|location[-_]?map|"
-    r"3d[-_]?plan|3d[-_]?render|layout|blueprint|brochure|elevation|under_screening|"
+    r"3d[-_]?plan|3d[-_]?render|layout|blueprint|brochure|elevation|under_screening|secondaryPortal/optImages|"
     r"fbshare|static\.99acres\.com|assets\.nobroker\.in|no[-_]?image|no[-_]?photo|"
     r"placeholder|default[-_]?img|avatar|logo|\.svg(?:\?|$)|\.gif(?:\?|$))",
     re.I,

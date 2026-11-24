@@ -75,7 +75,7 @@ async function callGemini(apiKey, systemPrompt, userPrompt, expectJson) {
     if (!r.ok) {
       const et = await r.text().catch(() => "");
       lastErr = model + " HTTP " + r.status + " " + et.slice(0, 80);
-      if (r.status === 404 || r.status === 400) continue;
+      if ([400, 404, 429, 500, 502, 503, 504].includes(r.status)) continue;
       throw new Error(lastErr);
     }
     const d = await r.json();
@@ -229,6 +229,7 @@ function sanitizeParsedFilters(raw, knownLocalities) {
   if (typeof raw.keywords === "string" && raw.keywords.trim().length >= 2 && raw.keywords.trim().length <= 40) {
     out.keywords = raw.keywords.trim();
   }
+  if (raw.zero || raw.zeroOnly || raw.zeroBrokerage || raw.zero_brokerage) out.zero = true;
   return out;
 }
 

@@ -131,10 +131,25 @@ def _load_google_place_names():
         pass
     return by_id, by_url
 
+def _load_dead_urls():
+    p = ROOT / "data/media_cache.json"
+    dead = set()
+    if not p.exists():
+        return dead
+    try:
+        mc = json.loads(p.read_text(encoding="utf-8-sig"))
+        for u, v in (mc.items() if isinstance(mc, dict) else []):
+            if isinstance(v, dict) and (v.get("dead") is True or v.get("st") in (404, 410)):
+                dead.add(u)
+    except Exception:
+        pass
+    return dead
+
 def repair_societies(socs, mode="rent"):
     stats = Counter()
     unit_k = "units_buy" if mode == "buy" else "units_rent"
     g_by_id, g_by_url = _load_google_place_names()
+    dead_urls = _load_dead_urls()
 
     for s in socs:
         loc = str(s.get("locality") or "").strip()
@@ -440,3 +455,36 @@ def run_on_shards():
 
 if __name__ == "__main__":
     run_on_shards()
+
+def _sync_manifest_v54():
+    # SYNC_MANIFEST_V54: align ALL manifest.json totals & IST timestamp with repaired shards
+    import time as _t
+    from datetime import datetime, timezone, timedelta
+    mp = ROOT / "web/public/data/manifest.json"
+    if not mp.exists():
+        return
+    m = json.loads(mp.read_text(encoding="utf-8-sig"))
+    rs = [x for sf in (m.get("rent_shards") or []) if (ROOT / "web/public/data" / sf).exists() for x in json.loads((ROOT / "web/public/data" / sf).read_text(encoding="utf-8-sig"))]
+    bs = [x for sf in (m.get("buy_shards") or []) if (ROOT / "web/public/data" / sf).exists() for x in json.loads((ROOT / "web/public/data" / sf).read_text(encoding="utf-8-sig"))]
+    ist = datetime.now(timezone(timedelta(hours=5, minutes=30)))
+    ist_str = ist.strftime("%d %b %Y, %I:%M %p IST")
+    tot_soc = len({s.get("id") for s in (rs + bs) if s.get("id")})
+    r_fl = sum(len(s.get("units_rent") or []) for s in rs)
+    b_fl = sum(len(s.get("units_buy") or []) for s in bs)
+    m["count"] = tot_soc
+    m["total_societies"] = tot_soc
+    m["rent_buildings"] = len(rs)
+    m["rent_societies"] = len(rs)
+    m["buy_buildings"] = len(bs)
+    m["buy_societies"] = len(bs)
+    m["rent_flats"] = r_fl
+    m["total_rent_flats"] = r_fl
+    m["buy_flats"] = b_fl
+    m["total_buy_flats"] = b_fl
+    m["generated_at"] = ist_str
+    m["updated_ist"] = ist_str
+    m["generated_ts"] = int(_t.time())
+    mp.write_text(json.dumps(m, ensure_ascii=False, indent=2), encoding="utf-8")
+
+if __name__ == '__main__':
+    _sync_manifest_v54()

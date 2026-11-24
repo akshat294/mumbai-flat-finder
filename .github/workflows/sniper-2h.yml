@@ -39,6 +39,12 @@ jobs:
           python -u pipeline/sniper_nobroker.py
           python -u pipeline/vision_vibe.py
 
+      - name: Apply HD Media Cache, Fleet Repair & CI Quality Gate (v50)
+        run: |
+          python -u pipeline/enrich_media.py --apply-only
+          python -u pipeline/fleet_repair.py
+          python -u pipeline/verify_build.py
+
       - name: Deploy & save if new drops found
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

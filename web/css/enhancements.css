@@ -466,10 +466,15 @@ button[data-act="save"], [aria-label*="Save" i].fc-act {
 }
 @media (max-width: 768px) {
   #bhAiBar .bh-ai-wrap { display: none !important; }
-  #bhAiBar { padding: 0 !important; border: 0 !important; min-height: 0 !important; background: transparent !important; }
+  #bhAiBar { display: none !important; }
   #bhAiBar:has(#bhAiStatus:not(:empty)) {
+    display: flex !important;
     padding: 6px 12px 8px !important;
     background: rgba(18, 37, 29, 0.96) !important;
     border-bottom: 1px solid rgba(196, 158, 92, 0.25) !important;
   }
 }
+
+/* === V50 IMG FALLBACK & VIDEO PILL SAFETY === */
+.bh-img-missing { background: linear-gradient(135deg, #162b22 0%, #0f1f18 100%) !important; }
+.bh-vid-pill { bottom: 10px; top: auto; left: 10px; }

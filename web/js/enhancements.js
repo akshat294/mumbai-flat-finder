@@ -28,7 +28,7 @@
     }
   }
 
-  const BH_BAD_IMG_RE = /(floor[-_]?plan|master[-_]?plan|site[-_]?plan|unit[-_]?plan|location[-_]?map|3d[-_]?plan|3d[-_]?render|layout|blueprint|brochure|elevation|under_screening|fbshare|static\.99acres\.com|assets\.nobroker\.in|no[-_]?image|no[-_]?photo|placeholder|default[-_]?img|avatar|logo)/i;
+  const BH_BAD_IMG_RE = /(floor[-_]?plan|master[-_]?plan|site[-_]?plan|unit[-_]?plan|location[-_]?map|3d[-_]?plan|3d[-_]?render|layout|blueprint|brochure|elevation|under_screening|secondaryPortal\/optImages|fbshare|static\.99acres\.com|assets\.nobroker\.in|no[-_]?image|no[-_]?photo|placeholder|default[-_]?img|avatar|logo)/i;
 
   function bhMediaInfo(raw) {
     const su = safeUrl(raw);
@@ -449,7 +449,7 @@
                 '<iframe class="bh-dgal-yt" src="' + escHtml(cur.url) + '" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>' +
                 '<span class="bh-dgal-vidtag">Video Tour</span>';
             } else {
-              stage.innerHTML = '<img src="' + escHtml(cur.url) + '" referrerpolicy="no-referrer" alt="Property photo" decoding="async" />';
+              stage.innerHTML = '<img referrerpolicy="no-referrer" src="' + escHtml(cur.url) + '" referrerpolicy="no-referrer" alt="Property photo" decoding="async" />';
               const im = stage.querySelector("img");
               if (im) {
                 im.addEventListener("error", () => {
@@ -1192,4 +1192,35 @@
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => setTimeout(wire, 220));
   else setTimeout(wire, 220);
+})();
+
+/* === BH_V50_IMG_GUARD === */
+(function initBrokenImgGuardV50() {
+  if (window.__bhV50ImgGuard) return;
+  window.__bhV50ImgGuard = true;
+  document.addEventListener("error", function (ev) {
+    const img = ev.target;
+    if (!img || img.tagName !== "IMG") return;
+    if (img.dataset.bhFallbackDone) return;
+    const card = img.closest("[data-id], .flat-card, .fc");
+    const sid = card && (card.dataset.id || card.getAttribute("data-id"));
+    let pool = [];
+    if (sid && window.__bhById && window.__bhById.get) {
+      const s = window.__bhById.get(sid);
+      if (s && Array.isArray(s.photos)) pool = s.photos;
+    }
+    const tried = Number(img.dataset.bhTry || "0");
+    const nextUrl = pool.find((u, idx) => idx > tried && u && u !== img.src);
+    if (nextUrl) {
+      img.dataset.bhTry = String(tried + 1);
+      img.src = nextUrl;
+      return;
+    }
+    img.dataset.bhFallbackDone = "1";
+    img.style.opacity = "0";
+    const parent = img.parentElement;
+    if (parent && !parent.querySelector(".bh-img-ph")) {
+      parent.classList.add("bh-img-missing");
+    }
+  }, true);
 })();

@@ -97,3 +97,7 @@ bombayhomes_v26_report.txt
 bombayhomes_*.txt
 data/diy_99acres_checkpoint.json
 data/.chrome_profile*/
+# Local audit & QA artifacts
+qa_screenshots/
+_v*.py
+_live_qa.py

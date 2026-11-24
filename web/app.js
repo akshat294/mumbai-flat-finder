@@ -72,11 +72,13 @@
       }
 
       if (wantFurn && wantFurn !== "ALL" && u.f && String(u.f).toLowerCase() !== String(wantFurn).toLowerCase()) return false;
-      if (wantSrc && wantSrc !== "ALL" && u.s !== wantSrc) return false;
-
       const uLt = u.lt || ((u.s === "community" || u.s === "reddit") ? "shared" : ((u.zb || u.s === "nobroker" || u.s === "owner") ? "owner" : "broker"));
+      if (wantSrc && wantSrc !== "ALL") {
+        if (wantSrc === "community") { if (u.s !== "community" && u.s !== "reddit" && uLt !== "shared") return false; }
+        else if (u.s !== wantSrc) return false;
+      }
       if (st.zero && uLt !== "owner" && !u.zb) return false;
-      if (st.community && uLt !== "shared") return false;
+      if ((st.community || ($("fSource")?.value === "community")) && uLt !== "shared") return false;
       if (wantLister !== "ALL" && uLt !== wantLister) return false;
       return true;
     });
@@ -403,7 +405,7 @@
       if (loc !== "ALL" && s.locality !== loc) return false;
       if (srcF !== "ALL") {
         const srcs = getSources(s);
-        if (srcF === "community") { if (!srcs.includes("community") && !srcs.includes("reddit")) return false; }
+        if (srcF === "community") { const _hasSh = srcs.includes("community") || srcs.includes("reddit") || (s.units_rent || []).some(u => (u.lt || ((u.s === "community" || u.s === "reddit") ? "shared" : "")) === "shared"); if (!_hasSh) return false; }
         else if (!srcs.includes(srcF)) return false;
       }
       if (q && (!((s.name + " " + s.locality + " " + (s.zone || "") + " " + ((s.features?.tags || []).join(" "))).toLowerCase().replace(/[^a-z0-9]/g, "").includes(q.replace(/[^a-z0-9]/g, ""))))) return false;
@@ -459,7 +461,7 @@
     else if (ctx.nearest_metro) meta.push(`${ctx.nearest_metro.walk_min}m Metro`);
 
     return `<article class="hc ${s.id === st.sel ? "sel" : ""}" data-id="${esc(s.id)}">
-      ${s.thumb ? `<img class="hc-thumb" src="${esc(s.thumb)}" referrerpolicy="no-referrer" alt="" loading="lazy" onerror="this.remove()" />` : ""}
+      ${s.thumb ? `<img referrerpolicy="no-referrer" class="hc-thumb" src="${esc(s.thumb)}" referrerpolicy="no-referrer" alt="" loading="lazy" onerror="this.remove()" />` : ""}
       <div class="hc-main">
         <div class="hc-row1">
           <div style="min-width:0;"><div class="hc-name">${esc(s.name)}</div><div class="hc-loc">${esc(s.locality)}${g?.rating ? ` · <span class="hc-star">★ ${g.rating}</span>` : ""}</div></div>
@@ -498,6 +500,8 @@
   }
 
   function renderList() {
+  if (!window.__bhById) window.__bhById = new Map();
+  if (Array.isArray(filtered)) { for (const _s of filtered) { if (_s && _s.id) window.__bhById.set(_s.id, _s); } }
     const isBuy = st.mode === "buy";
     const PORTALS = {
       magicbricks:"MagicBricks", nobroker:"NoBroker", squareyards:"Square Yards",
@@ -636,7 +640,7 @@
         <article class="fc${sel ? " sel" : ""}" data-id="${esc(s.id)}" data-url="${esc(directHref)}" data-img="${esc(img)}">
           <div class="fc-media">${(s.videos && s.videos.length) ? '<span class="bh-vid-pill">\u25b6 Video</span>' : ""}
             <div class="fc-ph">${archSvg}<span>${esc(s.locality)}</span></div>
-            ${img ? `<img class="fc-img" src="${esc(img)}" referrerpolicy="no-referrer" loading="lazy" alt="" onerror="this.remove()" />` : ""}
+            ${img ? `<img referrerpolicy="no-referrer" class="fc-img" src="${esc(img)}" referrerpolicy="no-referrer" loading="lazy" alt="" onerror="this.remove()" />` : ""}
             ${topPills.length ? `<div class="fc-badges-top">${topPills.slice(0, 2).join("")}</div>` : ""}
             <button class="fc-heart${saved ? " on" : ""}" data-save="${esc(s.id)}" aria-label="Save flat">${saved ? "♥" : "♡"}</button>
             ${img || directHref ? `<button type="button" class="fc-nav prev" data-pdir="-1" aria-label="Previous photo">‹</button><button type="button" class="fc-nav next" data-pdir="1" aria-label="Next photo">›</button><span class="fc-pcount">${Array.isArray(u.imgs) && u.imgs.length > 1 ? `1 / ${u.imgs.length}` : "1 / +"}</span>` : ""}
@@ -737,7 +741,7 @@
     $("dName").textContent = s.name;
     $("dSub").textContent = `${s.locality} · ${s.coords_approx ? "Locality Area Pin" : "Verified Building Pin"}${g.rating ? ` · ★ ${g.rating}` : ""}`;
     $("dBody").innerHTML = `
-      <div class="d-hero-slot">${s.thumb ? `<img class="d-hero" src="${esc(s.thumb)}" referrerpolicy="no-referrer" alt="" onerror="this.remove()" />` : ""}</div>
+      <div class="d-hero-slot">${s.thumb ? `<img referrerpolicy="no-referrer" class="d-hero" src="${esc(s.thumb)}" referrerpolicy="no-referrer" alt="" onerror="this.remove()" />` : ""}</div>
       <div class="d-actions">
         <button class="btn ${isS ? "active" : ""}" id="dSv">${isS ? "Saved" : "Save"}</button>
         <a class="btn" target="_blank" href="${mapsUrl}">Google Maps ↗</a>
