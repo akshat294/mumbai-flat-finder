@@ -1127,24 +1127,19 @@
 })();
 
 /* === BH_V45_UNIFIED_SEARCH === */
-(function initUnifiedSearchV45() {
+(function initUnifiedSearchV48() {
   const NL_RE = /(?:\b(?:under|below|above|over|max|min|upto|within|near|walk|metro|aqua|bkc|sunlit|bright|modern|zero|no\s*brok|owner|flatmate|sharing|pg|sea\s*view|balcony|terrace|flood|monsoon|rera|furnished|semi|unfurnished|cheapest|budget|deal|sobo)\b|\b\d+\s*(?:bhk|rk|k|l|lac|lakh|cr|crore)\b)/i;
   function wire() {
     const sb = document.getElementById("searchBox");
-    if (!sb || sb.dataset.bhV45) return;
-    sb.dataset.bhV45 = "1";
-    sb.placeholder = "Bandra, Khar, society, or '2BHK under 85k near metro'";
-
-    const findAsk = () => {
-      const inp = document.querySelector("#bhAskInput, .bh-ask-input, .ask-input, [id*='ask' i] input[type='text'], [id*='ask' i] input:not([type])");
-      const btn = document.querySelector("#bhAskBtn, .bh-ask-btn, .ask-btn, [id*='ask' i] button[type='submit'], [id*='ask' i] button");
-      return { inp, btn };
-    };
+    if (!sb || sb.dataset.bhV48) return;
+    sb.dataset.bhV48 = "1";
+    sb.placeholder = "Bandra, society, or '2BHK under 85k near metro'";
 
     const runUnifiedAsk = (rawQ) => {
       const q = String(rawQ || "").trim();
       if (!q) return false;
-      const { inp, btn } = findAsk();
+      const inp = document.getElementById("bhAiInput");
+      const btn = document.getElementById("bhAiGo");
       if (!inp) return false;
       inp.value = q;
       inp.dispatchEvent(new Event("input", { bubbles: true }));
@@ -1156,13 +1151,17 @@
     };
 
     const wrap = sb.closest(".search-wrap");
-    if (wrap && !wrap.querySelector(".bh-uni-ai")) {
-      const aiBtn = document.createElement("button");
-      aiBtn.type = "button";
-      aiBtn.className = "bh-uni-ai";
-      aiBtn.title = "Ask AI Map Search";
-      aiBtn.textContent = "\u2726 AI";
-      aiBtn.addEventListener("click", (e) => {
+    if (wrap) {
+      let aiBtn = wrap.querySelector(".bh-uni-ai");
+      if (!aiBtn) {
+        aiBtn = document.createElement("button");
+        aiBtn.type = "button";
+        aiBtn.className = "bh-uni-ai";
+        aiBtn.title = "Ask Map AI";
+        aiBtn.textContent = "\u2726 AI";
+        wrap.appendChild(aiBtn);
+      }
+      aiBtn.onclick = (e) => {
         e.preventDefault();
         e.stopPropagation();
         if (sb.value.trim()) runUnifiedAsk(sb.value);
@@ -1170,8 +1169,7 @@
           sb.focus();
           sb.placeholder = "Try: Sunlit 2BHK under 85k Bandra zero brokerage";
         }
-      });
-      wrap.appendChild(aiBtn);
+      };
       const syncBtn = () => {
         const v = sb.value.trim();
         aiBtn.classList.toggle("hot", NL_RE.test(v) || v.split(/\s+/).length >= 3);
@@ -1192,6 +1190,6 @@
       }
     }, true);
   }
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => setTimeout(wire, 180));
-  else setTimeout(wire, 180);
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => setTimeout(wire, 220));
+  else setTimeout(wire, 220);
 })();

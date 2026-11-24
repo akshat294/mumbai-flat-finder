@@ -453,7 +453,7 @@ button[data-act="save"], [aria-label*="Save" i].fc-act {
 
 /* === V45 UNIFIED SEARCH === */
 .search-wrap { position: relative; }
-.search-wrap #searchBox { padding-right: 64px !important; }
+.search-wrap #searchBox { padding-right: 62px !important; }
 .bh-uni-ai {
   position: absolute; right: 7px; top: 50%; transform: translateY(-50%);
   padding: 4px 9px; border-radius: 999px; font-size: 11px; font-weight: 700;
@@ -465,5 +465,11 @@ button[data-act="save"], [aria-label*="Save" i].fc-act {
   background: rgba(196,158,92,0.92); color: #12251d; border-color: #c49e5c;
 }
 @media (max-width: 768px) {
-  .bh-ask-row, .bh-ask-form, .ask-form, #bhAskForm { display: none !important; }
+  #bhAiBar .bh-ai-wrap { display: none !important; }
+  #bhAiBar { padding: 0 !important; border: 0 !important; min-height: 0 !important; background: transparent !important; }
+  #bhAiBar:has(#bhAiStatus:not(:empty)) {
+    padding: 6px 12px 8px !important;
+    background: rgba(18, 37, 29, 0.96) !important;
+    border-bottom: 1px solid rgba(196, 158, 92, 0.25) !important;
+  }
 }
