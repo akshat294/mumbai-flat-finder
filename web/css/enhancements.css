@@ -478,3 +478,26 @@ button[data-act="save"], [aria-label*="Save" i].fc-act {
 /* === V50 IMG FALLBACK & VIDEO PILL SAFETY === */
 .bh-img-missing { background: linear-gradient(135deg, #162b22 0%, #0f1f18 100%) !important; }
 .bh-vid-pill { bottom: 10px; top: auto; left: 10px; }
+
+/* === BH_V60_TAP_TARGETS: comfortable thumb-sized top buttons & neighborhood pills === */
+#modeRent, #modeBuy {
+  min-height: 32px !important;
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+.bh-uni-ai {
+  min-height: 28px !important;
+  height: 28px !important;
+  min-width: 46px !important;
+}
+#searchBox {
+  min-height: 34px !important;
+}
+.n-chip, .chip {
+  min-height: 32px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}

@@ -1,8 +1,8 @@
 {
   "version": 28,
   "city": "Mumbai MMR",
-  "generated_at": "25 Nov 2026, 01:36 AM IST",
-  "generated_ts": 1795550761,
+  "generated_at": "25 Nov 2026, 01:56 AM IST",
+  "generated_ts": 1795551991,
   "count": 16248,
   "rent_buildings": 10469,
   "buy_buildings": 7196,
@@ -29,5 +29,5 @@
   "buy_societies": 7196,
   "total_rent_flats": 16948,
   "total_buy_flats": 12313,
-  "updated_ist": "25 Nov 2026, 01:36 AM IST"
+  "updated_ist": "25 Nov 2026, 01:56 AM IST"
 }

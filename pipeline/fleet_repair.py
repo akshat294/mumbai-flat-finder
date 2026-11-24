@@ -505,6 +505,41 @@ def _apply_v59_floors_and_bright():
             sp.write_text(json.dumps(socs[i * chunk : (i + 1) * chunk], ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     print(f"[FLEET REPAIR V59] 99acres floors restored=+{added_flr:,} | features.bright synced (vs>=97)", flush=True)
 
+def _apply_v60_polish():
+    # V60_ENTITIES_AND_DEPOSITS: decode HTML entities in names/localities & clear typo Rent deposits
+    import html as _html, math as _math
+    mp = ROOT / "web/public/data/manifest.json"
+    if not mp.exists():
+        return
+    m = json.loads(mp.read_text(encoding="utf-8-sig"))
+    ent_fixed = dep_cleared = 0
+    for sk, uk in (("rent_shards", "units_rent"), ("buy_shards", "units_buy")):
+        paths = [ROOT / "web/public/data" / sf for sf in (m.get(sk) or []) if (ROOT / "web/public/data" / sf).exists()]
+        if not paths:
+            continue
+        socs = [x for sp in paths for x in json.loads(sp.read_text(encoding="utf-8-sig"))]
+        for s in socs:
+            for k in ("name", "locality"):
+                v = s.get(k)
+                if isinstance(v, str) and ("&" in v):
+                    v2 = _html.unescape(_html.unescape(v))
+                    v2 = re.sub(r"\s*\(\s*", " (", v2)
+                    v2 = re.sub(r"\s*\)\s*", ") ", v2)
+                    v2 = re.sub(r"\s+", " ", v2).strip()
+                    if v2 != v:
+                        s[k] = v2
+                        ent_fixed += 1
+            if sk == "rent_shards":
+                for u in (s.get(uk) or []):
+                    dep, p = u.get("dep"), u.get("p")
+                    if dep and p and (dep < 5000 or dep > p * 24):
+                        u.pop("dep", None)
+                        dep_cleared += 1
+        chunk = _math.ceil(len(socs) / max(1, len(paths)))
+        for i, sp in enumerate(paths):
+            sp.write_text(json.dumps(socs[i * chunk : (i + 1) * chunk], ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    print(f"[FLEET REPAIR V60] HTML entities decoded={ent_fixed} | typo deposits cleared={dep_cleared}", flush=True)
+
 def _sync_manifest_v54():
     # SYNC_MANIFEST_V54: align ALL manifest.json totals & IST timestamp with repaired shards
     import time as _t
@@ -537,4 +572,5 @@ def _sync_manifest_v54():
 
 if __name__ == '__main__':
     _apply_v59_floors_and_bright()
+    _apply_v60_polish()
     _sync_manifest_v54()

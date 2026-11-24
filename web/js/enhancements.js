@@ -1270,3 +1270,39 @@
     }
   }, true);
 })();
+
+/* === BH_V60_A11Y_AND_LINKS === */
+(function initV60A11yAndLinkSafety() {
+  if (window.__bhV60A11y) return;
+  window.__bhV60A11y = true;
+  const polish = (root) => {
+    try {
+      const scope = root && root.querySelectorAll ? root : document;
+      scope.querySelectorAll('a[href^="http"]').forEach((a) => {
+        if (!a.getAttribute("target")) a.setAttribute("target", "_blank");
+        const rel = (a.getAttribute("rel") || "").toLowerCase();
+        if (!rel.includes("noopener") || !rel.includes("noreferrer")) {
+          a.setAttribute("rel", "noopener noreferrer");
+        }
+      });
+      scope.querySelectorAll("img").forEach((im) => {
+        if (im.getAttribute("alt") && im.getAttribute("alt").trim().length > 1) return;
+        const card = im.closest(".fc, #detailSheet, .bh-preview, .leaflet-popup");
+        const title = card ? (card.querySelector(".fc-name, .fc-title, h2, h3, .d-title")?.textContent || "").trim() : "";
+        const loc = card ? (card.querySelector(".fc-loc, .d-loc, .fc-sub")?.textContent || "").trim() : "";
+        const desc = title ? (loc ? `${title}, ${loc}` : `${title} - Mumbai flat`) : "Bombay Homes Mumbai flat photo";
+        im.setAttribute("alt", desc.slice(0, 95));
+      });
+    } catch {}
+  };
+  const mo = new MutationObserver(() => polish(document));
+  if (document.body) {
+    polish(document);
+    mo.observe(document.body, { childList: true, subtree: true });
+  } else {
+    document.addEventListener("DOMContentLoaded", () => {
+      polish(document);
+      mo.observe(document.body, { childList: true, subtree: true });
+    });
+  }
+})();
