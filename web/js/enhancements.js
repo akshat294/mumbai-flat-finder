@@ -34,7 +34,9 @@
     const su = safeUrl(raw);
     if (!su || BH_BAD_IMG_RE.test(su)) return null;
     let url = su;
-    if (url.includes("housingcdn.com/") || url.includes("housing-images.n7net.in/")) {
+    if (url.includes("img.staticmb.com/mbphoto/property/") && url.includes("Photo_h180_w240")) {
+      url = url.replace("Photo_h180_w240", "Photo_h600_w900").replace("_180_240.", "_600_900.");
+    } else if (url.includes("housingcdn.com/") || url.includes("housing-images.n7net.in/")) {
       url = url.replace(/\/v(\d+)\/(?:version|fs_medium|medium|small|thumb)\//i, "/v$1/fs/");
     } else if (url.includes("images.nobroker.in/images/")) {
       url = url.replace(/_thumbnail\./i, "_large.").replace(/_small\./i, "_large.");
@@ -362,16 +364,51 @@
         const mountTarget = heroSlot || firstImg;
         if (mountTarget && !dBody.querySelector(".bh-dgal")) {
           const openedSocId = socId;
-          const rawSeed = [];
+          const _mkMedia = (rawUrls, rawVids) => {
+            const imgs = bhBuildCleanPhotos(rawUrls);
+            const vids = [], seenV = new Set();
+            for (const v of (rawVids || [])) {
+              if (!v || !v.url || seenV.has(v.url)) continue;
+              seenV.add(v.url);
+              vids.push({ type: v.kind === "youtube" ? "youtube" : "video", url: v.url });
+            }
+            const out = [];
+            if (imgs.length) out.push({ type: "img", url: imgs[0] });
+            vids.forEach(v => out.push(v));
+            imgs.slice(1).forEach(url => out.push({ type: "img", url }));
+            return out;
+          };
+          const _fmtTabP = (p, isB) => {
+            if (!p) return "";
+            if (isB) return p >= 1e7 ? ("\u20b9" + (p / 1e7).toFixed(1).replace(/\.0$/, "") + "Cr") : ("\u20b9" + Math.round(p / 1e5) + "L");
+            return p >= 1e5 ? ("\u20b9" + (p / 1e5).toFixed(1).replace(/\.0$/, "") + "L") : ("\u20b9" + Math.round(p / 1e3) + "k");
+          };
+          const rawSeed = [], rawVids = [];
+          const unitTabs = [];
+          const isBuyMode = !!(bh().st && bh().st.mode === "buy");
           if (firstImg && firstImg.getAttribute("src")) rawSeed.push(firstImg.getAttribute("src"));
           if (soc) {
             if (soc.thumb) rawSeed.push(soc.thumb);
             (soc.photos || []).forEach(p => rawSeed.push(p));
+            (soc.videos || []).forEach(v => rawVids.push(v));
             const us = bh().matchingUnits ? bh().matchingUnits(soc) : (soc.units_rent || []);
-            us.forEach(u => { if (u.img) rawSeed.push(u.img); (u.imgs || []).forEach(p => rawSeed.push(p)); });
+            us.forEach((u, ui) => {
+              const uUrls = [];
+              if (u.img) { rawSeed.push(u.img); uUrls.push(u.img); }
+              (u.imgs || []).forEach(p => { rawSeed.push(p); uUrls.push(p); });
+              const uVids = Array.isArray(u.vids) ? u.vids : [];
+              uVids.forEach(v => rawVids.push(v));
+              const uMedia = _mkMedia(uUrls, uVids);
+              if (uMedia.length) {
+                const bLbl = u.b === 0 ? "1RK" : (u.b ? (u.b + "BHK") : "");
+                const lbl = [_fmtTabP(u.p, isBuyMode), bLbl].filter(Boolean).join(" ") || ("Flat " + (ui + 1));
+                unitTabs.push({ label: lbl, items: uMedia });
+              }
+            });
           }
 
-          let mediaItems = bhBuildCleanPhotos(rawSeed).map(url => ({ type: "img", url }));
+          let allMediaItems = _mkMedia(rawSeed, rawVids);
+          let mediaItems = allMediaItems.slice();
           let mIdx = 0;
           galPhotos = mediaItems.map(x => x.url);
           galIdx = 0;
@@ -438,6 +475,31 @@
 
           renderSlide();
           wrap._bhNav = d => { mIdx += d; renderSlide(); };
+          if (unitTabs.length >= 2) {
+            const tabBar = document.createElement("div");
+            tabBar.className = "bh-utabs";
+            const mkBtn = (txt, isOn, fn) => {
+              const b = document.createElement("button");
+              b.type = "button";
+              b.className = "bh-utab" + (isOn ? " on" : "");
+              b.textContent = txt;
+              b.addEventListener("click", () => {
+                tabBar.querySelectorAll(".bh-utab").forEach(x => x.classList.remove("on"));
+                b.classList.add("on");
+                fn();
+              });
+              return b;
+            };
+            tabBar.appendChild(mkBtn("All (" + allMediaItems.length + ")", true, () => {
+              mediaItems = allMediaItems.slice(); mIdx = 0; renderSlide();
+            }));
+            unitTabs.slice(0, 6).forEach(t => {
+              tabBar.appendChild(mkBtn(t.label + " (" + t.items.length + ")", false, () => {
+                mediaItems = t.items.slice(); mIdx = 0; renderSlide();
+              }));
+            });
+            wrap.insertAdjacentElement("afterend", tabBar);
+          }
           wrap.querySelector(".bh-dgal-prev").addEventListener("click", () => { mIdx--; renderSlide(); });
           wrap.querySelector(".bh-dgal-next").addEventListener("click", () => { mIdx++; renderSlide(); });
 
@@ -452,7 +514,7 @@
 
           const portalLinks = [...dBody.querySelectorAll('a[href*="magicbricks"], a[href*="nobroker"], a[href*="squareyards"], a[href*="makaan"], a[href*="commonfloor"], a[href*="99acres"], a[href*="housing.com"]')].map(a => a.href);
           const portalLink = portalLinks[0];
-          const shouldFetch = !!portalLink && (mediaItems.length < 6 || /housing\.com|nobroker\.in|99acres\.com/i.test(portalLink));
+          const shouldFetch = !!portalLink && /squareyards\.com|makaan\.com|commonfloor\.com/i.test(portalLink) && mediaItems.length < 6;
           if (shouldFetch) {
             fetch("/api/photos?url=" + encodeURIComponent(portalLink))
               .then(r => (r.ok ? r.json() : null))

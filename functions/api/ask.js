@@ -68,7 +68,7 @@ async function callGemini(apiKey, systemPrompt, userPrompt, expectJson) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  if (!r.ok) throw new Error("Gemini HTTP " + r.status);
+  if (!r.ok) { const et = await r.text().catch(() => ""); throw new Error("Gemini HTTP " + r.status + " " + et.slice(0, 90)); }
   const d = await r.json();
   const txt = d?.candidates?.[0]?.content?.parts?.[0]?.text || "";
   if (!txt) throw new Error("Gemini empty response");
@@ -90,13 +90,15 @@ async function callWorkersAI(aiBinding, systemPrompt, userPrompt, expectJson) {
 }
 
 async function runLLM(env, systemPrompt, userPrompt, expectJson) {
+  let diag = "no_key";
   const gemKey = (env?.GEMINI_API_KEY || "").trim();
   if (gemKey) {
     try {
       const txt = await callGemini(gemKey, systemPrompt, userPrompt, expectJson);
-      return { engine: "gemini", text: txt };
+      return { engine: "gemini", text: txt, diag: "ok" };
     } catch (e) {
-      console.error("[ask] Gemini error:", e?.message || e);
+      diag = String(e?.message || e).slice(0, 140);
+      console.error("[ask] Gemini error:", diag);
     }
   }
   if (env?.AI && typeof env.AI.run === "function") {
@@ -107,7 +109,7 @@ async function runLLM(env, systemPrompt, userPrompt, expectJson) {
       console.error("[ask] Workers AI error:", e?.message || e);
     }
   }
-  return { engine: "local-nlp", text: "" };
+  return { engine: "local-nlp", text: "", diag };
 }
 
 function sanitizeParsedFilters(raw, knownLocalities) {
@@ -227,7 +229,7 @@ export async function onRequestPost({ request, env }) {
 
     const llm = await runLLM(env, sysPrompt, userPrompt, true);
     const parsed = sanitizeParsedFilters(extractJsonObject(llm.text), knownLocalities);
-    return jsonRes(request, { ok: true, engine: llm.engine, filters: parsed });
+    return jsonRes(request, { ok: true, engine: llm.engine, diag: llm.diag || "", filters: parsed });
   }
 
   if (action === "summarize") {

@@ -70,6 +70,8 @@ jobs:
           PYTHONUNBUFFERED: "1"
         run: |
           python -u -c "from pipeline.vision_vibe import score_societies; score_societies()"
+          python -u pipeline/enrich_media.py --limit 300 --workers 6 --max-seconds 300
+          python -u pipeline/fleet_repair.py
           python -u pipeline/verify_build.py | tee verify_out.txt
           {
             echo "## ONNX Vision AI Catch-Up Summary"
@@ -89,5 +91,5 @@ jobs:
         run: |
           git config user.name "mumbai-flat-finder-bot"
           git config user.email "bot@users.noreply.github.com"
-          git add data/vision_tags_cache.json data/apify_cache.json data/apish_99acres_cache.json data/listing_registry.json web/public/data/manifest.json web/public/data/shards
+          git add data/media_cache.json data/vision_tags_cache.json data/apify_cache.json data/apish_99acres_cache.json data/listing_registry.json web/public/data/manifest.json web/public/data/shards
           git diff --staged --quiet || (git commit -m "chore: ONNX SigLIP 2 vision catch-up scan" && (git pull --rebase || (git rebase --abort && git pull --no-rebase -X ours --no-edit)) && git push)

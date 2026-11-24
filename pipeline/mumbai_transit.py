@@ -10,31 +10,44 @@ METRO_STATIONS = [
     ("Versova Metro", 19.1314, 72.8213), ("DN Nagar Metro", 19.1243, 72.8315),
     ("Azad Nagar Metro", 19.1268, 72.8380), ("Andheri Metro", 19.1197, 72.8464),
     ("WEH Metro", 19.1155, 72.8562), ("Chakala Metro", 19.1112, 72.8635),
-    ("Marol Naka Metro", 19.1082, 72.8798), ("Saki Naka Metro", 19.1030, 72.8880),
-    ("Asalpha Metro", 19.0968, 72.8980), ("Ghatkopar Metro", 19.0868, 72.9082),
-    ("Dahisar East Metro", 19.2502, 72.8593), ("Borivali West Metro", 19.2292, 72.8452),
-    ("Kandivali West Metro", 19.2059, 72.8364), ("Malad West Metro", 19.1864, 72.8360),
-    ("Goregaon West Metro", 19.1665, 72.8366), ("Oshiwara Metro", 19.1490, 72.8345),
-    ("Lower Oshiwara Metro", 19.1415, 72.8330),
-    ("Ovaripada Metro", 19.2420, 72.8635), ("Magathane Metro", 19.2185, 72.8645),
-    ("Poisar Metro", 19.2050, 72.8650), ("Kurar Metro", 19.1865, 72.8615),
-    ("Aarey Metro", 19.1650, 72.8565), ("Jogeshwari East Metro", 19.1370, 72.8560),
+    ("Airport Road Metro", 19.1095, 72.8740), ("Marol Naka Metro", 19.1082, 72.8798),
+    ("Saki Naka Metro", 19.1030, 72.8880), ("Asalpha Metro", 19.0968, 72.8980),
+    ("Jagruti Nagar Metro", 19.0920, 72.9035), ("Ghatkopar Metro", 19.0868, 72.9082),
+    ("Dahisar East Metro", 19.2502, 72.8593), ("Anand Nagar Metro", 19.2485, 72.8518),
+    ("Kandarpada Metro", 19.2425, 72.8468), ("Mandapeshwar Metro", 19.2360, 72.8458),
+    ("Eksar Metro", 19.2320, 72.8455), ("Borivali West Metro", 19.2292, 72.8452),
+    ("Pahadi Eksar Metro", 19.2230, 72.8415), ("Kandivali West Metro", 19.2059, 72.8364),
+    ("Dahanukarwadi Metro", 19.2145, 72.8378), ("Valnai Metro", 19.1965, 72.8362),
+    ("Malad West Metro", 19.1864, 72.8360), ("Lower Malad Metro", 19.1765, 72.8362),
+    ("Bangur Nagar Metro", 19.1715, 72.8364), ("Goregaon West Metro", 19.1665, 72.8366),
+    ("Oshiwara Metro", 19.1490, 72.8345), ("Lower Oshiwara Metro", 19.1415, 72.8330),
+    ("Ovaripada Metro", 19.2420, 72.8635), ("Rashtriya Udyan Metro", 19.2335, 72.8645),
+    ("Devipada Metro", 19.2260, 72.8648), ("Magathane Metro", 19.2185, 72.8645),
+    ("Poisar Metro", 19.2050, 72.8650), ("Akurli Metro", 19.1955, 72.8630),
+    ("Kurar Metro", 19.1865, 72.8615), ("Dindoshi Metro", 19.1755, 72.8588),
+    ("Aarey Metro", 19.1650, 72.8565), ("Goregaon East Metro", 19.1560, 72.8562),
+    ("Jogeshwari East Metro", 19.1370, 72.8560), ("Mogra Metro", 19.1260, 72.8562),
     ("Gundavali Metro", 19.1155, 72.8562),
     ("Cuffe Parade Metro", 18.9128, 72.8214), ("Vidhan Bhavan Metro", 18.9265, 72.8240),
     ("Churchgate Metro", 18.9322, 72.8264), ("Hutatma Chowk Metro", 18.9335, 72.8325),
-    ("Kalbadevi Metro", 18.9475, 72.8295), ("Grant Road Metro", 18.9625, 72.8170),
+    ("CST Metro", 18.9400, 72.8350), ("Kalbadevi Metro", 18.9475, 72.8295),
+    ("Girgaon Metro", 18.9555, 72.8195), ("Grant Road Metro", 18.9625, 72.8170),
     ("Mumbai Central Metro", 18.9712, 72.8195), ("Mahalaxmi Metro", 18.9830, 72.8210),
+    ("Science Museum Metro", 18.9945, 72.8205), ("Acharya Atre Chowk Metro", 19.0005, 72.8225),
     ("Worli Metro", 19.0055, 72.8235), ("Siddhivinayak Metro", 19.0170, 72.8305),
     ("Dadar Metro", 19.0215, 72.8390), ("Shitladevi Metro", 19.0345, 72.8405),
     ("Dharavi Metro", 19.0445, 72.8535), ("BKC Metro", 19.0655, 72.8655),
     ("Bandra Colony Metro", 19.0750, 72.8595), ("Santacruz Metro", 19.0850, 72.8520),
     ("CSMIA T1 Metro", 19.0920, 72.8565), ("Sahar Road Metro", 19.0990, 72.8690),
-    ("CSMIA T2 Metro", 19.0980, 72.8745), ("SEEPZ Metro", 19.1245, 72.8740),
-    ("Aarey JVLR Metro", 19.1390, 72.8780),
+    ("CSMIA T2 Metro", 19.0980, 72.8745), ("MIDC Metro", 19.1180, 72.8745),
+    ("SEEPZ Metro", 19.1245, 72.8740), ("Aarey JVLR Metro", 19.1390, 72.8780),
     ("Chembur Metro", 19.0550, 72.9000), ("Diamond Garden Metro", 19.0510, 72.9075),
     ("Mandale Metro", 19.0525, 72.9310),
-    ("CBD Belapur Metro", 19.0185, 73.0385), ("Kharghar Sector 11 Metro", 19.0425, 73.0685),
-    ("Central Park Kharghar Metro", 19.0575, 73.0695), ("Pendhar Metro", 19.0790, 73.0815),
+    ("CBD Belapur Metro", 19.0185, 73.0385), ("Sector 7 Belapur Metro", 19.0285, 73.0475),
+    ("Kharghar Village Metro", 19.0365, 73.0630), ("Kharghar Sector 11 Metro", 19.0425, 73.0685),
+    ("Kharghar Sector 14 Metro", 19.0495, 73.0695), ("Central Park Kharghar Metro", 19.0575, 73.0695),
+    ("Pethapada Metro", 19.0645, 73.0730), ("Sector 34 Kharghar Metro", 19.0705, 73.0770),
+    ("Panchanand Metro", 19.0750, 73.0800), ("Pendhar Metro", 19.0790, 73.0815),
 ]
 
 LOCAL_TRAINS = [
@@ -46,23 +59,40 @@ LOCAL_TRAINS = [
     ("Mahim (WR)", 19.0405, 72.8465), ("Bandra (WR)", 19.0544, 72.8402),
     ("Khar Road (WR)", 19.0697, 72.8400), ("Santacruz (WR)", 19.0816, 72.8415),
     ("Vile Parle (WR)", 19.0996, 72.8439), ("Andheri (WR)", 19.1197, 72.8468),
-    ("Jogeshwari (WR)", 19.1363, 72.8489), ("Goregaon (WR)", 19.1645, 72.8492),
-    ("Malad (WR)", 19.1869, 72.8489), ("Kandivali (WR)", 19.2045, 72.8518),
-    ("Borivali (WR)", 19.2291, 72.8573), ("Dahisar (WR)", 19.2500, 72.8595),
-    ("Mira Road (WR)", 19.2810, 72.8562), ("Bhayandar (WR)", 19.3114, 72.8525),
-    ("CSMT (CR)", 18.9401, 72.8355), ("Byculla (CR)", 18.9759, 72.8331),
+    ("Jogeshwari (WR)", 19.1363, 72.8489), ("Ram Mandir (WR)", 19.1518, 72.8501),
+    ("Goregaon (WR)", 19.1645, 72.8492), ("Malad (WR)", 19.1869, 72.8489),
+    ("Kandivali (WR)", 19.2045, 72.8518), ("Borivali (WR)", 19.2291, 72.8573),
+    ("Dahisar (WR)", 19.2500, 72.8595), ("Mira Road (WR)", 19.2810, 72.8562),
+    ("Bhayandar (WR)", 19.3114, 72.8525), ("Naigaon (WR)", 19.3515, 72.8465),
+    ("Vasai Road (WR)", 19.3822, 72.8322), ("Nalasopara (WR)", 19.4175, 72.8189),
+    ("Virar (WR)", 19.4559, 72.8115),
+    ("CSMT (CR)", 18.9401, 72.8355), ("Masjid (CR)", 18.9515, 72.8382),
+    ("Sandhurst Road (CR)", 18.9605, 72.8398), ("Byculla (CR)", 18.9759, 72.8331),
+    ("Chinchpokli (CR)", 18.9870, 72.8325), ("Currey Road (CR)", 18.9942, 72.8332),
     ("Parel (CR)", 19.0095, 72.8376), ("Matunga (CR)", 19.0275, 72.8505),
-    ("Sion (CR)", 19.0466, 72.8633), ("Kurla (CR)", 19.0655, 72.8794),
+    ("Sion (CR)", 19.0466, 72.8633), ("Kurla (CR/HR)", 19.0655, 72.8794),
     ("Vidyavihar (CR)", 19.0796, 72.8973), ("Ghatkopar (CR)", 19.0859, 72.9082),
     ("Vikhroli (CR)", 19.1112, 72.9277), ("Kanjurmarg (CR)", 19.1292, 72.9284),
     ("Bhandup (CR)", 19.1422, 72.9378), ("Nahur (CR)", 19.1544, 72.9465),
     ("Mulund (CR)", 19.1722, 72.9562), ("Thane (CR)", 19.1861, 72.9758),
-    ("Wadala Road (HR)", 19.0160, 72.8590), ("Chembur (HR)", 19.0623, 72.9008),
-    ("Vashi (HR)", 19.0642, 72.9990), ("Sanpada (HR)", 19.0660, 73.0095),
-    ("Nerul (HR)", 19.0338, 73.0185), ("Seawoods (HR)", 19.0222, 73.0190),
+    ("Kalwa (CR)", 19.1965, 72.9985), ("Mumbra (CR)", 19.1902, 73.0235),
+    ("Diva (CR)", 19.1885, 73.0422), ("Dombivli (CR)", 19.2183, 73.0867),
+    ("Kalyan (CR)", 19.2350, 73.1305),
+    ("Dockyard Road (HR)", 18.9665, 72.8442), ("Reay Road (HR)", 18.9778, 72.8444),
+    ("Cotton Green (HR)", 18.9862, 72.8432), ("Sewri (HR)", 18.9985, 72.8548),
+    ("Wadala Road (HR)", 19.0160, 72.8590), ("GTB Nagar (HR)", 19.0380, 72.8648),
+    ("Chunabhatti (HR)", 19.0518, 72.8698), ("Tilak Nagar (HR)", 19.0672, 72.8902),
+    ("Chembur (HR)", 19.0623, 72.9008), ("Govandi (HR)", 19.0550, 72.9154),
+    ("Mankhurd (HR)", 19.0484, 72.9324), ("Vashi (HR)", 19.0642, 72.9990),
+    ("Sanpada (HR)", 19.0660, 73.0095), ("Juinagar (HR)", 19.0555, 73.0180),
+    ("Nerul (HR)", 19.0338, 73.0185), ("Seawoods-Darave (HR)", 19.0222, 73.0190),
     ("CBD Belapur (HR)", 19.0188, 73.0394), ("Kharghar (HR)", 19.0258, 73.0598),
-    ("Airoli (TH)", 19.1585, 72.9995), ("Ghansoli (TH)", 19.1245, 73.0010),
-    ("Kopar Khairane (TH)", 19.1030, 73.0050), ("Panvel (HR)", 18.9906, 73.1208),
+    ("Mansarovar (HR)", 19.0165, 73.0802), ("Khandeshwar (HR)", 19.0072, 73.0955),
+    ("Panvel (HR)", 18.9906, 73.1208),
+    ("Bamandongri (Ulwe)", 18.9715, 73.0295), ("Kharkopar (Ulwe)", 18.9690, 73.0385),
+    ("Turbhe (TH)", 19.0762, 73.0170), ("Kopar Khairane (TH)", 19.1030, 73.0050),
+    ("Ghansoli (TH)", 19.1245, 73.0010), ("Rabale (TH)", 19.1365, 73.0012),
+    ("Airoli (TH)", 19.1585, 72.9995),
 ]
 
 HUB_COORDS = {
@@ -87,21 +117,16 @@ def enrich_transit_context(socs):
             s["mumbai_context"] = ctx
 
         m_name, m_km = min(((n, _hav_km(lat, lng, a, o)) for n, a, o in METRO_STATIONS), key=lambda x: x[1])
-        m_walk = max(2, int(round(m_km * 1.3 * 12)))
-        cur_m = ctx.get("nearest_metro")
-        if isinstance(cur_m, dict) and (cur_m.get("walk_min") or 0) > 45:
-            ctx.pop("nearest_metro", None)
-            fixed_far += 1
-        if m_walk <= 45 and (not ctx.get("nearest_metro") or (ctx["nearest_metro"].get("walk_min") or 999) > m_walk):
+        m_walk = max(2, int(round(m_km * 1.28 * 12)))
+        if m_walk <= 45:
             ctx["nearest_metro"] = {"name": m_name, "distance_m": int(round(m_km * 1000)), "walk_min": m_walk}
             filled += 1
+        elif ctx.pop("nearest_metro", None):
+            fixed_far += 1
 
         t_name, t_km = min(((n, _hav_km(lat, lng, a, o)) for n, a, o in LOCAL_TRAINS), key=lambda x: x[1])
-        t_walk = max(2, int(round(t_km * 1.3 * 12)))
-        cur_l = ctx.get("nearest_local")
-        if not isinstance(cur_l, dict) or (cur_l.get("walk_min") or 999) > 60:
-            ctx["nearest_local"] = {"name": t_name, "distance_m": int(round(t_km * 1000)), "walk_min": t_walk}
-            filled += 1
+        t_walk = max(2, int(round(t_km * 1.28 * 12)))
+        ctx["nearest_local"] = {"name": t_name, "distance_m": int(round(t_km * 1000)), "walk_min": t_walk}
         ctx.pop("nearest_train", None)
 
         hubs = ctx.get("commute_hubs_min")
@@ -113,13 +138,11 @@ def enrich_transit_context(socs):
             comm = {}
             s["commutes"] = comm
         for hk, (hlat, hlng) in HUB_COORDS.items():
-            if not hubs.get(hk):
-                dk = _hav_km(lat, lng, hlat, hlng)
-                mins = max(8, min(140, int(round(9 + dk * 3.1))))
-                hubs[hk] = mins
-                comm[hk if hk != "andheri_seepz" else "seepz"] = mins
-        if not comm.get("bkc"):
-            comm["bkc"] = hubs["bkc"]
+            dk = _hav_km(lat, lng, hlat, hlng)
+            mins = max(8, min(140, int(round(9 + dk * 3.1))))
+            hubs[hk] = mins
+            comm[hk if hk != "andheri_seepz" else "seepz"] = mins
+        comm["bkc"] = hubs["bkc"]
         if not ctx.get("monsoon_flood_risk"):
             ctx["monsoon_flood_risk"] = "low"
     return fixed_far, filled

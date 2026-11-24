@@ -1,0 +1,66 @@
+name: Media & Video Catch-Up (HD Galleries + Fleet Repair)
+
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: 'Max listing pages to enrich this run (NoBroker/MagicBricks/99acres)'
+        required: true
+        default: '2500'
+      workers:
+        description: 'Concurrent curl_cffi workers'
+        required: true
+        default: '8'
+      deploy_live:
+        description: 'Deploy updated shards to Cloudflare Pages after run'
+        type: boolean
+        default: true
+
+concurrency:
+  group: media-enrich-main
+  cancel-in-progress: false
+
+jobs:
+  enrich-media:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Python deps
+        run: |
+          pip install -q curl_cffi
+      - name: Enrich HD Photos, Videos & Furnishing (0 API credits)
+        env:
+          PYTHONUNBUFFERED: "1"
+        run: |
+          python -u pipeline/enrich_media.py --limit ${{ inputs.limit }} --workers ${{ inputs.workers }} --max-seconds 1800
+      - name: Run Full-Fleet Hygiene & Repair Pass
+        run: |
+          python -u pipeline/fleet_repair.py
+          python -u pipeline/verify_build.py
+      - name: Commit updated media cache & shards
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/media_cache.json web/public/data/shards
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(media): Enrich HD photos, videos & fleet repair (${{ inputs.limit }} batch)"
+            git pull --rebase origin main
+            git push origin main
+          fi
+      - name: Deploy Live to Cloudflare Pages
+        if: ${{ inputs.deploy_live }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx --yes wrangler@latest pages deploy web --project-name=bombayhomes --branch=production --commit-dirty=true

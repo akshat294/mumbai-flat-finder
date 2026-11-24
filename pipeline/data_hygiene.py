@@ -217,6 +217,8 @@ def _media_key_rank(raw):
     u = raw.strip()
     if not re.match(r"^https?://", u, re.I) or len(u) < 24 or _BAD_IMG_RE.search(u):
         return None
+    if "img.staticmb.com/mbphoto/property/" in u and "Photo_h180_w240" in u:
+        u = u.replace("Photo_h180_w240", "Photo_h600_w900").replace("_180_240.", "_600_900.")
     if "housingcdn.com/" in u or "housing-images.n7net.in/" in u:
         u = re.sub(r"/v(\d+)/(?:version|fs_medium|medium|small|thumb)/", r"/v\1/fs/", u, flags=re.I)
     elif "images.nobroker.in/images/" in u:

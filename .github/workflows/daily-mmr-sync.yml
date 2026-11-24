@@ -81,7 +81,9 @@ jobs:
           python -u pipeline/inventory_report.py
 
       - name: Verify final build integrity
-        run: python -u pipeline/verify_build.py
+        run: python -u pipeline/enrich_media.py --limit 300 --workers 6 --max-seconds 300
+          python -u pipeline/fleet_repair.py
+          python -u pipeline/verify_build.py
 
       - name: Deploy fresh site to Cloudflare Pages (bombayhomes)
         env:
