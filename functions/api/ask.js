@@ -48,32 +48,99 @@ function extractJsonObject(rawText) {
   }
 }
 
+const GEMINI_MODELS = ["gemini-flash-latest", "gemini-3.5-flash-lite", "gemini-2.5-flash-lite"];
+
 async function callGemini(apiKey, systemPrompt, userPrompt, expectJson) {
-  const endpoint =
-    "https:" +
-    "//generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" +
-    encodeURIComponent(apiKey);
-  const body = {
-    systemInstruction: { parts: [{ text: systemPrompt }] },
-    contents: [{ role: "user", parts: [{ text: userPrompt }] }],
-    generationConfig: {
-      temperature: expectJson ? 0.1 : 0.35,
-      maxOutputTokens: expectJson ? 380 : 280,
-      thinkingConfig: { thinkingBudget: 0 },
-      ...(expectJson ? { responseMimeType: "application/json" } : {}),
-    },
-  };
-  const r = await fetch(endpoint, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  if (!r.ok) { const et = await r.text().catch(() => ""); throw new Error("Gemini HTTP " + r.status + " " + et.slice(0, 90)); }
-  const d = await r.json();
-  const txt = d?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-  if (!txt) throw new Error("Gemini empty response");
-  return txt;
+  let lastErr = "no_models";
+  for (const model of GEMINI_MODELS) {
+    const endpoint =
+      "https:" +
+      "//generativelanguage.googleapis.com/v1beta/models/" +
+      model +
+      ":generateContent?key=" +
+      encodeURIComponent(apiKey);
+    const body = {
+      systemInstruction: { parts: [{ text: systemPrompt }] },
+      contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+      generationConfig: {
+        temperature: expectJson ? 0.1 : 0.35,
+        maxOutputTokens: expectJson ? 380 : 280,
+        ...(expectJson ? { responseMimeType: "application/json" } : {}),
+      },
+    };
+    const r = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    if (!r.ok) {
+      const et = await r.text().catch(() => "");
+      lastErr = model + " HTTP " + r.status + " " + et.slice(0, 80);
+      if (r.status === 404 || r.status === 400) continue;
+      throw new Error(lastErr);
+    }
+    const d = await r.json();
+    const txt = d?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    if (txt) return txt;
+    lastErr = model + " empty";
+  }
+  throw new Error(lastErr);
 }
+
+function localParseQuery(query, knownLocalities, currentMode) {
+  const q = String(query || "").toLowerCase();
+  const out = {};
+  if (/\b(buy|purchase|sale|resale|cr|crore)\b/.test(q)) out.mode = "buy";
+  else if (/\b(rent|lease|pg|flatmate|sharing|\/mo)\b/.test(q)) out.mode = "rent";
+  else if (currentMode === "buy" || currentMode === "rent") out.mode = currentMode;
+
+  const bhks = [];
+  if (/\b(1\s*rk|studio)\b/.test(q)) bhks.push(0);
+  for (const m of q.matchAll(/\b([1-4])\s*\+?\s*bhk\b/g)) bhks.push(Number(m[1]));
+  if (bhks.length) out.bhks = [...new Set(bhks)];
+
+  const parseAmt = (numStr, unit) => {
+    let n = parseFloat(numStr);
+    if (!Number.isFinite(n)) return 0;
+    const u = (unit || "").toLowerCase();
+    if (u.startsWith("cr")) n *= 1e7;
+    else if (u === "l" || u.startsWith("lac") || u.startsWith("lakh")) n *= 1e5;
+    else if (u === "k") n *= 1e3;
+    else if (n < 500) n *= (out.mode === "buy" ? 1e5 : 1e3);
+    return Math.round(n);
+  };
+  const maxM = q.match(/(?:under|below|max|upto|up to|within|less than|<|<=)\s*(?:rs\.?|inr|\u20b9)?\s*(\d+(?:\.\d+)?)\s*(k|l|lac|lakh|cr|crore)?\b/);
+  if (maxM) { const v = parseAmt(maxM[1], maxM[2]); if (v >= 5000) out.maxPrice = v; }
+  const minM = q.match(/(?:above|over|min|at least|more than|>|>=)\s*(?:rs\.?|inr|\u20b9)?\s*(\d+(?:\.\d+)?)\s*(k|l|lac|lakh|cr|crore)?\b/);
+  if (minM) { const v = parseAmt(minM[1], minM[2]); if (v >= 5000) out.minPrice = v; }
+
+  const locs = [];
+  for (const loc of (knownLocalities || [])) {
+    const ll = String(loc || "").toLowerCase();
+    if (ll.length >= 3 && q.includes(ll) && !locs.includes(loc)) locs.push(loc);
+    if (locs.length >= 5) break;
+  }
+  if (locs.length) out.localities = locs;
+
+  if (/\b(zero\s*brok|no\s*brok|direct\s*owner|owner\s*only)\b/.test(q)) out.zero = true;
+  if (/\b(flatmate|sharing|pg|shared)\b/.test(q)) out.lister = "shared";
+  else if (/\bowner\b/.test(q)) out.lister = "owner";
+  if (/\bsemi[\s-]*furn/.test(q)) out.furn = "Semi-Furnished";
+  else if (/\bunfurn/.test(q)) out.furn = "Unfurnished";
+  else if (/\bfurnish/.test(q)) out.furn = "Furnished";
+  if (/\b(sunlit|bright|modern|airy|good interior)\b/.test(q)) out.brightOnly = true;
+  if (/\bbalcony\b/.test(q)) out.balcony = true;
+  if (/\bsea\s*view\b/.test(q)) out.seaview = true;
+  if (/\bterrace\b/.test(q)) out.terrace = true;
+  if (/\b(flood\s*safe|monsoon\s*safe|low\s*flood)\b/.test(q)) out.floodSafe = true;
+  if (/\brera\b/.test(q)) out.reraOnly = true;
+  if (/\b(near\s*metro|walk\s*to\s*metro|aqua\s*line)\b/.test(q)) out.maxMetroWalk = 15;
+  if (/\bbkc\b/.test(q)) out.hub = "bkc";
+  if (/\b(cheapest|lowest|budget)\b/.test(q)) out.sort = "p_asc";
+  else if (/\b(best\s*deal|great\s*value|bargain)\b/.test(q)) out.sort = "deal";
+  return out;
+}
+
 
 async function callWorkersAI(aiBinding, systemPrompt, userPrompt, expectJson) {
   const res = await aiBinding.run("@cf/meta/llama-3.1-8b-instruct", {
@@ -228,7 +295,8 @@ export async function onRequestPost({ request, env }) {
       `User query: "${query}"`;
 
     const llm = await runLLM(env, sysPrompt, userPrompt, true);
-    const parsed = sanitizeParsedFilters(extractJsonObject(llm.text), knownLocalities);
+    const rawParsed = extractJsonObject(llm.text) || localParseQuery(query, knownLocalities, currentMode);
+    const parsed = sanitizeParsedFilters(rawParsed, knownLocalities);
     return jsonRes(request, { ok: true, engine: llm.engine, diag: llm.diag || "", filters: parsed });
   }
 

@@ -99,9 +99,35 @@ def _infer_furn_from_url(u):
         return "furnished"
     return ""
 
+def _load_google_place_names():
+    p = ROOT / "data/google_places_cache.json"
+    by_id, by_url = {}, {}
+    if not p.exists():
+        return by_id, by_url
+    try:
+        d = json.loads(p.read_text(encoding="utf-8-sig"))
+        for k, v in (d.items() if isinstance(d, dict) else []):
+            if not isinstance(v, dict):
+                continue
+            dn = v.get("displayName")
+            nm = dn.get("text") if isinstance(dn, dict) else (dn if isinstance(dn, str) else "")
+            if not nm:
+                continue
+            by_id[k] = nm
+            u = str(v.get("googleMapsUri") or "").strip()
+            if u:
+                by_url[u] = nm
+                cm = re.search(r"cid=(\d+)", u)
+                if cm:
+                    by_url["cid:" + cm.group(1)] = nm
+    except Exception:
+        pass
+    return by_id, by_url
+
 def repair_societies(socs, mode="rent"):
     stats = Counter()
     unit_k = "units_buy" if mode == "buy" else "units_rent"
+    g_by_id, g_by_url = _load_google_place_names()
 
     for s in socs:
         loc = str(s.get("locality") or "").strip()
@@ -143,11 +169,27 @@ def repair_societies(socs, mode="rent"):
                     elif mode == "rent" and p and (p / sq_n < 12 or p / sq_n > 450):
                         u["sq"] = None
                         stats["absurd_psf_cleared"] += 1
+                    elif mode == "buy" and p and (p / sq_n < 2500 or p / sq_n > 250000):
+                        u["sq"] = None
+                        stats["buy_absurd_psf_cleared"] += 1
                     else:
                         u["sq"] = sq_n
                 except Exception:
                     u["sq"] = None
 
+            if u.get("b") is None and u.get("u"):
+                bm = re.search(r"(\d)\s*[-_]?\s*bhk", str(u["u"]), re.I)
+                if bm:
+                    u["b"] = int(bm.group(1))
+                    stats["bhk_from_url"] += 1
+                elif re.search(r"1\s*[-_]?\s*rk", str(u["u"]), re.I):
+                    u["b"] = 0
+                    stats["bhk_from_url"] += 1
+            if not u.get("sq") and u.get("u"):
+                sm = re.search(r"(\d{3,4})\s*[-_]?\s*sq[-_]?ft", str(u["u"]), re.I)
+                if sm and 150 <= int(sm.group(1)) <= 9000:
+                    u["sq"] = int(sm.group(1))
+                    stats["sqft_from_url"] += 1
             if not u.get("f") and u.get("u"):
                 inf_f = _infer_furn_from_url(u["u"])
                 if inf_f:
@@ -292,14 +334,18 @@ def repair_societies(socs, mode="rent"):
                 s.pop("deal", None)
 
         g = s.get("google")
-        if isinstance(g, dict) and g.get("reviews"):
+        if isinstance(g, dict) and (g.get("reviews") or g.get("rating")):
             s_words = {w for w in re.findall(r"[a-z]{3,}", str(s.get("name") or "").lower()) if w not in STOP_WORDS}
-            g_name = str(g.get("name") or "").lower()
-            if s_words and g_name:
-                g_words = {w for w in re.findall(r"[a-z]{3,}", g_name) if w not in STOP_WORDS}
+            gu = str(g.get("url") or "").strip()
+            cm = re.search(r"cid=(\d+)", gu)
+            g_disp = str(g.get("name") or g_by_id.get(s.get("id") or "") or g_by_url.get(gu) or (g_by_url.get("cid:" + cm.group(1)) if cm else "") or "").lower()
+            if s_words and g_disp:
+                g_words = {w for w in re.findall(r"[a-z]{3,}", g_disp) if w not in STOP_WORDS}
                 if g_words and not (s_words & g_words):
                     g.pop("reviews", None)
                     g.pop("rating", None)
+                    g.pop("review_count", None)
+                    g.pop("url", None)
                     stats["bad_google_reviews_purged"] += 1
 
         raw_soc = ([s["thumb"]] if s.get("thumb") else []) + list(s.get("photos") or [])

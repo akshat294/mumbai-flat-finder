@@ -634,7 +634,7 @@
 
       return `
         <article class="fc${sel ? " sel" : ""}" data-id="${esc(s.id)}" data-url="${esc(directHref)}" data-img="${esc(img)}">
-          <div class="fc-media">
+          <div class="fc-media">${(s.videos && s.videos.length) ? '<span class="bh-vid-pill">\u25b6 Video</span>' : ""}
             <div class="fc-ph">${archSvg}<span>${esc(s.locality)}</span></div>
             ${img ? `<img class="fc-img" src="${esc(img)}" referrerpolicy="no-referrer" loading="lazy" alt="" onerror="this.remove()" />` : ""}
             ${topPills.length ? `<div class="fc-badges-top">${topPills.slice(0, 2).join("")}</div>` : ""}
@@ -705,7 +705,7 @@
     let unitsHtml = "";
     if (units.length) {
       unitsHtml = `<div class="unit-list">${units.map(u => {
-        const specs = [u.b !== null && u.b !== undefined ? fmtBhk(u.b) : null, u.sq ? `${u.sq} sq ft` : null, u.f || null].filter(Boolean).join(" · ");
+        const specs = [u.b !== null && u.b !== undefined ? fmtBhk(u.b) : null, u.sq ? `${u.sq} sq ft` : null, u.f || null, u.flr ? `Flr ${u.flr}` : null, u.fac || null].filter(Boolean).join(" \u00b7 ");
         const portal = PORTAL_NAMES[u.s] || u.s;
         const inner = `<div class="u-left"><div class="u-price">${fmt(u.p, isBuy)}</div><div class="u-meta">${esc(specs || "Verified listing")}</div></div><div class="u-right">${u.zb ? '<span class="zb-dot" title="Zero Brokerage"></span>' : ""}${esc(portal)}${u.u ? " ↗" : ""}</div>`;
         const fbU = (isBuy ? (s.sources_buy || {}) : (s.sources_rent || {}))[u.s] || (s.sources || {})[u.s] || (H + "www.google.com/search?q=" + encodeURIComponent(`${s.name} ${s.locality} Mumbai ${portal} ${isBuy ? "sale" : "rent"}`));
@@ -722,7 +722,10 @@
 
     let costHtml = "";
     const pv = getP(s);
-    if (!isBuy && pv) {
+    const realDep = units.map(u => u.dep).find(d => d && d >= 5000);
+    if (!isBuy && pv && realDep) {
+      costHtml = `<div class="info-strip"><strong>Upfront Move-In (Rent):</strong> Deposit <b>${fmt(realDep, true)}</b> \u00b7 Direct <b>${fmt(realDep + pv, true)}</b> \u00b7 Broker ~<b>${fmt(realDep + pv * 2, true)}</b><small>Verified portal security deposit + 1st month rent</small></div>`;
+    } else if (!isBuy && pv) {
       costHtml = `<div class="info-strip"><strong>Upfront Move-In (Rent):</strong> Direct ~<b>${fmt(pv * 4, true)}</b> · Broker ~<b>${fmt(pv * 5, true)}</b><small>Standard 3 months deposit + 1st month rent</small></div>`;
     } else if (isBuy && pv) {
       const isTN = s.zone === "Thane" || s.zone === "Navi Mumbai", stdPct = isTN ? 7 : 6, womPct = stdPct - 1, reg = Math.min(30000, Math.round(pv * 0.01));
