@@ -147,26 +147,12 @@ def _load_dead_urls():
         pass
     return dead
 
-def _load_99acres_floors():
-    p = ROOT / "data/99acres_floors_cache.json"
-    if not p.exists():
-        return {}
-    try:
-        d = json.loads(p.read_text(encoding="utf-8-sig"))
-        return d if isinstance(d, dict) else {}
-    except Exception:
-        return {}
-
-def _extract_99_spid(u_str):
-    m = re.search(r"spid-([A-Z]\d{6,10})", str(u_str or ""), re.I)
-    return m.group(1).upper() if m else ""
 
 def repair_societies(socs, mode="rent"):
     stats = Counter()
     unit_k = "units_buy" if mode == "buy" else "units_rent"
     g_by_id, g_by_url = _load_google_place_names()
     dead_urls = _load_dead_urls()
-    a99_floors = _load_99acres_floors()
 
     for s in socs:
         loc = str(s.get("locality") or "").strip()
@@ -470,55 +456,31 @@ def run_on_shards():
             sp.write_text(json.dumps(part, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
         print(f"[FLEET REPAIR {mode.upper()}] entries={len(socs):,} | {dict(st)}")
 
-if __name__ == "__main__":
-    run_on_shards()
-
-def _apply_v59_floors_and_bright():
-    # V59_FLOORS_AND_BRIGHT: permanently restore 99acres floors from cache & sync features.bright (vs>=97)
-    import math as _math
+def _finalize_shards_and_manifest():
+    # Single-pass shard finalizer: 99acres floors, curated Bright (vs>=97), HTML entity decode,
+    # Rent typo-deposit cleanup, single-unit u.imgs dedupe (~5.6 MB saved) & manifest sync.
+    import html as _html, math as _math, time as _t
+    from datetime import datetime, timezone, timedelta
     mp = ROOT / "web/public/data/manifest.json"
     if not mp.exists():
         return
+    m = json.loads(mp.read_text(encoding="utf-8-sig"))
     flr_p = ROOT / "data/99acres_floors_cache.json"
     flr_map = json.loads(flr_p.read_text(encoding="utf-8-sig")) if flr_p.exists() else {}
-    m = json.loads(mp.read_text(encoding="utf-8-sig"))
-    added_flr = 0
-    for sk, uk in (("rent_shards", "units_rent"), ("buy_shards", "units_buy")):
-        paths = [ROOT / "web/public/data" / sf for sf in (m.get(sk) or []) if (ROOT / "web/public/data" / sf).exists()]
-        if not paths:
-            continue
-        socs = [x for sp in paths for x in json.loads(sp.read_text(encoding="utf-8-sig"))]
-        for s in socs:
-            if isinstance(s.get("features"), dict):
-                s["features"]["bright"] = bool((s.get("vs") or 0) >= 97 and not s.get("vr"))
-            if flr_map:
-                for u in (s.get(uk) or []):
-                    if u.get("s") == "99acres" and not u.get("flr"):
-                        mm = re.search(r"spid-([A-Z]\d{6,10})", str(u.get("u") or ""), re.I)
-                        if mm:
-                            fv = flr_map.get(mm.group(1).upper())
-                            if fv:
-                                u["flr"] = fv
-                                added_flr += 1
-        chunk = _math.ceil(len(socs) / max(1, len(paths)))
-        for i, sp in enumerate(paths):
-            sp.write_text(json.dumps(socs[i * chunk : (i + 1) * chunk], ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-    print(f"[FLEET REPAIR V59] 99acres floors restored=+{added_flr:,} | features.bright synced (vs>=97)", flush=True)
 
-def _apply_v60_polish():
-    # V60_ENTITIES_AND_DEPOSITS: decode HTML entities in names/localities & clear typo Rent deposits
-    import html as _html, math as _math
-    mp = ROOT / "web/public/data/manifest.json"
-    if not mp.exists():
-        return
-    m = json.loads(mp.read_text(encoding="utf-8-sig"))
-    ent_fixed = dep_cleared = 0
+    added_flr = ent_fixed = dep_cleared = deduped_imgs = 0
+    totals = {}
+    all_ids = set()
+
     for sk, uk in (("rent_shards", "units_rent"), ("buy_shards", "units_buy")):
         paths = [ROOT / "web/public/data" / sf for sf in (m.get(sk) or []) if (ROOT / "web/public/data" / sf).exists()]
         if not paths:
+            totals[sk] = (0, 0)
             continue
         socs = [x for sp in paths for x in json.loads(sp.read_text(encoding="utf-8-sig"))]
         for s in socs:
+            if s.get("id"):
+                all_ids.add(s["id"])
             for k in ("name", "locality"):
                 v = s.get(k)
                 if isinstance(v, str) and ("&" in v):
@@ -529,48 +491,57 @@ def _apply_v60_polish():
                     if v2 != v:
                         s[k] = v2
                         ent_fixed += 1
-            if sk == "rent_shards":
-                for u in (s.get(uk) or []):
+            if isinstance(s.get("features"), dict):
+                s["features"]["bright"] = bool((s.get("vs") or 0) >= 97 and not s.get("vr"))
+            us = s.get(uk) or []
+            s_photos = set(s.get("photos") or [])
+            if s.get("thumb"):
+                s_photos.add(s["thumb"])
+            for u in us:
+                if flr_map and u.get("s") == "99acres" and not u.get("flr"):
+                    mm = re.search(r"spid-([A-Z]\d{6,10})", str(u.get("u") or ""), re.I)
+                    if mm:
+                        fv = flr_map.get(mm.group(1).upper())
+                        if fv:
+                            u["flr"] = fv
+                            added_flr += 1
+                if sk == "rent_shards":
                     dep, p = u.get("dep"), u.get("p")
                     if dep and p and (dep < 5000 or dep > p * 24):
                         u.pop("dep", None)
                         dep_cleared += 1
+            if len(us) == 1 and isinstance(us[0].get("imgs"), list) and us[0]["imgs"]:
+                u0 = us[0]
+                if set(u0["imgs"]).issubset(s_photos):
+                    u0.pop("imgs", None)
+                    deduped_imgs += 1
+
         chunk = _math.ceil(len(socs) / max(1, len(paths)))
         for i, sp in enumerate(paths):
             sp.write_text(json.dumps(socs[i * chunk : (i + 1) * chunk], ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-    print(f"[FLEET REPAIR V60] HTML entities decoded={ent_fixed} | typo deposits cleared={dep_cleared}", flush=True)
+        totals[sk] = (len(socs), sum(len(s.get(uk) or []) for s in socs))
 
-def _sync_manifest_v54():
-    # SYNC_MANIFEST_V54: align ALL manifest.json totals & IST timestamp with repaired shards
-    import time as _t
-    from datetime import datetime, timezone, timedelta
-    mp = ROOT / "web/public/data/manifest.json"
-    if not mp.exists():
-        return
-    m = json.loads(mp.read_text(encoding="utf-8-sig"))
-    rs = [x for sf in (m.get("rent_shards") or []) if (ROOT / "web/public/data" / sf).exists() for x in json.loads((ROOT / "web/public/data" / sf).read_text(encoding="utf-8-sig"))]
-    bs = [x for sf in (m.get("buy_shards") or []) if (ROOT / "web/public/data" / sf).exists() for x in json.loads((ROOT / "web/public/data" / sf).read_text(encoding="utf-8-sig"))]
-    ist = datetime.now(timezone(timedelta(hours=5, minutes=30)))
-    ist_str = ist.strftime("%d %b %Y, %I:%M %p IST")
-    tot_soc = len({s.get("id") for s in (rs + bs) if s.get("id")})
-    r_fl = sum(len(s.get("units_rent") or []) for s in rs)
-    b_fl = sum(len(s.get("units_buy") or []) for s in bs)
-    m["count"] = tot_soc
-    m["total_societies"] = tot_soc
-    m["rent_buildings"] = len(rs)
-    m["rent_societies"] = len(rs)
-    m["buy_buildings"] = len(bs)
-    m["buy_societies"] = len(bs)
-    m["rent_flats"] = r_fl
-    m["total_rent_flats"] = r_fl
-    m["buy_flats"] = b_fl
-    m["total_buy_flats"] = b_fl
-    m["generated_at"] = ist_str
-    m["updated_ist"] = ist_str
-    m["generated_ts"] = int(_t.time())
+    ist_str = datetime.now(timezone(timedelta(hours=5, minutes=30))).strftime("%d %b %Y, %I:%M %p IST")
+    r_b, r_f = totals.get("rent_shards", (0, 0))
+    b_b, b_f = totals.get("buy_shards", (0, 0))
+    tot_soc = len(all_ids)
+    m.update({
+        "count": tot_soc, "total_societies": tot_soc,
+        "rent_buildings": r_b, "rent_societies": r_b,
+        "buy_buildings": b_b, "buy_societies": b_b,
+        "rent_flats": r_f, "total_rent_flats": r_f,
+        "buy_flats": b_f, "total_buy_flats": b_f,
+        "generated_at": ist_str, "updated_ist": ist_str,
+        "generated_ts": int(_t.time()),
+    })
     mp.write_text(json.dumps(m, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"[FLEET FINALIZE] floors=+{added_flr:,} | entities={ent_fixed} | deposits_cleared={dep_cleared} | single_unit_imgs_deduped={deduped_imgs:,}", flush=True)
+
+if __name__ == "__main__":
+    run_on_shards()
+
+
+
 
 if __name__ == '__main__':
-    _apply_v59_floors_and_bright()
-    _apply_v60_polish()
-    _sync_manifest_v54()
+    _finalize_shards_and_manifest()

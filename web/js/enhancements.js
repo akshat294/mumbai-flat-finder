@@ -1,49 +1,3 @@
-/* === BH_V58_SY_PROXY === */
-(function initSquareYardsOrbProxyV58() {
-  if (window.__bhV58SyProxy) return;
-  window.__bhV58SyProxy = true;
-  const toProxy = (u) => {
-    if (typeof u !== "string") return u;
-    if (!/^https:\/\/static\.squareyards\.com\//i.test(u)) return u;
-    return "/api/img?u=" + encodeURIComponent(u);
-  };
-  const rewriteSoc = (s) => {
-    if (!s || typeof s !== "object") return;
-    if (s.thumb) s.thumb = toProxy(s.thumb);
-    if (Array.isArray(s.photos)) s.photos = s.photos.map(toProxy);
-    for (const k of ["units_rent", "units_buy"]) {
-      if (Array.isArray(s[k])) {
-        for (const u of s[k]) {
-          if (u && u.img) u.img = toProxy(u.img);
-          if (u && Array.isArray(u.imgs)) u.imgs = u.imgs.map(toProxy);
-        }
-      }
-    }
-  };
-  const origFetch = window.fetch;
-  if (typeof origFetch === "function") {
-    window.fetch = async function (...args) {
-      const resp = await origFetch.apply(this, args);
-      try {
-        const reqUrl = typeof args[0] === "string" ? args[0] : (args[0] && args[0].url) || "";
-        if (resp.ok && /\/shards\/[^/]+\.json/i.test(reqUrl)) {
-          const data = await resp.clone().json();
-          if (Array.isArray(data)) {
-            for (const s of data) rewriteSoc(s);
-            return new Response(JSON.stringify(data), {
-              status: resp.status,
-              statusText: resp.statusText,
-              headers: { "Content-Type": "application/json" },
-            });
-          }
-        }
-      } catch {}
-      return resp;
-    };
-  }
-})();
-
-
 /* Bombay Homes - Unified Enhancements Module (v24 Clean & Hardened) */
 (function initBombayHomesEnhancements() {
   "use strict";
@@ -1271,7 +1225,7 @@
   }, true);
 })();
 
-/* === BH_V60_A11Y_AND_LINKS === */
+/* === BH_V60_A11Y_AND_LINKS (debounced & scoped to cards/drawer - zero map-pan overhead) === */
 (function initV60A11yAndLinkSafety() {
   if (window.__bhV60A11y) return;
   window.__bhV60A11y = true;
@@ -1295,14 +1249,19 @@
       });
     } catch {}
   };
-  const mo = new MutationObserver(() => polish(document));
-  if (document.body) {
-    polish(document);
-    mo.observe(document.body, { childList: true, subtree: true });
-  } else {
-    document.addEventListener("DOMContentLoaded", () => {
-      polish(document);
-      mo.observe(document.body, { childList: true, subtree: true });
+  let _t = null;
+  const schedule = (el) => {
+    if (_t) return;
+    _t = setTimeout(() => { _t = null; requestAnimationFrame(() => polish(el || document)); }, 80);
+  };
+  const attach = () => {
+    const targets = ["cardList", "detailSheet", "mapPreview"].map((id) => document.getElementById(id)).filter(Boolean);
+    if (!targets.length) { polish(document); return; }
+    targets.forEach((el) => {
+      polish(el);
+      new MutationObserver(() => schedule(el)).observe(el, { childList: true, subtree: true });
     });
-  }
+  };
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", attach);
+  else attach();
 })();
