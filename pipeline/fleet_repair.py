@@ -19,6 +19,7 @@ STOP_WORDS = {
     "west", "east", "north", "south", "mumbai", "thane", "navi", "road", "marg", "nagar",
     "colony", "park", "enclave", "plaza", "court", "view", "new", "shree", "shri", "sri",
 }
+PLUS_OR_FLAT_RE = re.compile(r"^(?:[2-9a-z]{4}\+[2-9a-z]{2,4}|(?:[a-z]{1,2}[\s\-/]*)?\d{1,4}[a-z]?)$", re.I)
 AD_SENTENCE_RE = re.compile(
     r"\b(?:for\s+rent|for\s+sale|looking\s+for\s+(?:a\s+)?(?:female|male)?\s*flatmate|"
     r"available\s+for|sq\.?\s*ft\.?|immediate\s+possession|well\s+maintained)\b",
@@ -49,6 +50,10 @@ def upgrade_media_url(raw):
     u = raw.strip()
     if "img.staticmb.com/mbphoto/property/" in u and "Photo_h180_w240" in u:
         u = u.replace("Photo_h180_w240", "Photo_h600_w900").replace("_180_240.", "_600_900.")
+    elif "img.staticmb.com/mbimages/project/Photo_h310_w462/" in u:
+        u = u.replace("Photo_h310_w462/", "").replace("_310_462.", ".")
+    elif "images.nobroker.in/images/" in u:
+        u = re.sub(r"_(?:thumbnail|small|medium)\.", "_large.", u, flags=re.I)
     return u
 
 def _res_tier(url):
@@ -101,7 +106,7 @@ def repair_societies(socs, mode="rent"):
     for s in socs:
         loc = str(s.get("locality") or "").strip()
         nm = _smart_title_case(s.get("name") or "")
-        if AD_SENTENCE_RE.search(nm) or nm.lower() == loc.lower() or not nm:
+        if AD_SENTENCE_RE.search(nm) or PLUS_OR_FLAT_RE.match(nm) or nm.lower() == loc.lower() or not nm:
             us0 = s.get(unit_k) or []
             b0 = us0[0].get("b") if us0 else None
             bl = "1 RK" if b0 == 0 else (f"{int(float(b0))} BHK" if b0 else "Flat")
@@ -327,8 +332,18 @@ def repair_societies(socs, mode="rent"):
             else:
                 s.pop("photos", None)
         else:
-            s.pop("thumb", None)
-            s.pop("photos", None)
+            yt_poster = None
+            for _v in (s.get("videos") or []):
+                _ym = re.search(r"youtube\.com/embed/([A-Za-z0-9_-]{11})", str((_v or {}).get("url") or ""))
+                if _ym:
+                    yt_poster = "https:" + f"//i.ytimg.com/vi/{_ym.group(1)}/hqdefault.jpg"
+                    break
+            if yt_poster:
+                s["thumb"] = yt_poster
+                s.pop("photos", None)
+            else:
+                s.pop("thumb", None)
+                s.pop("photos", None)
 
     return stats
 

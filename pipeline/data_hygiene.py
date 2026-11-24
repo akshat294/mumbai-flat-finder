@@ -221,8 +221,10 @@ def _media_key_rank(raw):
         u = u.replace("Photo_h180_w240", "Photo_h600_w900").replace("_180_240.", "_600_900.")
     if "housingcdn.com/" in u or "housing-images.n7net.in/" in u:
         u = re.sub(r"/v(\d+)/(?:version|fs_medium|medium|small|thumb)/", r"/v\1/fs/", u, flags=re.I)
+    elif "img.staticmb.com/mbimages/project/Photo_h310_w462/" in u:
+        u = u.replace("Photo_h310_w462/", "").replace("_310_462.", ".")
     elif "images.nobroker.in/images/" in u:
-        u = re.sub(r"_(?:thumbnail|small)\.", "_large.", u, flags=re.I)
+        u = re.sub(r"_(?:thumbnail|small|medium)\.", "_large.", u, flags=re.I)
 
     clean = u.split("?")[0]
     m99 = _RE_99_ID.search(clean)

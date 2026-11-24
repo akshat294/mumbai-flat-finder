@@ -38,8 +38,10 @@
       url = url.replace("Photo_h180_w240", "Photo_h600_w900").replace("_180_240.", "_600_900.");
     } else if (url.includes("housingcdn.com/") || url.includes("housing-images.n7net.in/")) {
       url = url.replace(/\/v(\d+)\/(?:version|fs_medium|medium|small|thumb)\//i, "/v$1/fs/");
+    } else if (url.includes("img.staticmb.com/mbimages/project/Photo_h310_w462/")) {
+      url = url.replace("Photo_h310_w462/", "").replace("_310_462.", ".");
     } else if (url.includes("images.nobroker.in/images/")) {
-      url = url.replace(/_thumbnail\./i, "_large.").replace(/_small\./i, "_large.");
+      url = url.replace(/_(?:thumbnail|small|medium)\./i, "_large.");
     }
     const clean = url.split("?")[0];
     const m99 = clean.match(/imagecdn\.99acres\.com\/.*\/(\d+)([A-Z])-\d+\./i);
@@ -365,7 +367,7 @@
         if (mountTarget && !dBody.querySelector(".bh-dgal")) {
           const openedSocId = socId;
           const _mkMedia = (rawUrls, rawVids) => {
-            const imgs = bhBuildCleanPhotos(rawUrls);
+            const imgs = bhBuildCleanPhotos(rawUrls).filter(u => !(rawVids && rawVids.length && u.includes("i.ytimg.com/vi/")));
             const vids = [], seenV = new Set();
             for (const v of (rawVids || [])) {
               if (!v || !v.url || seenV.has(v.url)) continue;

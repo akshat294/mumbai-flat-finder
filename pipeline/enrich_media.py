@@ -24,6 +24,45 @@ BAD_URL_RE = re.compile(
     re.I,
 )
 
+DEAD_PAGE_RE = re.compile(
+    r"(?:property\s+(?:is\s+)?(?:no\s+longer\s+available|has\s+been\s+(?:rented|sold|deactivated|removed)|expired)|"
+    r"this\s+listing\s+is\s+(?:no\s+longer|expired|inactive)|oops!\s*page\s+not\s+found)",
+    re.I,
+)
+GENERIC_SOC_RE = re.compile(
+    r"^(?:\d(?:\.\d)?\s*(?:bhk|rk)|flat|apartment|studio|independent|house|room|pg|hostel|"
+    r"on\s+request|standalone|residential|na|n/a|none|null|others?|mumbai|thane|navi\s+mumbai)$",
+    re.I,
+)
+
+def _clean_soc_candidate(raw):
+    if not isinstance(raw, str):
+        return ""
+    s = re.sub(r"\s+", " ", raw.strip(" ,.-_|")).strip()
+    if len(s) < 3 or len(s) > 65:
+        return ""
+    if GENERIC_SOC_RE.match(s) or re.search(r"\b(?:for\s+rent|for\s+sale|sq\.?\s*ft|bhk|crore|lakh)\b", s, re.I):
+        return ""
+    if re.match(r"^(?:[2-9a-z]{4}\+[2-9a-z]{2,4}|(?:[a-z]{1,2}[\s\-/]*)?\d{1,4}[a-z]?)$", s, re.I):
+        return ""
+    return s
+
+def _parse_inr_int(val):
+    if isinstance(val, (int, float)):
+        n = int(val)
+        return n if 1000 <= n <= 50000000 else 0
+    s = str(val or "").strip().lower().replace(",", "")
+    m = re.search(r"(\d+(?:\.\d+)?)\s*(lac|lakh|cr|crore|k)?", s)
+    if not m:
+        return 0
+    num = float(m.group(1))
+    unit = m.group(2) or ""
+    if unit in ("lac", "lakh"): num *= 100000
+    elif unit in ("cr", "crore"): num *= 10000000
+    elif unit == "k": num *= 1000
+    n = int(round(num))
+    return n if 1000 <= n <= 50000000 else 0
+
 def load_cache():
     if CACHE_PATH.exists():
         try:
@@ -87,8 +126,18 @@ def _extract_nobroker(html, url):
         elif "unfurn" in fv or "not" in fv: furn = "unfurnished"
         elif "full" in fv or "furn" in fv: furn = "furnished"
 
+    soc_m = re.search(r'"(?:society|buildingName|projectName)"\s*:\s*"([^"]{3,65})"', t)
+    soc_nm = _clean_soc_candidate(soc_m.group(1)) if soc_m else ""
+    dep_m = re.search(r'"deposit"\s*:\s*(\d{4,8})', t)
+    dep = _parse_inr_int(int(dep_m.group(1))) if dep_m else 0
+    fl_m = re.search(r'"floor"\s*:\s*(\d{1,2})', t)
+    tf_m = re.search(r'"totalFloor"\s*:\s*(\d{1,2})', t)
+    flr = f"{fl_m.group(1)}/{tf_m.group(1)}" if (fl_m and tf_m) else (fl_m.group(1) if fl_m else "")
+    fac_m = re.search(r'"facingDesc"\s*:\s*"([A-Za-z\-\s]{3,16})"', t)
+    fac = fac_m.group(1).strip() if fac_m else ""
+    dead = bool(DEAD_PAGE_RE.search(t[:45000]) or '"inactive":true' in t[:45000].lower())
     imgs, _ = _dedupe_rank_urls(raw_imgs, cap=10)
-    return {"imgs": imgs, "vids": [], "furn": furn}
+    return {"imgs": imgs, "vids": [], "furn": furn, "soc": soc_nm, "dep": dep, "flr": flr, "fac": fac, "dead": dead}
 
 def _mb_hex_to_pid(url, html):
     m = re.search(r"[?&]id=([0-9a-f]{12,32})", url, re.I)
@@ -128,8 +177,18 @@ def _extract_magicbricks(html, url):
             raw_imgs.append(u)
             proj_added += 1
 
+    soc_m = re.search(r'"(?:projectName|pName|societyName)"\s*:\s*"([^"]{3,65})"', t)
+    soc_nm = _clean_soc_candidate(soc_m.group(1)) if soc_m else ""
+    dep_m = re.search(r'Security\s+Deposit[^0-9]{0,40}([\d.,]+\s*(?:Lac|Lakh|Cr|K)?)', t, re.I)
+    dep = _parse_inr_int(dep_m.group(1)) if dep_m else 0
+    fl_m = re.search(r'"floorNo"\s*:\s*"?(\d{1,2}|Ground)"?', t, re.I)
+    tf_m = re.search(r'"totalFloor"\s*:\s*"?(\d{1,2})"?', t, re.I)
+    flr = f"{fl_m.group(1)}/{tf_m.group(1)}" if (fl_m and tf_m) else (fl_m.group(1) if fl_m else "")
+    fac_m = re.search(r'"facing"\s*:\s*"([A-Za-z\-\s]{3,16})"', t)
+    fac = fac_m.group(1).strip() if fac_m else ""
+    dead = bool(DEAD_PAGE_RE.search(t[:45000]))
     imgs, _ = _dedupe_rank_urls(raw_imgs, cap=10)
-    return {"imgs": imgs, "vids": [], "furn": ""}
+    return {"imgs": imgs, "vids": [], "furn": "", "soc": soc_nm, "dep": dep, "flr": flr, "fac": fac, "dead": dead}
 
 def _extract_99acres(html, url):
     t = html.replace("\\u002F", "/").replace("\\/", "/")
@@ -157,12 +216,118 @@ def _extract_99acres(html, url):
         if not BAD_URL_RE.search(u):
             raw_imgs.append(u)
 
+    soc_m = re.search(r'"(?:SOCIETY_NAME|BUILDING_NAME|societyName|projectName)"\s*:\s*"([^"]{3,65})"', t)
+    soc_nm = _clean_soc_candidate(soc_m.group(1)) if soc_m else ""
+    fl_m = re.search(r'"FLOOR_NUM"\s*:\s*"?(\d{1,2}|Ground)"?', t, re.I)
+    tf_m = re.search(r'"TOTAL_FLOOR"\s*:\s*"?(\d{1,2})"?', t, re.I)
+    flr = f"{fl_m.group(1)}/{tf_m.group(1)}" if (fl_m and tf_m) else (fl_m.group(1) if fl_m else "")
+    dead = bool(DEAD_PAGE_RE.search(t[:45000]))
     imgs, _ = _dedupe_rank_urls(raw_imgs, cap=10)
-    return {"imgs": imgs, "vids": vids[:3], "furn": ""}
+    return {"imgs": imgs, "vids": vids[:3], "furn": "", "soc": soc_nm, "dep": 0, "flr": flr, "fac": "", "dead": dead}
+
+HS_BAD_GROUP_RE = re.compile(r"(floor|plan|layout|map|brochure|locality|neighbourhood|neighborhood|amenity|amenities|master)", re.I)
+
+def _norm_housing_src(src):
+    if not isinstance(src, str) or not src.strip():
+        return ""
+    u = src.strip().replace("\\u002F", "/").replace("\\/", "/")
+    if u.startswith("//"):
+        u = "https:" + u
+    u = u.replace("/{version}/", "/fs/").replace("/version/", "/fs/").replace("version/", "fs/").replace("/%s/", "/fs/")
+    u = re.sub(r"/v(\d+)/(?:fs_medium|medium|small|thumb)/", r"/v\1/fs/", u, flags=re.I)
+    return u
+
+def _extract_housing_gql(url):
+    m_rent = re.search(r"/rent/(\d+)(?:-|/|$)", url)
+    m_buy = re.search(r"/(?:buy|resale)/(?:[^/]+/)*(\d+)(?:-|/|$)", url) or re.search(r"/page/(\d+)(?:-|/|$)", url)
+    if m_rent:
+        pid, ptype = int(m_rent.group(1)), "rent"
+    elif m_buy:
+        pid, ptype = int(m_buy.group(1)), "resale"
+    else:
+        return {"imgs": [], "vids": [], "furn": "", "st": 400}
+
+    gql = "https:" + "//mightyzeus.housing.com/api/gql?apiName=DETAILS&isBot=false&source=web"
+    hdrs = {"Accept": "application/json", "Origin": "https:" + "//housing.com", "Referer": "https:" + "//housing.com/"}
+    q = (
+        f'{{ details(propertyId: {pid}, propertyType: "{ptype}") {{'
+        ' furnishingType propertyVideoUrl'
+        ' coverImage { src alt caption type tag }'
+        ' details { images { type images { src alt caption tag category } } }'
+        ' } }'
+    )
+    r = creq.post(gql, json={"query": q}, headers=hdrs, impersonate="chrome124", timeout=12)
+    if r.status_code != 200:
+        return {"imgs": [], "vids": [], "furn": "", "st": r.status_code}
+    det = ((r.json() or {}).get("data") or {}).get("details")
+    if not isinstance(det, dict):
+        return {"imgs": [], "vids": [], "furn": "", "st": 404}
+
+    prop_imgs, proj_imgs = [], []
+    cov = det.get("coverImage") or {}
+    if isinstance(cov, dict) and cov.get("src"):
+        cap0 = f"{cov.get('caption') or ''} {cov.get('alt') or ''} {cov.get('tag') or ''}"
+        u0 = _norm_housing_src(cov["src"])
+        if u0 and not BAD_CAPTION_RE.search(cap0) and not BAD_URL_RE.search(u0):
+            prop_imgs.append(u0)
+
+    for grp in ((det.get("details") or {}).get("images") or []):
+        if not isinstance(grp, dict):
+            continue
+        gtype = str(grp.get("type") or "")
+        if HS_BAD_GROUP_RE.search(gtype):
+            continue
+        is_proj = "project" in gtype.lower() or "society" in gtype.lower() or "exterior" in gtype.lower()
+        for item in (grp.get("images") or []):
+            if not isinstance(item, dict):
+                continue
+            cap = f"{item.get('caption') or ''} {item.get('alt') or ''} {item.get('tag') or ''} {item.get('category') or ''}"
+            if BAD_CAPTION_RE.search(cap) or ("model flat" in cap.lower() and "render" in cap.lower()):
+                continue
+            u = _norm_housing_src(item.get("src") or "")
+            if not u or BAD_URL_RE.search(u):
+                continue
+            if is_proj:
+                if len(proj_imgs) < 3:
+                    proj_imgs.append(u)
+            else:
+                prop_imgs.append(u)
+
+    raw_imgs = prop_imgs + proj_imgs
+    imgs, _ = _dedupe_rank_urls(raw_imgs, cap=12)
+
+    vids = []
+    pv = str(det.get("propertyVideoUrl") or "").strip()
+    if pv:
+        yt = re.search(r"(?:youtube\.com/embed/|youtu\.be/|watch\?v=)([A-Za-z0-9_-]{11})", pv)
+        if yt:
+            vids.append({"url": "https:" + "//www.youtube.com/embed/" + yt.group(1), "kind": "youtube"})
+        elif re.search(r"\.(?:mp4|m3u8|webm)", pv, re.I):
+            vids.append({"url": pv, "kind": "video"})
+
+    furn = ""
+    ft = str(det.get("furnishingType") or "").lower()
+    if "semi" in ft:
+        furn = "semi"
+    elif "unfurn" in ft:
+        furn = "unfurnished"
+    elif "full" in ft or "furn" in ft:
+        furn = "furnished"
+
+    soc_nm = ""
+    alt0 = str((cov or {}).get("alt") or "")
+    am = re.search(r"\bfor\s+(?:rent|sale)\s+in\s+([^,]{3,65})", alt0, re.I)
+    if am:
+        soc_nm = _clean_soc_candidate(am.group(1))
+    return {"imgs": imgs, "vids": vids[:2], "furn": furn, "soc": soc_nm, "dep": 0, "flr": "", "fac": "", "dead": False, "st": 200}
 
 def fetch_one(item):
     src, url = item
     try:
+        if src == "housing":
+            res = _extract_housing_gql(url)
+            res["ts"] = int(time.time())
+            return url, res
         r = creq.get(url, impersonate="chrome124", timeout=14, headers={
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
             "Accept-Language": "en-IN,en;q=0.9",
@@ -193,7 +358,7 @@ def collect_targets(socs_all, cache, limit=400, focus_names=None):
         for uk in ("units_rent", "units_buy"):
             for u in (s.get(uk) or []):
                 src, url = u.get("s"), u.get("u")
-                if src not in ("nobroker", "magicbricks", "99acres") or not url or url in seen_u:
+                if src not in ("housing", "nobroker", "magicbricks", "99acres") or not url or url in seen_u:
                     continue
                 if url in cache and not is_focus:
                     continue
@@ -201,22 +366,25 @@ def collect_targets(socs_all, cache, limit=400, focus_names=None):
                 u_imgs = ([u["img"]] if u.get("img") else []) + list(u.get("imgs") or [])
                 n_img = len(set(u_imgs))
                 is_t_only = src == "99acres" and n_img > 0 and all(re.search(r"/\d+T-\d+\.", x) for x in u_imgs)
+                mode_pen = 0 if uk == "units_rent" else 10
                 if is_focus:
                     p = 0
+                elif src == "housing" and n_img <= 1:
+                    p = 1 + mode_pen
                 elif src == "99acres" and n_img == 0:
-                    p = 1
+                    p = 2 + mode_pen
                 elif src == "nobroker" and n_img <= 1:
-                    p = 2
+                    p = 3 + mode_pen
                 elif src == "magicbricks" and n_img <= 1:
-                    p = 3
+                    p = 4 + mode_pen
                 elif is_t_only:
-                    p = 4
+                    p = 5 + mode_pen
                 else:
                     continue
                 prio.append((p, src, url))
 
     prio.sort(key=lambda x: x[0])
-    by_p = {"nobroker": [], "magicbricks": [], "99acres": []}
+    by_p = {"housing": [], "nobroker": [], "magicbricks": [], "99acres": []}
     ordered = []
     for p, src, url in prio:
         if p == 0:
@@ -224,7 +392,7 @@ def collect_targets(socs_all, cache, limit=400, focus_names=None):
         else:
             by_p[src].append((src, url))
     while len(ordered) < limit and any(by_p.values()):
-        for src in ("nobroker", "magicbricks", "99acres"):
+        for src in ("housing", "nobroker", "magicbricks", "99acres"):
             if by_p[src] and len(ordered) < limit:
                 ordered.append(by_p[src].pop(0))
     return ordered[:limit]
@@ -267,6 +435,14 @@ def apply_cache_to_societies(socs, cache):
                 if e_furn and not u.get("f"):
                     u["f"] = e_furn
                     furn_added += 1
+                if entry.get("dep") and not u.get("dep"):
+                    u["dep"] = entry["dep"]
+                if entry.get("flr") and not u.get("flr"):
+                    u["flr"] = entry["flr"]
+                if entry.get("fac") and not u.get("fac"):
+                    u["fac"] = entry["fac"]
+                if entry.get("soc") and re.match(r"^(?:\d(?:\.\d)?\s*(?:bhk|rk)|flat|studio|apartment)\b", str(s.get("name") or ""), re.I):
+                    s["name"] = entry["soc"]
 
         if changed:
             soc_clean, _ = _dedupe_rank_urls(soc_raw_imgs, cap=12)
