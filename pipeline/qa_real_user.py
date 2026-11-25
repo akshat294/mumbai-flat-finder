@@ -1,5 +1,5 @@
 # Permanent Full-Route Real-User E2E Audit for Bombay Homes (v63+)
-import argparse, http.server, json, socketserver, sys, threading, time, urllib.parse
+import argparse, traceback, http.server, json, socketserver, sys, threading, time, urllib.parse
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from curl_cffi import requests as creq
@@ -104,8 +104,9 @@ def run_qa(target_url=None, live_mode=False):
 
             ai_inp = page.locator("#bhAiInput")
             ai_inp.fill("2bhk in Powai under 75k")
-            page.locator("#bhAiGo").click()
-            page.wait_for_timeout(1600)
+            with page.expect_response(lambda r: "/api/ask" in r.url and r.status == 200, timeout=20000):
+                page.locator("#bhAiGo").click()
+            page.wait_for_timeout(600)
             ai_filt = (page.locator("#resSum").text_content() or "").strip()
             ai_inp.fill(""); ai_inp.dispatch_event("input")
             page.wait_for_timeout(700)
@@ -114,8 +115,9 @@ def run_qa(target_url=None, live_mode=False):
 
             sb = page.locator("#searchBox")
             sb.fill("2bhk in Powai under 75k")
-            page.locator(".bh-uni-ai").click()
-            page.wait_for_timeout(1600)
+            with page.expect_response(lambda r: "/api/ask" in r.url and r.status == 200, timeout=20000):
+                page.locator(".bh-uni-ai").click()
+            page.wait_for_timeout(600)
             uni_filt = (page.locator("#resSum").text_content() or "").strip()
             sb.fill(""); sb.dispatch_event("input")
             page.wait_for_timeout(700)
@@ -187,7 +189,9 @@ def run_qa(target_url=None, live_mode=False):
 
             ai_inp = page.locator("#bhAiInput")
             ai_inp.fill("3bhk in Powai under 3 cr")
-            page.locator("#bhAiGo").click(); page.wait_for_timeout(1600)
+            with page.expect_response(lambda r: "/api/ask" in r.url and r.status == 200, timeout=20000):
+                page.locator("#bhAiGo").click()
+            page.wait_for_timeout(600)
             buy_ai = (page.locator("#resSum").text_content() or "").strip()
             ai_inp.fill(""); ai_inp.dispatch_event("input"); page.wait_for_timeout(700)
             buy_ai_rst = (page.locator("#resSum").text_content() or "").strip()
@@ -219,7 +223,11 @@ def run_qa(target_url=None, live_mode=False):
             spage = ctx.new_page()
             sep = "&" if "?" in target_url else "?"
             spage.goto(target_url + sep + "mode=buy&loc=Powai", wait_until="networkidle", timeout=45000)
-            spage.wait_for_timeout(2200)
+            try:
+                spage.wait_for_function("() => { const t = document.getElementById('resSum')?.textContent || ''; return t.includes('for sale') && !t.startsWith('0 ') && !t.startsWith('7,'); }", timeout=15000)
+            except Exception:
+                pass
+            spage.wait_for_timeout(500)
             sh_sum = (spage.locator("#resSum").text_content() or "").strip()
             check("for sale" in sh_sum and sh_sum != buy_home, f"DESKTOP Shareable URL (?mode=buy&loc=Powai) restored: {sh_sum!r}")
             spage.close()
@@ -252,7 +260,9 @@ def run_qa(target_url=None, live_mode=False):
 
             msb = mp.locator("#searchBox")
             msb.fill("2bhk in Powai under 75k")
-            mp.locator(".bh-uni-ai").click(); mp.wait_for_timeout(1600)
+            with mp.expect_response(lambda r: "/api/ask" in r.url and r.status == 200, timeout=20000):
+                mp.locator(".bh-uni-ai").click()
+            mp.wait_for_timeout(600)
             m_filt = (mp.locator("#resSum").text_content() or "").strip()
             msb.fill(""); msb.dispatch_event("input"); mp.wait_for_timeout(700)
             m_rst = (mp.locator("#resSum").text_content() or "").strip()
@@ -347,6 +357,9 @@ def run_qa(target_url=None, live_mode=False):
             rf = creq.get(base_origin + "/api/flags", impersonate="chrome124", timeout=12)
             rl = creq.get(base_origin + "/api/listings", impersonate="chrome124", timeout=12)
             check(rf.status_code == 200 and rl.status_code == 200, f"LIVE /api/flags ({rf.status_code}) & /api/listings ({rl.status_code})")
+    except Exception as _qa_err:
+        print("  [CRASH] " + traceback.format_exc(), flush=True)
+        failures.append(f"CRASH: {_qa_err}")
     finally:
         if httpd: httpd.shutdown()
 
