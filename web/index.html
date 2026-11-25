@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="./vendor/leaflet.min.css" />
   <link rel="stylesheet" href="./styles.css" />
   <script src="./vendor/leaflet.min.js"></script>
-  <link rel="stylesheet" href="css/enhancements.css?v=64" />
+  <link rel="stylesheet" href="css/enhancements.css?v=65" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect width=%2232%22 height=%2232%22 rx=%228%22 fill=%22%2312251d%22/><text x=%2216%22 y=%2222%22 font-size=%2218%22 text-anchor=%22middle%22 fill=%22%23c49e5c%22 font-family=%22Georgia,serif%22>B</text></svg>">
   <link rel="canonical" href="https://bombayhomes.pages.dev/">
   <meta property="og:type" content="website">
@@ -67,7 +67,7 @@
   </header>
 
   <section class="subbar" aria-label="Neighbourhoods and quick filters">
-    <div class="chips">
+    <div id="nbStrip" class="chips">
       <button class="n-chip active" data-nb="ALL">All Bombay</button>
       <button class="n-chip" data-nb="South Mumbai">South Bombay</button>
       <button class="n-chip" data-nb="Bandra-Santacruz">Bandra–Khar</button>
@@ -148,7 +148,7 @@
           <button class="p-opt bhk-opt" data-bhk="1">1 BHK</button><button class="p-opt bhk-opt" data-bhk="1.5">1.5 BHK</button>
           <button class="p-opt bhk-opt" data-bhk="2">2 BHK</button><button class="p-opt bhk-opt" data-bhk="2.5">2.5 BHK</button>
           <button class="p-opt bhk-opt" data-bhk="3">3 BHK</button><button class="p-opt bhk-opt" data-bhk="3.5">3.5 BHK</button>
-          <button class="p-opt bhk-opt" data-bhk="4">4+ BHK</button>
+          <button class="p-opt bhk-opt" data-bhk="4">4+ BHK</button><button class="p-opt bhk-opt" data-bhk="shared" id="bhkSharedOpt">Shared</button>
         </div>
       </div>
 
@@ -169,30 +169,9 @@
           <input id="sMax" type="range" min="0" max="4000" step="50" value="4000" />
         </div>
       </div>
-
-      <div class="g2">
-        <div class="f-sec"><label>Commuting To</label><select id="fHub"><option value="">Any Hub</option><option value="bkc">BKC</option><option value="lower_parel">Lower Parel</option><option value="andheri_seepz">Andheri / SEEPZ</option><option value="powai">Powai</option><option value="goregaon_nesco">Goregaon</option><option value="nariman_point">Nariman Point</option></select></div>
-        <div class="f-sec"><label>Max Commute</label><select id="fHubMin"><option value="0">Any time</option><option value="20">≤ 20 min</option><option value="30">≤ 30 min</option><option value="45">≤ 45 min</option><option value="60">≤ 60 min</option></select></div>
-      </div>
-
-      <div class="g2">
-        <div class="f-sec"><label>Metro Walk</label><select id="fMetro"><option value="0">Any</option><option value="5">≤ 5 min</option><option value="10">≤ 10 min</option><option value="15">≤ 15 min</option><option value="25">≤ 25 min</option></select></div>
-        <div class="f-sec"><label>Google Rating</label><select id="fRate"><option value="0">Any</option><option value="3.5">3.5★+</option><option value="4.0">4.0★+</option><option value="4.3">4.3★+</option></select></div>
-      </div>
-
       <div class="g2">
         <div class="f-sec"><label>Furnishing</label><select id="fFurn"><option value="ALL">Any</option><option value="furnished">Furnished</option><option value="semi">Semi-Furnished</option><option value="unfurnished">Unfurnished</option></select></div>
-        <div class="f-sec"><label>Tenant</label><select id="fTen"><option value="ALL">Any</option><option value="bachelors_ok">Bachelors OK</option><option value="family">Family</option></select></div>
-      </div>
-
-      <div class="f-sec"><label>Source</label><select id="fSource"><option value="ALL">All Sources</option></select></div>
-
-      <div class="f-sec">
-        <label>Map & Listing Options</label>
-        <div class="pill-row">
-          <button class="p-opt" id="fExactOnly">Verified Building Pins Only</button>
-          <button class="p-opt" id="fShowEst" style="display:none">Include Price Estimates</button>
-        </div>
+        <div class="f-sec"><label>Source</label><select id="fSource"><option value="ALL">All Sources</option></select></div>
       </div>
     </div>
     <div class="s-foot">
@@ -282,8 +261,8 @@
   </div>
 
   <div id="toast" class="toast"></div>
-  <script src="./app.js?v=64"></script>
-  <button id="v20MobToggle" class="v20-mob-toggle" type="button" aria-label="Switch between Map and List">Show Map</button>
-  <script src="js/enhancements.js?v=64"></script>
+  <script src="./app.js?v=65"></script>
+  <button id="v20MobToggle" class="v20-mob-toggle" type="button" aria-label="Switch between Map and List">Show List</button>
+  <script src="js/enhancements.js?v=65"></script>
 </body>
 </html>

@@ -203,7 +203,7 @@
       if (p.get("bright") === "1") st.brightOnly = true;
       if (p.get("rera") === "1") st.reraOnly = true;
       if (p.get("bhk") && st.bhks && st.bhks.add) {
-        p.get("bhk").split(",").forEach(v => { const n = parseFloat(v); if (isFinite(n)) st.bhks.add(n); });
+        p.get("bhk").split(",").forEach(v => { if (v === "shared") st.bhks.add("shared"); else { const n = parseFloat(v); if (isFinite(n)) st.bhks.add(n); } });
       }
       const rawLocs = p.get("locs") || p.get("loc") || "";
       if (rawLocs) {
@@ -783,20 +783,48 @@
   }
 
   function syncMobTopOffset() {
-    const h1 = document.querySelector("header.topbar")?.getBoundingClientRect().height || 0;
-    const h2 = document.getElementById("bhAiBar")?.getBoundingClientRect().height || 0;
-    const tot = Math.round(h1 + h2);
+    const topEl = document.querySelector("header.topbar");
+    const aiEl = document.getElementById("bhAiBar");
+    const nbEl = document.getElementById("nbStrip") || document.querySelector(".n-chip")?.parentElement;
+    let bot = topEl ? topEl.getBoundingClientRect().bottom : 0;
+    if (aiEl && getComputedStyle(aiEl).display !== "none") {
+      bot = Math.max(bot, aiEl.getBoundingClientRect().bottom);
+    }
+    if (nbEl && getComputedStyle(nbEl).display !== "none") {
+      bot = Math.max(bot, nbEl.getBoundingClientRect().bottom);
+    }
+    const tot = Math.ceil(bot);
     if (tot > 40) document.documentElement.style.setProperty("--bh-mob-top", tot + "px");
   }
   window.addEventListener("resize", syncMobTopOffset);
   const mobBtn = document.getElementById("v20MobToggle");
   if (mobBtn) {
+    if (window.innerWidth <= 820) {
+      document.body.classList.add("bh-mob-map");
+      document.body.classList.remove("view-list");
+      document.body.classList.add("view-map");
+      mobBtn.textContent = "Show List";
+      setTimeout(() => { syncMobTopOffset(); try { if (bh().map) bh().map.invalidateSize(); } catch {} }, 180);
+      setTimeout(() => { syncMobTopOffset(); try { if (bh().map) bh().map.invalidateSize(); } catch {} }, 750);
+    }
     mobBtn.addEventListener("click", () => {
       syncMobTopOffset();
       const showingMap = document.body.classList.toggle("bh-mob-map");
+      document.body.classList.toggle("view-map", showingMap);
+      document.body.classList.toggle("view-list", !showingMap);
       mobBtn.textContent = showingMap ? "Show List" : "Show Map";
       if (showingMap && bh().map && bh().map.invalidateSize) {
-        setTimeout(() => { syncMobTopOffset(); bh().map.invalidateSize(); }, 120);
+        setTimeout(() => {
+          syncMobTopOffset();
+          try {
+            bh().map.invalidateSize();
+            if (window.__bhPendingView) {
+              const pv = window.__bhPendingView;
+              window.__bhPendingView = null;
+              bh().map.setView([pv[0], pv[1]], pv[2], { animate: false });
+            }
+          } catch {}
+        }, 90);
       }
     });
   }
@@ -1549,3 +1577,36 @@ document.addEventListener("pointerdown", (e) => {
     ss.classList.remove("open", "show");
   }
 }, true);
+
+/* === BH_V65_FIX_PHOTO_CNT_AND_SHARED: Clean '1/+' badge + honest Shared Room labeling === */
+(function(){
+  const fix = () => {
+    document.querySelectorAll('.fc-cnt, .fc-pbadge').forEach(el => {
+      if (/\/\+/.test(el.textContent || '')) el.style.display = 'none';
+    });
+    const api = (typeof window.__bh === 'function' ? window.__bh() : {}) || {};
+    const socs = api.societies || [];
+    const st = api.st || {};
+    if (!socs.length || st.mode === 'buy') return;
+    const byId = new Map(socs.map(s => [s.id, s]));
+    const wantSh = st.bhks instanceof Set && st.bhks.has('shared');
+    document.querySelectorAll('#cardList .fc').forEach(card => {
+      const s = byId.get(card.dataset.id);
+      if (!s) return;
+      const us = s.units_rent || [];
+      const onlyShared = us.length > 0 && us.every(u => u && (u.lt === 'shared' || u.s === 'community' || u.s === 'reddit'));
+      if (wantSh || onlyShared) {
+        const meta = card.querySelector('.fc-bhk, .fc-meta, .fc-top');
+        if (meta && !/Shared Room/i.test(card.textContent || '')) {
+          const tag = document.createElement('span');
+          tag.className = 'bh-shared-badge';
+          tag.textContent = 'Shared Room';
+          meta.prepend(tag);
+        }
+      }
+    });
+  };
+  const cl = document.getElementById('cardList');
+  if (cl) new MutationObserver(fix).observe(cl, { childList: true, subtree: true });
+  setTimeout(fix, 500);
+})();

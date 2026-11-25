@@ -53,6 +53,7 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
   const fmtS = (v, buy, ceil) => v <= 0 ? "₹0" : fmtPill(v, buy) + (v >= ceil ? "+" : "");
   const fmtDist = m => !m ? "—" : (m >= 1000 ? `${(m / 1000).toFixed(1)} km` : `${Math.round(m)} m`);
   const fmtBhk = b => b === 0 ? "1 RK" : `${b} BHK`;
+  const fmtUnitBhk = u => (u && (u.lt === "shared" || u.s === "community" || u.s === "reddit")) ? ("Shared Room" + (u.b ? ` (${fmtBhk(u.b)})` : "")) : (u && fmtUnitBhk(u));
 
   function matchingUnits(s) {
     const isBuy = st.mode === "buy";
@@ -75,18 +76,25 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
         if (sHi < Infinity && u.sq > sHi) return false;
       }
 
-      if (st.bhks instanceof Set && st.bhks.size > 0) {
-        if (u.b === null || u.b === undefined) return false;
-        const ub = Number(u.b);
-        let ok = false;
-        for (const w of st.bhks) {
-          if ((w === "4+" || Number(w) === 4) ? ub >= 4 : Math.abs(ub - Number(w)) <= 0.05) { ok = true; break; }
-        }
-        if (!ok) return false;
-      }
-
-      if (wantFurn && wantFurn !== "ALL" && u.f && String(u.f).toLowerCase() !== String(wantFurn).toLowerCase()) return false;
       const uLt = u.lt || ((u.s === "community" || u.s === "reddit") ? "shared" : ((u.zb || u.s === "nobroker" || u.s === "owner") ? "owner" : "broker"));
+      const isSharedU = (uLt === "shared");
+      if (st.bhks instanceof Set && st.bhks.size > 0) {
+        const wantShared = st.bhks.has("shared");
+        const numBhks = [...st.bhks].filter(w => w !== "shared");
+        if (isSharedU) {
+          if (!wantShared) return false;
+        } else {
+          if (!numBhks.length) return false;
+          if (u.b === null || u.b === undefined) return false;
+          const ub = Number(u.b);
+          let ok = false;
+          for (const w of numBhks) {
+            if ((w === "4+" || Number(w) === 4) ? ub >= 4 : Math.abs(ub - Number(w)) <= 0.05) { ok = true; break; }
+          }
+          if (!ok) return false;
+        }
+      }
+      if (wantFurn && wantFurn !== "ALL" && u.f && String(u.f).toLowerCase() !== String(wantFurn).toLowerCase()) return false;
       if (wantSrc && wantSrc !== "ALL") {
         if (wantSrc === "community") { if (u.s !== "community" && u.s !== "reddit" && uLt !== "shared") return false; }
         else if (u.s !== wantSrc) return false;
@@ -151,11 +159,16 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
     return !!(pinfo?.median && !pinfo?.is_estimate);
   }
   const getDeal = s => st.mode === "rent" ? s.deal?.rent : s.deal?.buy;
-  const getSources = s => {
-    const set = new Set([...Object.keys(s.sources || {}), ...Object.keys(s.pricing?.by_portal || {})]);
-    for (const u of (s.units_rent || []).concat(s.units_buy || [])) if (u.s) set.add(u.s);
+  function getSources(s) { /* BH_V65D */
+    const us = (st.mode === "buy" ? s.units_buy : s.units_rent) || [];
+    const set = new Set();
+    for (const u of us) {
+      if (!u || !u.s) continue;
+      const k = String(u.s).trim().toLowerCase();
+      if (k && !/^\d+$/.test(k)) set.add(k === "reddit" ? "community" : k);
+    }
     return [...set];
-  };
+  }
 
   function toast(msg) {
     const el = $("toast"); el.textContent = msg; el.classList.add("show");
@@ -163,8 +176,8 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
   }
 
   const MMR_BOUNDS = L.latLngBounds([18.84, 72.72], [19.36, 73.22]);
-  const map = L.map("map", { preferCanvas: true, zoomControl: true, minZoom: 11, maxZoom: 20, maxBounds: MMR_BOUNDS, maxBoundsViscosity: 0.92 }).setView([19.088, 72.885], 11);
-  const osmStreet = L.tileLayer(H + "tile.openstreetmap.org/{z}/{x}/{y}.png", { maxNativeZoom: 19, maxZoom: 20, attribution: "OpenStreetMap" });
+  const map = L.map("map", { preferCanvas: true, zoomControl: true, minZoom: 11, maxZoom: 20, maxBounds: MMR_BOUNDS, maxBoundsViscosity: 0.85, zoomSnap: 0.5, zoomDelta: 0.5, wheelPxPerZoomLevel: 90, inertia: true, inertiaDeceleration: 2400, bounceAtZoomLimits: false, tapTolerance: 22 }).setView([19.088, 72.885], 11);
+  const osmStreet = L.tileLayer(H + "tile.openstreetmap.org/{z}/{x}/{y}.png", { maxNativeZoom: 19, maxZoom: 20, attribution: "OpenStreetMap", updateWhenIdle: true, updateWhenZooming: false, keepBuffer: 4 });
   const esriSat = L.layerGroup([
     L.tileLayer(H + "server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { maxNativeZoom: 18, maxZoom: 20, attribution: "Esri" }),
     L.tileLayer(H + "server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}", { maxNativeZoom: 18, maxZoom: 20 })
@@ -179,7 +192,7 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
     const mapEl = $("map");
     mapEl.classList.remove("map-street", "map-dark", "map-sat");
     mapEl.classList.add(style === "dark" ? "map-dark" : (style === "sat" ? "map-sat" : "map-street"));
-    ["msStreet","msDark","msSat"].forEach(id => $(id).classList.remove("active"));
+    ["msStreet","msDark","msSat"].forEach(id => { if ($(id)) $(id).classList.remove("active"); });
     $(style === "dark" ? "msDark" : (style === "sat" ? "msSat" : "msStreet")).classList.add("active");
   }
 
@@ -285,6 +298,7 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
   }
 
   function renderMap() {
+    try { const mc = map.getContainer(); if (!mc || mc.getBoundingClientRect().width < 30) return; } catch { return; }
     mLayer.clearLayers(); pillEls.clear(); drawHubRing();
     const z = map.getZoom(), bounds = map.getBounds().pad(0.12);
     const inView = filtered.filter(s => s.lat && s.lng && bounds.contains([s.lat, s.lng]));
@@ -361,7 +375,7 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
   function openClusterSheet(title, sub, items) {
     const sorted = [...items].sort((a, b) => (getP(a) || 9e12) - (getP(b) || 9e12));
     $("clTitle").textContent = title; $("clSub").textContent = sub;
-    $("clBody").innerHTML = sorted.slice(0, 60).map(s => renderCardHtml(s, $("fHub").value)).join("");
+    $("clBody").innerHTML = sorted.slice(0, 60).map(s => renderCardHtml(s, ($("fHub")?.value || ""))).join("");
     bindCardEvents($("clBody"));
     $("clusterBackdrop").style.display = "block"; $("clusterSheet").style.display = "flex";
   }
@@ -385,33 +399,77 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
 
   function renderActiveBar() {
     const bar = $("activeBar"), tags = [];
-    const z = $("fZone").value, loc = $("fLoc").value, srcF = $("fSource").value, ceil = priceMax();
-    if (z !== "ALL") tags.push(z);
-    if (loc !== "ALL") tags.push(loc);
-    if (srcF !== "ALL") tags.push(PORTAL_NAMES[srcF] || srcF);
-    if (st.bhks.size) tags.push([...st.bhks].sort((a, b) => a - b).map(x => Number(x) === 4 ? "4+ BHK" : (Number(x) === 0 ? "1 RK" : `${x} BHK`)).join(", "));
-    if (st.pLo > 0 || st.pHi < ceil) tags.push(`${fmtS(st.pLo, st.mode === "buy", ceil)}–${fmtS(st.pHi, st.mode === "buy", ceil)}`);
-    if (st.sLo > 0 || st.sHi < SQFT_MAX) tags.push(`${st.sLo}–${st.sHi} sq ft`);
-    if (Number($("fMetro").value)) tags.push(`Metro ≤${$("fMetro").value}m`);
-    if ($("fHub") && $("fHub").value && $("fHub").value !== "ALL") tags.push((HUB_LABELS[$("fHub").value] || $("fHub").value) + (Number($("fHubMin").value) ? ` ≤${$("fHubMin").value}m` : ""));
-    if ($("fFurn") && $("fFurn").value && $("fFurn").value !== "ALL") tags.push($("fFurn").selectedOptions?.[0]?.text || $("fFurn").value);
-    if ($("fTen") && $("fTen").value && $("fTen").value !== "ALL") tags.push($("fTen").selectedOptions?.[0]?.text || $("fTen").value);
-    if (Number($("fRate").value)) tags.push(`${$("fRate").value}★+`);
-    if (st.exactOnly) tags.push("Exact Pins");
-    if (st.mapBounds) tags.push("Map Area"); if (Array.isArray(st.lasso) && st.lasso.length >= 3) tags.push("Drawn Area");
+    const z = $("fZone")?.value || "ALL", loc = $("fLoc")?.value || "ALL", srcF = $("fSource")?.value || "ALL", ceil = priceMax();
+    if (z !== "ALL") tags.push({ k: "zone", lbl: z });
+    if (loc !== "ALL") tags.push({ k: "loc", lbl: loc });
+    if (Array.isArray(st.multiLocs) && st.multiLocs.length) {
+      st.multiLocs.forEach(ml => { if (ml !== loc) tags.push({ k: "mloc:" + ml, lbl: ml }); });
+    }
+    if (srcF !== "ALL") tags.push({ k: "src", lbl: PORTAL_NAMES[srcF] || srcF });
+    if (st.bhks.size) {
+      const sortedBhks = [...st.bhks].sort((a, b) => (a === "shared" ? 99 : Number(a)) - (b === "shared" ? 99 : Number(b)));
+      sortedBhks.forEach(x => {
+        const lbl = x === "shared" ? "Shared" : (Number(x) === 4 ? "4+ BHK" : (Number(x) === 0 ? "1 RK" : `${x} BHK`));
+        tags.push({ k: "bhk:" + x, lbl });
+      });
+    }
+    if (st.pLo > 0 || st.pHi < ceil) tags.push({ k: "price", lbl: `${fmtS(st.pLo, st.mode === "buy", ceil)}-${fmtS(st.pHi, st.mode === "buy", ceil)}` });
+    if (st.sLo > 0 || st.sHi < SQFT_MAX) tags.push({ k: "sqft", lbl: `${st.sLo}-${st.sHi} sq ft` });
+    if ($("fFurn") && $("fFurn").value && $("fFurn").value !== "ALL") tags.push({ k: "furn", lbl: $("fFurn").selectedOptions?.[0]?.text || $("fFurn").value });
+    if (st.zero) tags.push({ k: "zero", lbl: "Zero Brokerage" });
+    if (st.brightOnly) tags.push({ k: "bright", lbl: "Sunlit" });
+    if (st.reraOnly) tags.push({ k: "rera", lbl: "RERA" });
+    if (st.seaview) tags.push({ k: "seaview", lbl: "Sea View" });
+    if (st.balcony) tags.push({ k: "balcony", lbl: "Balcony" });
+    if (st.terrace) tags.push({ k: "terrace", lbl: "Terrace" });
+    if (st.drop) tags.push({ k: "drop", lbl: "Price Drop" });
+    if (st.mapBounds) tags.push({ k: "mapBounds", lbl: "Map Area" });
+    if (Array.isArray(st.lasso) && st.lasso.length >= 3) tags.push({ k: "lasso", lbl: "Drawn Area" });
 
     $("filterCount").textContent = tags.length; $("filterCount").style.display = tags.length ? "inline-block" : "none";
-    $("resetMiniBtn").style.display = (tags.length > 0 || st.zero || st.dealOnly || st.flood) ? "inline-block" : "none";
-    if (!tags.length) { bar.style.display = "none"; return; }
+    $("resetMiniBtn").style.display = tags.length > 0 ? "inline-block" : "none";
+    if (!tags.length) { bar.style.display = "none"; bar.innerHTML = ""; return; }
     bar.style.display = "flex";
-    bar.innerHTML = tags.map(t => `<span class="af-pill">${esc(t)}</span>`).join("");
+    bar.innerHTML = tags.map(t => `<button type="button" class="af-pill bh-af-btn" data-af="${esc(t.k)}" title="Remove ${esc(t.lbl)}"><span>${esc(t.lbl)}</span><span class="af-x" aria-hidden="true">\u00d7</span></button>`).join("")
+      + `<button type="button" class="af-clear-x" id="bhAfClearAll" title="Clear all filters" aria-label="Clear all filters">\u00d7</button>`;
+
+    bar.querySelectorAll(".bh-af-btn").forEach(btn => {
+      btn.onclick = () => {
+        const k = btn.dataset.af || "";
+        if (k === "zone") { if ($("fZone")) $("fZone").value = "ALL"; document.querySelectorAll(".n-chip").forEach(c => c.classList.toggle("active", c.dataset.nb === "ALL")); populateLocalities(); }
+        else if (k === "loc") { if ($("fLoc")) $("fLoc").value = "ALL"; }
+        else if (k.startsWith("mloc:")) { const v = k.slice(5); st.multiLocs = (st.multiLocs || []).filter(x => x !== v); if ($("fLoc") && $("fLoc").value === v) $("fLoc").value = "ALL"; }
+        else if (k === "src") { if ($("fSource")) $("fSource").value = "ALL"; }
+        else if (k.startsWith("bhk:")) {
+          const rv = k.slice(4);
+          const v = rv === "shared" ? "shared" : Number(rv);
+          st.bhks.delete(v);
+          document.querySelectorAll(".bhk-opt").forEach(b => {
+            const bv = b.dataset.bhk === "shared" ? "shared" : Number(b.dataset.bhk);
+            b.classList.toggle("active", st.bhks.has(bv));
+          });
+        }
+        else if (k === "price") { resetPriceScale(); }
+        else if (k === "sqft") { if ($("sMin")) $("sMin").value = 0; if ($("sMax")) $("sMax").value = SQFT_MAX; syncSqftSlider(); }
+        else if (k === "furn") { if ($("fFurn")) $("fFurn").value = "ALL"; }
+        else if (k === "zero") { st.zero = false; document.querySelector('.chip[data-q="zero"]')?.classList.remove("active","on"); }
+        else if (k === "bright") { st.brightOnly = false; document.getElementById("bhBrightBtn")?.classList.remove("active","on"); }
+        else if (k === "rera") { st.reraOnly = false; document.querySelector('.chip[data-q="rera"]')?.classList.remove("active","on"); }
+        else if (k === "seaview" || k === "balcony" || k === "terrace" || k === "drop") { st[k] = false; document.querySelector(`.chip[data-q="${k}"]`)?.classList.remove("active","on"); }
+        else if (k === "mapBounds") { st.mapBounds = false; $("mapAreaBtn")?.classList.remove("active"); }
+        else if (k === "lasso") { st.lasso = null; if (window.__bhClearLasso) window.__bhClearLasso(true); }
+        st.page = 36; renderAll();
+      };
+    });
+    const clrAll = $("bhAfClearAll");
+    if (clrAll) clrAll.onclick = () => resetAll();
   }
 
   function renderAll() {
     const q = $("searchBox").value.trim().toLowerCase();
     const z = $("fZone").value, loc = $("fLoc").value, srcF = $("fSource").value, ceil = priceMax();
-    const maxM = Number($("fMetro").value || 0), hub = $("fHub").value, hubMax = Number($("fHubMin").value || 0);
-    const furn = $("fFurn").value, ten = $("fTen").value, minRate = Number($("fRate").value || 0), srt = ($("sortSelect")?.value || "rec");
+    const maxM = Number($("fMetro")?.value || 0), hub = $("fHub")?.value || "", hubMax = Number($("fHubMin")?.value || 0);
+    const furn = $("fFurn")?.value || "ALL", ten = $("fTen")?.value || "ALL", minRate = Number($("fRate")?.value || 0), srt = ($("sortSelect")?.value || "rec");
     const bounds = st.mapBounds ? map.getBounds() : null;
 
     filtered = societies.filter(s => {
@@ -426,8 +484,13 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
       }
       if (q && (!((s.name + " " + s.locality + " " + (s.zone || "") + " " + ((s.features?.tags || []).join(" "))).toLowerCase().replace(/[^a-z0-9]/g, "").includes(q.replace(/[^a-z0-9]/g, ""))))) return false;
       if (st.bhks.size) {
-        const bs = s.bhks || [];
-        if (!bs.length || ![...st.bhks].some(b => b === 4 ? bs.some(x => x >= 4) : bs.includes(b))) return false;
+        const modeUs = (st.mode === "buy" ? s.units_buy : s.units_rent) || [];
+        const wantSh = st.bhks.has("shared");
+        const numW = [...st.bhks].filter(w => w !== "shared");
+        const hitSh = wantSh && modeUs.some(u => u && (u.lt === "shared" || u.s === "community" || u.s === "reddit"));
+        const fullBs = modeUs.filter(u => u && u.lt !== "shared" && u.s !== "community" && u.s !== "reddit").map(u => Number(u.b)).filter(x => isFinite(x));
+        const hitNum = numW.length > 0 && numW.some(b => b === 4 ? fullBs.some(x => x >= 4) : fullBs.some(x => Math.abs(x - b) <= 0.05));
+        if (!hitSh && !hitNum) return false;
       }
       const p = getP(s);
       if (st.pLo > 0 && (!p || p < st.pLo)) return false;
@@ -436,7 +499,7 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
       if (st.sHi < SQFT_MAX && (!s.rera_carpet_sqft || s.rera_carpet_sqft > st.sHi)) return false;
       if (maxM > 0 && (s.mumbai_context?.nearest_metro?.walk_min || 999) > maxM) return false;
       if (hub && hubMax > 0 && (s.mumbai_context?.commute_hubs_min?.[hub] || 999) > hubMax) return false;
-      if (furn !== "ALL" && !(s.furnishing || []).includes(furn)) return false;
+      if (furn !== "ALL") { const modeUs = (st.mode === "buy" ? s.units_buy : s.units_rent) || []; const hasF = (s.furnishing || []).includes(furn) || modeUs.some(u => String(u.f || "").toLowerCase() === furn); if (!hasF) return false; }
       if (ten !== "ALL" && !(s.tenant || []).includes(ten)) return false;
       if (minRate > 0 && (s.google?.rating || 0) < minRate) return false;
       if (st.zero && !s.pricing?.has_zero_brokerage && !matchingUnits(s).some(u => u.zb)) return false;
@@ -466,7 +529,7 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
     if (window.__bhModeLoading && window.__bhModeLoading === st.mode && filtered.length === 0) {
       $("resSum").textContent = st.mode === "buy" ? "Loading homes for sale..." : "Loading homes for rent...";
     } else {
-      $("resSum").textContent = `${filtered.length.toLocaleString("en-IN")} homes \u00b7 ${exactCnt.toLocaleString("en-IN")} exact pins`;
+      $("resSum").textContent = `${filtered.length.toLocaleString("en-IN")} homes`;
     }
     $("applyFiltersBtn").textContent = `Show ${filtered.length.toLocaleString("en-IN")} Homes`;
     renderActiveBar();
@@ -760,7 +823,7 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
     const igrSearch = H + "www.google.com/search?q=" + encodeURIComponent(`site:zapkey.com OR site:indextap.com "${s.name}" "${s.locality}" Mumbai`);
 
     $("dName").textContent = s.name;
-    $("dSub").textContent = `${s.locality} · ${s.coords_approx ? "Locality Area Pin" : "Verified Building Pin"}${g.rating ? ` · ★ ${g.rating}` : ""}`;
+    $("dSub").textContent = `${s.locality}${g.rating ? ` · ★ ${g.rating}` : ""}`;
     $("dBody").innerHTML = `
       <div class="d-hero-slot">${s.thumb ? `<img referrerpolicy="no-referrer" class="d-hero" src="${esc(s.thumb)}" referrerpolicy="no-referrer" alt="" onerror="this.remove()" />` : ""}</div>
       <div class="d-actions">
@@ -798,7 +861,7 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
     $("svFoot").style.display = items.length ? "flex" : "none";
     $("svBody").innerHTML = !items.length
       ? `<div class="empty"><p>Tap the heart on any home to build your shortlist, compare side-by-side, or generate a 1-tap Weekend Visit Route.</p><button class="btn" id="svAddExt">+ Add Housing.com / 99acres URL</button></div>`
-      : items.map(s => renderCardHtml(s, $("fHub").value)).join("") + `<button class="btn" id="svAddExt" style="width:100%;margin-top:4px;">+ Add External Listing (Housing / 99acres)</button>`;
+      : items.map(s => renderCardHtml(s, ($("fHub")?.value || ""))).join("") + `<button class="btn" id="svAddExt" style="width:100%;margin-top:4px;">+ Add External Listing (Housing / 99acres)</button>`;
     bindCardEvents($("svBody"));
     const addBtn = $("svAddExt"); if (addBtn) addBtn.onclick = () => { closeSaved(); $("clipModal").style.display = "grid"; };
   }
@@ -854,14 +917,14 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
   }
 
   function resetAll() {
-    $("searchBox").value = ""; ["fZone","fLoc","fSource","fFurn","fTen"].forEach(id => $(id).value = "ALL");
-    $("fHub").value = ""; ["fHubMin","fMetro","fRate"].forEach(id => $(id).value = "0"); if ($("sortSelect")) $("sortSelect").value = "rec";
+    $("searchBox").value = ""; ["fZone","fLoc","fSource","fFurn","fTen"].forEach(id => { if ($(id)) $(id).value = "ALL"; });
+    if ($("fHub")) $("fHub").value = ""; ["fHubMin","fMetro","fRate"].forEach(id => { if ($(id)) $(id).value = "0"; }); if ($("sortSelect")) $("sortSelect").value = "rec";
     $("sMin").value = 0; $("sMax").value = SQFT_MAX; syncSqftSlider(); resetPriceScale();
     st.bhks.clear(); document.querySelectorAll(".bhk-opt").forEach(b => b.classList.remove("active"));
-    st.zero = st.dealOnly = st.flood = st.exactOnly = st.showEst = st.mapBounds = false; st.lasso = null; st.multiLocs = []; st.brightOnly = false; st.reraOnly = false; st.lister = "ALL"; st.page = 36; if (window.__bhClearLasso) window.__bhClearLasso(true); if (window.__bhResetAiUiOnly) window.__bhResetAiUiOnly();
+    st.zero = st.dealOnly = st.flood = st.exactOnly = st.showEst = st.mapBounds = st.seaview = st.balcony = st.terrace = st.drop = false; st.lasso = null; st.multiLocs = []; st.brightOnly = false; st.reraOnly = false; st.lister = "ALL"; st.page = 36; if (window.__bhClearLasso) window.__bhClearLasso(true); if (window.__bhResetAiUiOnly) window.__bhResetAiUiOnly();
     document.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
     document.querySelectorAll(".n-chip").forEach(c => c.classList.toggle("active", c.dataset.nb === "ALL"));
-    ["fExactOnly","fShowEst","mapAreaBtn"].forEach(id => $(id).classList.remove("active"));
+    ["fExactOnly","fShowEst","mapAreaBtn"].forEach(id => { if ($(id)) $(id).classList.remove("active"); });
     populateLocalities(); renderAll();
   }
 
@@ -872,17 +935,19 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
   const closeSaved = () => { $("savedBackdrop").style.display = "none"; $("savedSheet").style.display = "none"; };
 
   function setMobView(v) {
-    document.body.className = "view-" + v;
+    document.body.classList.remove("view-list", "view-map", "view-split");
+    document.body.classList.add("view-" + v);
+    if (window.innerWidth <= 820) document.body.classList.toggle("bh-mob-map", v === "map");
     $("mobTogTxt").textContent = v === "map" ? "List" : "Map";
     $("mobTogIc").innerHTML = v === "map"
       ? '<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>'
       : '<polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/>';
     $("mapPreview").style.display = "none";
-    setTimeout(() => { map.invalidateSize(); renderMap(); }, 90);
+    setTimeout(() => { try { map.invalidateSize(); if (window.__bhPendingView) { const pv = window.__bhPendingView; window.__bhPendingView = null; map.setView([pv[0], pv[1]], pv[2], { animate: false }); } renderMap(); } catch {} }, 90);
   }
 
-  $("modeRent").onclick = () => { st.mode = "rent"; $("modeRent").classList.add("active"); $("modeBuy").classList.remove("active"); resetPriceScale(); renderAll(); };
-  $("modeBuy").onclick = () => { if (!window.__bhBuyDone) window.__bhModeLoading = "buy"; st.mode = "buy"; $("modeBuy").classList.add("active"); $("modeRent").classList.remove("active"); resetPriceScale(); renderAll(); ensureBuyShardsLoaded(); };
+  $("modeRent").onclick = () => { st.mode = "rent"; $("modeRent").classList.add("active"); $("modeBuy").classList.remove("active"); if ($("bhkSharedOpt")) $("bhkSharedOpt").style.display = ""; resetPriceScale(); populateSources(); renderAll(); };
+  $("modeBuy").onclick = () => { if (!window.__bhBuyDone) window.__bhModeLoading = "buy"; st.mode = "buy"; $("modeBuy").classList.add("active"); $("modeRent").classList.remove("active"); st.bhks.delete("shared"); if ($("bhkSharedOpt")) { $("bhkSharedOpt").classList.remove("active"); $("bhkSharedOpt").style.display = "none"; } resetPriceScale(); populateSources(); renderAll(); ensureBuyShardsLoaded(); };
   $("themeBtn").onclick = () => applyTheme(st.theme === "dark" ? "light" : "dark");
   $("openFilterBtn").onclick = openFilters; $("closeFilterBtn").onclick = closeFilters; $("filterBackdrop").onclick = closeFilters; $("applyFiltersBtn").onclick = closeFilters;
   $("clearFiltersBtn").onclick = resetAll; $("resetMiniBtn").onclick = resetAll;
@@ -909,9 +974,9 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
       if (k === "zero") { st.zero = !st.zero; btn.classList.toggle("active", st.zero); }
       else if (k === "deal") { st.dealOnly = !st.dealOnly; btn.classList.toggle("active", st.dealOnly); }
       else if (k === "flood") { st.flood = !st.flood; btn.classList.toggle("active", st.flood); }
-      else if (k === "metro") { const on = $("fMetro").value !== "10"; $("fMetro").value = on ? "10" : "0"; btn.classList.toggle("active", on); }
+      else if (k === "metro") { const on = ($("fMetro")?.value || "") !== "10"; if ($("fMetro")) $("fMetro").value = on ? "10" : "0"; btn.classList.toggle("active", on); }
       else if (k === "community") { const on = $("fSource").value !== "community"; $("fSource").value = on ? "community" : "ALL"; btn.classList.toggle("active", on); }
-      else if (k === "rated") { const on = $("fRate").value !== "4.0"; $("fRate").value = on ? "4.0" : "0"; btn.classList.toggle("active", on); }
+      else if (k === "rated") { const on = ($("fRate")?.value || "") !== "4.0"; if ($("fRate")) $("fRate").value = on ? "4.0" : "0"; btn.classList.toggle("active", on); }
       st.page = 36; renderAll();
     };
   });
@@ -926,15 +991,32 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
     "Thane": [19.222, 72.974, 13],
     "Navi Mumbai": [19.048, 73.035, 12]
   };
+  function safeFlyTo(lat, lng, zoom) {
+    try {
+      const mc = map.getContainer();
+      if (!mc) return;
+      const r = mc.getBoundingClientRect();
+      if (r.width > 40 && r.height > 40) {
+        map.flyTo([lat, lng], zoom, { duration: 0.45, easeLinearity: 0.35 });
+      } else {
+        window.__bhPendingView = [lat, lng, zoom];
+      }
+    } catch {}
+  }
   document.querySelectorAll(".n-chip").forEach(btn => {
     btn.onclick = () => {
-      const nb = btn.dataset.nb;
-      $("fZone").value = nb;
+      const rawNb = btn.dataset.nb;
+      const curZ = $("fZone")?.value || "ALL";
+      const nb = (rawNb !== "ALL" && curZ === rawNb) ? "ALL" : rawNb;
+      if ($("fZone")) $("fZone").value = nb;
+      if ($("fLoc")) $("fLoc").value = "ALL";
+      st.multiLocs = [];
       populateLocalities();
       document.querySelectorAll(".n-chip").forEach(x => x.classList.toggle("active", x.dataset.nb === nb));
+      st.page = 36;
+      renderAll();
       const v = NB_VIEWS[nb];
-      if (v) map.flyTo([v[0], v[1]], v[2], { duration: 0.55 });
-      st.page = 36; renderAll();
+      if (v) safeFlyTo(v[0], v[1], v[2]);
     };
   });
 
@@ -943,20 +1025,21 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
   ["mpMin","mpMax"].forEach(id => $(id).addEventListener("input", () => { syncPriceSliders(Number($("mpMin").value), Number($("mpMax").value)); st.page = 36; scheduleRender(); }));
   ["sMin","sMax"].forEach(id => $(id).addEventListener("input", () => { syncSqftSlider(); st.page = 36; scheduleRender(); }));
   document.querySelectorAll(".bhk-opt").forEach(btn => {
-    btn.onclick = () => { const v = Number(btn.dataset.bhk); if (st.bhks.has(v)) st.bhks.delete(v); else st.bhks.add(v); btn.classList.toggle("active", st.bhks.has(v)); st.page = 36; renderAll(); };
+    btn.onclick = () => { const v = btn.dataset.bhk === "shared" ? "shared" : Number(btn.dataset.bhk); if (st.bhks.has(v)) st.bhks.delete(v); else st.bhks.add(v); btn.classList.toggle("active", st.bhks.has(v)); st.page = 36; renderAll(); };
   });
-  $("fExactOnly").onclick = e => { st.exactOnly = !st.exactOnly; e.currentTarget.classList.toggle("active", st.exactOnly); st.page = 36; renderAll(); };
-  $("fShowEst").onclick = e => { st.showEst = !st.showEst; e.currentTarget.classList.toggle("active", st.showEst); st.page = 36; renderAll(); };
-  ["searchBox","fLoc","fSource","fMetro","fHub","fHubMin","fFurn","fTen","fRate"].forEach(id => $(id).addEventListener("input", () => { st.page = 36; scheduleRender(); }));
+  if ($("fExactOnly")) $("fExactOnly").onclick = e => { st.exactOnly = !st.exactOnly; e.currentTarget.classList.toggle("active", st.exactOnly); st.page = 36; renderAll(); };
+  if ($("fShowEst")) $("fShowEst").onclick = e => { st.showEst = !st.showEst; e.currentTarget.classList.toggle("active", st.showEst); st.page = 36; renderAll(); };
+  ["searchBox","fLoc","fSource","fMetro","fHub","fHubMin","fFurn","fTen","fRate"].forEach(id => { if ($(id)) $(id).addEventListener("input", () => { st.page = 36; scheduleRender(); }); });
 
-  map.on("moveend zoomend", () => { if (st.mapBounds) renderAll(); else renderMap(); });
+  let _mvT = null;
+  map.on("moveend zoomend", () => { clearTimeout(_mvT); _mvT = setTimeout(() => { requestAnimationFrame(() => { if (st.mapBounds) renderAll(); else renderMap(); }); }, 80); });
   document.addEventListener("keydown", e => {
     if (e.key === "Escape") { closeDetail(); closeFilters(); closeCluster(); closeSaved(); $("cmpModal").style.display = "none"; $("clipModal").style.display = "none"; $("mapPreview").style.display = "none"; }
     if (e.key === "/" && !["INPUT","TEXTAREA","SELECT"].includes(document.activeElement.tagName)) { e.preventDefault(); $("searchBox").focus(); }
   });
 
   applyTheme(st.theme); resetPriceScale(); syncSqftSlider(); syncCounts();
-  if (window.innerWidth <= 1024) setMobView("list");
+  if (window.innerWidth <= 820) { document.body.classList.add("bh-mob-map"); setMobView("map"); } else if (window.innerWidth <= 1024) setMobView("list");
 
 
   let directSocieties = [];
@@ -1025,8 +1108,8 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
   });
   if ($("fHub")) {
     const syncHubUI = () => {
-      st.hub = ($("fHub").value || "ALL");
-      st.hubMin = Number($("fHubMin").value || 45);
+      st.hub = (($("fHub")?.value || "") || "ALL");
+      st.hubMin = Number(($("fHubMin")?.value || "") || 45);
       if ($("hubVal")) $("hubVal").textContent = st.hub === "ALL" ? "Any" : `≤ ${st.hubMin} min to ${HUB_META[st.hub]?.name || st.hub}`;
       if (st.hub !== "ALL" && HUB_META[st.hub]) map.flyTo(HUB_META[st.hub].ll, 12, { duration: 0.5 });
       st.page = 36; renderAll();
@@ -1187,7 +1270,7 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
 
   if ($("fHub")) {
     const onHubChange = () => {
-      st.hub = $("fHub").value || "ALL";
+      st.hub = ($("fHub")?.value || "") || "ALL";
       st.hubMin = Number($("fHubMin")?.value || 45);
       if ($("hubVal")) $("hubVal").textContent = st.hub === "ALL" ? "Any" : `≤ ${st.hubMin} min to ${HUB_META[st.hub]?.name || st.hub}`;
       if (st.hub !== "ALL" && HUB_META[st.hub]) map.flyTo(HUB_META[st.hub].ll, 12, { duration: 0.5 });
@@ -1409,7 +1492,7 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
     el.addEventListener("click", () => {
       st.seaview = st.balcony = st.terrace = st.drop = false;
       st.lister = "ALL"; st.hub = "ALL"; st.multiLocs = [];
-      if ($("fHub")) $("fHub").value = "";
+      if ($("fHub")) if ($("fHub")) $("fHub").value = "";
       if ($("hubVal")) $("hubVal").textContent = "Any";
       document.querySelectorAll(".chip[data-q]").forEach(b => {
         if (V15_CHIP_KEYS.has(b.dataset.q)) b.classList.remove("on", "active");

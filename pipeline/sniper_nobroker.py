@@ -92,12 +92,15 @@ def run_sniper():
             if not price: continue
             det = detect_locality(f"{prop.get('locality', '')} {prop.get('street', '')} {loc_name}")
             if not det: continue
+            # BH_V65_TAG_SHARED: Detect shared-room/PG listings so they route to the Shared filter
+            _nb_t = f"{prop.get('propertyTitle','')} {prop.get('detailUrl','')} {prop.get('type','')}".lower()
+            _is_sh = bool(prop.get('sharedAccomodation') or any(k in _nb_t for k in ('shared-room','shared room','single-room','single room','sharing','flatmate','pg ')))
             imgs = _extract_imgs(prop)
             rows.append({
                 "name": clean_soc_name(prop.get("society") or prop.get("propertyTitle") or f"{det[0]} Flat", det[0]),
                 "locality": det[0], "mode": "rent", "p": price,
                 "b": parse_bhk(str(prop.get("typeDesc") or prop.get("type") or "")) or 1,
-                "sq": prop.get("propertySize"), "s": "nobroker", "u": detail, "zb": True, "lt": lt,
+                "sq": prop.get("propertySize"), "s": "nobroker", "u": detail, "zb": True, "lt": ("shared" if _is_sh else "owner"), "lt": lt,
                 "f": norm_furnishing(prop.get("furnishingDesc") or prop.get("furnishing")),
                 "img": imgs[0] if imgs else None, "imgs": imgs,
                 "lat": prop.get("latitude"), "lng": prop.get("longitude"),

@@ -497,7 +497,15 @@ def _finalize_shards_and_manifest():
             s_photos = set(s.get("photos") or [])
             if s.get("thumb"):
                 s_photos.add(s["thumb"])
-            # BH_V63_URL_SCRUB: Drop SquareYards /agent/ profile links & fix mislabeled housing.com tags
+            # BH_V63_URL_SCRUB + BH_V65_GUARD: Tag shared rooms lt='shared', normalize zones, sync s.bhks & sources dict
+            _sh_re = re.compile(r'(?:shared[-_]?room|single[-_]?room[-_]?in|private[-_]?room[-_]?in|sharing|flatmate|roommate|/pg-|paying[-_]?guest|hostel)', re.I)
+            if uk == 'units_rent':
+                for _u in us:
+                    if _sh_re.search(str(_u.get('u') or '')) or str(_u.get('s') or '') in ('community','reddit'): _u['lt'] = 'shared'
+            if s.get('zone') == 'South Bombay': s['zone'] = 'South Mumbai'
+            elif s.get('zone') == 'Western Suburbs': s['zone'] = 'Western Suburbs North'
+            s['bhks'] = sorted({(int(float(u['b'])) if float(u['b']).is_integer() else round(float(u['b']), 1)) for u in us if u.get('b') is not None and str(u.get('lt') or '') != 'shared'})
+            s['sources_rent' if uk == 'units_rent' else 'sources_buy'] = {str(u.get('s')): (u.get('u') or '') for u in us if u.get('s')}
             us = [u for u in us if not (str(u.get("s") or "") == "squareyards" and "/agent/" in str(u.get("u") or "").lower())]
             s[uk] = us
             for u in us:
