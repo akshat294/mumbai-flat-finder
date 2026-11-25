@@ -55,8 +55,9 @@ jobs:
             git config user.name "mumbai-flat-finder-bot"
             git config user.email "bot@users.noreply.github.com"
             git add web/public/data/manifest.json web/public/data/shards data/listing_registry.json
+            git add -u
             git commit -m "chore: 2h zero-brokerage sniper update"
-            git pull --rebase && git push
+            git pull --rebase --autostash -X theirs && git push
           else
             echo "No new drops - skipping deploy."
           fi

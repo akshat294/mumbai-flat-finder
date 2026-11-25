@@ -138,4 +138,5 @@ jobs:
           git config user.name "mumbai-flat-finder-bot"
           git config user.email "bot@users.noreply.github.com"
           git add data/google_places_cache.json data/osm_geo_cache.json data/osm_civic_cache.json data/mumbai_osm_buildings.json data/vision_tags_cache.json data/price_history.json data/apify_cache.json data/apish_99acres_cache.json data/apish_99acres_queue.json data/raw_99acres data/raw_housing data/maharera_cache.json data/seen_timestamps.json data/listing_registry.json web/public/data/manifest.json web/public/data/shards web/public/data/mumbai-societies.csv
-          git diff --staged --quiet || (git commit -m "feat: full Mumbai MMR multi-portal backfill harvest" && (git pull --rebase || (git rebase --abort && git pull --no-rebase -X ours --no-edit)) && git push)
+          git add -u
+          git diff --staged --quiet || (git commit -m "feat: full Mumbai MMR multi-portal backfill harvest" && (git pull --rebase --autostash -X theirs || (git rebase --abort && git pull --no-rebase -X ours --no-edit)) && git push)

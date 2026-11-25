@@ -92,4 +92,5 @@ jobs:
           git config user.name "mumbai-flat-finder-bot"
           git config user.email "bot@users.noreply.github.com"
           git add data/media_cache.json data/vision_tags_cache.json data/apify_cache.json data/apish_99acres_cache.json data/listing_registry.json web/public/data/manifest.json web/public/data/shards
-          git diff --staged --quiet || (git commit -m "chore: ONNX SigLIP 2 vision catch-up scan" && (git pull --rebase || (git rebase --abort && git pull --no-rebase -X ours --no-edit)) && git push)
+          git add -u
+          git diff --staged --quiet || (git commit -m "chore: ONNX SigLIP 2 vision catch-up scan" && (git pull --rebase --autostash -X theirs || (git rebase --abort && git pull --no-rebase -X ours --no-edit)) && git push)
