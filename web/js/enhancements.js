@@ -155,17 +155,25 @@
 
   function syncUrlFromState() {
     try {
-      const st = bh().st; if (!st) return;
+      const api = bh();
+      const st = api.st; if (!st) return;
       const p = new URLSearchParams();
       if (st.mode && st.mode !== "rent") p.set("mode", st.mode);
-      if (st.sort && st.sort !== "rec") p.set("sort", st.sort);
-      if (st.lister && st.lister !== "all") p.set("lister", st.lister);
-      const locs = (window.__v16Locs && window.__v16Locs.size) ? [...window.__v16Locs] : (st.locality ? [st.locality] : []);
+      const sortVal = (sortEl && sortEl.value) || st.sort || "rec";
+      if (sortVal && sortVal !== "rec") p.set("sort", sortVal);
+      if (st.lister && String(st.lister).toUpperCase() !== "ALL") p.set("lister", st.lister);
+      const fLocVal = (document.getElementById("fLoc")?.value || "ALL");
+      const locs = (Array.isArray(st.multiLocs) && st.multiLocs.length)
+        ? st.multiLocs
+        : (fLocVal && fLocVal !== "ALL" ? [fLocVal] : []);
       if (locs.length) p.set("locs", locs.join(","));
-      if (st.bhk && st.bhk.size) p.set("bhk", [...st.bhk].join(","));
+      if (st.bhks && st.bhks.size) p.set("bhk", [...st.bhks].join(","));
       if (st.balcony) p.set("balcony", "1");
       if (st.seaview) p.set("seaview", "1");
-      if (st.zb) p.set("zb", "1");
+      if (st.terrace) p.set("terrace", "1");
+      if (st.zero) p.set("zb", "1");
+      if (st.brightOnly) p.set("bright", "1");
+      if (st.reraOnly) p.set("rera", "1");
       const qs = p.toString();
       history.replaceState(null, "", qs ? ("?" + qs) : location.pathname);
     } catch {}
@@ -174,27 +182,50 @@
   function applyUrlStateOnBoot() {
     try {
       const p = new URLSearchParams(location.search);
-      const st = bh().st; if (![...p.keys()].length || !st) return;
-      if (p.get("mode") === "buy") { st.mode = "buy"; document.getElementById("modeBuy")?.click(); }
-      if (p.get("sort")) { st.sort = p.get("sort"); if (sortEl) sortEl.value = st.sort; }
+      const api = bh();
+      const st = api.st; if (![...p.keys()].length || !st) return;
+      if (p.get("mode") === "buy") {
+        st.mode = "buy";
+        document.getElementById("modeBuy")?.click();
+      }
+      if (p.get("sort")) {
+        st.sort = p.get("sort");
+        if (sortEl) sortEl.value = st.sort;
+      }
       if (p.get("lister")) {
         st.lister = p.get("lister");
         document.querySelector('[data-lt="' + p.get("lister").replace(/"/g, "") + '"]')?.click();
       }
       if (p.get("balcony") === "1") st.balcony = true;
       if (p.get("seaview") === "1") st.seaview = true;
-      if (p.get("zb") === "1") st.zb = true;
-      if (p.get("bhk") && st.bhk && st.bhk.add) {
-        p.get("bhk").split(",").forEach(v => { const n = parseFloat(v); if (isFinite(n)) st.bhk.add(n); });
+      if (p.get("terrace") === "1") st.terrace = true;
+      if (p.get("zb") === "1") st.zero = true;
+      if (p.get("bright") === "1") st.brightOnly = true;
+      if (p.get("rera") === "1") st.reraOnly = true;
+      if (p.get("bhk") && st.bhks && st.bhks.add) {
+        p.get("bhk").split(",").forEach(v => { const n = parseFloat(v); if (isFinite(n)) st.bhks.add(n); });
       }
-      if (p.get("locs")) {
-        const arr = p.get("locs").split(",").map(x => x.trim()).filter(Boolean).slice(0, 5);
+      const rawLocs = p.get("locs") || p.get("loc") || "";
+      if (rawLocs) {
+        const arr = rawLocs.split(",").map(x => x.trim()).filter(Boolean).slice(0, 5);
         if (arr.length) {
-          if (window.__v16Locs && window.__v16Locs.add) arr.forEach(l => window.__v16Locs.add(l));
-          else st.locality = arr[0];
+          st.multiLocs = arr;
+          const fl = document.getElementById("fLoc");
+          if (fl && arr.length === 1 && [...fl.options].some(o => o.value === arr[0])) {
+            fl.value = arr[0];
+          }
         }
       }
-      setTimeout(() => { try { if (bh().applyFilters) bh().applyFilters(); } catch {} }, 450);
+      const triggerRender = () => {
+        try {
+          const cur = bh();
+          if (cur.renderAll) cur.renderAll();
+          else if (cur.renderList) cur.renderList();
+        } catch {}
+      };
+      triggerRender();
+      setTimeout(triggerRender, 500);
+      setTimeout(triggerRender, 1500);
     } catch {}
   }
 

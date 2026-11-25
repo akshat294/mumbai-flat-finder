@@ -282,25 +282,38 @@ function allowLlmForIp(request, maxPerMin = 20) {
 function normCacheQuery(q) {
   return String(q || "").toLowerCase().replace(/[^a-z0-9\s]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 140);
 }
+// BH_V63_MEM_CACHE: Fast in-isolate LRU + awaited Cloudflare Edge Cache
+const _MEM_CACHE = new Map();
 async function readEdgeCache(keyPath) {
+  const mem = _MEM_CACHE.get(keyPath);
+  if (mem && mem.exp > Date.now()) return mem.val;
+  if (mem) _MEM_CACHE.delete(keyPath);
   try {
     if (typeof caches === "undefined" || !caches.default) return null;
     const req = new Request("https:" + "//bombayhomes.pages.dev/__cache/ask/" + keyPath, { method: "GET" });
     const hit = await caches.default.match(req);
-    return hit ? await hit.json() : null;
+    if (!hit) return null;
+    const val = await hit.json();
+    _MEM_CACHE.set(keyPath, { val, exp: Date.now() + 3600000 });
+    return val;
   } catch {
     return null;
   }
 }
-function writeEdgeCache(waitUntil, keyPath, obj, ttlSec = 86400) {
+async function writeEdgeCache(waitUntil, keyPath, obj, ttlSec = 86400) {
   try {
-    if (typeof caches === "undefined" || !caches.default || typeof waitUntil !== "function") return;
+    _MEM_CACHE.set(keyPath, { val: obj, exp: Date.now() + Math.min(ttlSec, 3600) * 1000 });
+    if (_MEM_CACHE.size > 250) {
+      const firstK = _MEM_CACHE.keys().next().value;
+      if (firstK) _MEM_CACHE.delete(firstK);
+    }
+    if (typeof caches === "undefined" || !caches.default) return;
     const req = new Request("https:" + "//bombayhomes.pages.dev/__cache/ask/" + keyPath, { method: "GET" });
     const res = new Response(JSON.stringify(obj), {
       status: 200,
       headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=" + ttlSec },
     });
-    waitUntil(caches.default.put(req, res));
+    await caches.default.put(req, res);
   } catch {}
 }
 
@@ -358,7 +371,7 @@ export async function onRequestPost({ request, env, waitUntil }) {
     const rawParsed = extractJsonObject(llm.text) || localParseQuery(query, knownLocalities, currentMode);
     const parsed = sanitizeParsedFilters(rawParsed, knownLocalities);
     const payload = { ok: true, engine: llm.engine, diag: llm.diag || "", filters: parsed };
-    if (llm.engine && llm.engine !== "local-nlp") writeEdgeCache(waitUntil, cKey, payload, 86400);
+    if (llm.engine && llm.engine !== "local-nlp") await writeEdgeCache(waitUntil, cKey, payload, 86400);
     return jsonRes(request, payload);
   }
 
@@ -425,7 +438,7 @@ export async function onRequestPost({ request, env, waitUntil }) {
       engine: cleanText ? llm.engine : "local-nlp",
       summary: cleanText || buildFallbackSummary(query, totalBuildings, totalFlats, topMatches, mode),
     };
-    if (cleanText && llm.engine !== "local-nlp") writeEdgeCache(waitUntil, sKey, sumPayload, 21600);
+    if (cleanText && llm.engine !== "local-nlp") await writeEdgeCache(waitUntil, sKey, sumPayload, 21600);
     return jsonRes(request, sumPayload);
   }
 

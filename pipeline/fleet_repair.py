@@ -497,7 +497,12 @@ def _finalize_shards_and_manifest():
             s_photos = set(s.get("photos") or [])
             if s.get("thumb"):
                 s_photos.add(s["thumb"])
+            # BH_V63_URL_SCRUB: Drop SquareYards /agent/ profile links & fix mislabeled housing.com tags
+            us = [u for u in us if not (str(u.get("s") or "") == "squareyards" and "/agent/" in str(u.get("u") or "").lower())]
+            s[uk] = us
             for u in us:
+                if str(u.get("s") or "") in ("99acres", "makaan") and "housing.com/" in str(u.get("u") or "").lower():
+                    u["s"] = "housing"
                 if flr_map and u.get("s") == "99acres" and not u.get("flr"):
                     mm = re.search(r"spid-([A-Z]\d{6,10})", str(u.get("u") or ""), re.I)
                     if mm:

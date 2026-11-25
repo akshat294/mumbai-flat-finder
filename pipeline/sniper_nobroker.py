@@ -41,7 +41,7 @@ HOT_HUBS = [
 def _extract_imgs(prop):
     pid = prop.get("id") or ""
     imgs = []
-    for ph in (prop.get("photos") or [])[:5]:
+    for ph in (prop.get("photos") or [])[:20]:
         if not isinstance(ph, dict): continue
         im = ph.get("imagesMap") or {}
         for k in ("large", "original", "medium", "thumbnail"):
