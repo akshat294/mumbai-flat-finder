@@ -4,10 +4,10 @@
   "generated_at": "25 Nov 2026, 04:50 PM IST",
   "generated_ts": 1795605651,
   "count": 16290,
-  "rent_buildings": 10488,
-  "buy_buildings": 7196,
-  "rent_flats": 16971,
-  "buy_flats": 12313,
+  "rent_buildings": 10445,
+  "buy_buildings": 7184,
+  "rent_flats": 16921,
+  "buy_flats": 12296,
   "rent_shards": [
     "shards/rent_0.json",
     "shards/rent_1.json",
@@ -30,6 +30,6 @@
   "total_rent_flats": 17004,
   "total_buy_flats": 12313,
   "updated_ist": "25 Nov 2026, 04:50 PM IST",
-  "total_buildings": 17684,
-  "total_flats": 29284
+  "total_buildings": 17629,
+  "total_flats": 29217
 }

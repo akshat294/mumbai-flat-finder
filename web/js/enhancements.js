@@ -266,7 +266,7 @@
         let metaRow = card.querySelector(".bh-badge-row");
         if (!metaRow) { metaRow = document.createElement("div"); metaRow.className = "bh-badge-row"; const anchor = card.querySelector(".fc-price, .fc-top"); if (anchor) anchor.insertAdjacentElement("afterend", metaRow); else body.appendChild(metaRow); }
 
-        const cnt = card.querySelector(".fc-cnt");
+        const cnt = card.querySelector(".fc-pcount, .fc-cnt");
         if (cnt && /^\s*1\s*\/\s*(?:\+|1)\s*$/.test(cnt.textContent || "")) cnt.dataset.single = "1";
 
         if (soc) {
@@ -285,43 +285,50 @@
             metaRow.appendChild(fp);
           }
 
-          if (typeof st !== "undefined" && st.mode === "buy" && Array.isArray(soc.rera_ids) && soc.rera_ids.length && !card.querySelector(".bh-rera-chip")) {
+          if ((bh().st || {}).mode === "buy" && Array.isArray(soc.rera_ids) && soc.rera_ids.length && !card.querySelector(".bh-rera-chip")) {
             const rc = document.createElement("span");
             rc.className = "bh-rera-chip";
             rc.textContent = "RERA";
             metaRow.appendChild(rc);
           }
 
+          const curSt = bh().st || {};
           const photos = [];
           const _rawP = [];
-          const addP = u => { if (u) _rawP.push(u); };
-          if (imgEl) addP(imgEl.src);
+          const addP = u => {
+            if (!u || typeof u !== "string") return;
+            const t = u.trim();
+            if (t.includes("static.squareyards.com/") && !t.startsWith("/api/img")) _rawP.push("/api/img?u=" + encodeURIComponent(t));
+            else _rawP.push(t);
+          };
+          const us = (curSt.mode === "buy" ? soc.units_buy : soc.units_rent) || [];
+          if (us.length) { addP(us[0].img); (us[0].imgs || []).forEach(addP); }
           addP(soc.thumb);
           (soc.photos || []).forEach(addP);
-          const us = (typeof st !== "undefined" && st.mode === "buy" ? soc.units_buy : soc.units_rent) || [];
-          us.forEach(u => { addP(u.img); (u.imgs || []).forEach(addP); });
-
+          if (us.length > 1) us.slice(1).forEach(u => { addP(u.img); (u.imgs || []).forEach(addP); });
+          if (imgEl && imgEl.getAttribute("src")) addP(imgEl.getAttribute("src"));
           bhBuildCleanPhotos(_rawP).forEach(u => photos.push(u));
+          card.dataset.v66Total = String(photos.length);
           if (imgEl && photos.length && imgEl.src !== photos[0]) imgEl.src = photos[0];
-          if (cnt) { if (photos.length > 1) { delete cnt.dataset.single; cnt.textContent = "1/" + photos.length; } else { cnt.dataset.single = "1"; cnt.textContent = ""; } }
+          if (cnt) { if (photos.length > 1) { delete cnt.dataset.single; cnt.style.display = ""; cnt.textContent = "1/" + photos.length; } else { cnt.dataset.single = "1"; cnt.style.display = "none"; cnt.textContent = ""; } }
           if (imgEl && photos.length > 1) {
             let idx = 0;
             const show = () => {
               idx = (idx + photos.length) % photos.length;
               imgEl.src = photos[idx];
-              if (cnt) { delete cnt.dataset.single; cnt.textContent = (idx + 1) + "/" + photos.length; }
+              if (cnt) { delete cnt.dataset.single; cnt.style.display = ""; cnt.textContent = (idx + 1) + "/" + photos.length; }
             };
-            if (cnt) { delete cnt.dataset.single; cnt.textContent = "1/" + photos.length; }
-
             const mediaBox = imgEl.parentElement || card;
             mediaBox.querySelectorAll("button").forEach(btn => {
               const t = (btn.textContent || "").trim();
               const al = (btn.getAttribute("aria-label") || "").toLowerCase();
-              if (t === "<" || t === "\u2039" || al.includes("prev")) {
-                btn.addEventListener("click", e => { e.preventDefault(); e.stopImmediatePropagation(); idx--; show(); }, true);
-              } else if (t === ">" || t === "\u203a" || al.includes("next")) {
-                btn.addEventListener("click", e => { e.preventDefault(); e.stopImmediatePropagation(); idx++; show(); }, true);
-              }
+              const isPrev = (t === "<" || t === "\u2039" || al.includes("prev") || btn.classList.contains("prev"));
+              const isNext = (t === ">" || t === "\u203a" || al.includes("next") || btn.classList.contains("next"));
+              if (!isPrev && !isNext) return;
+              const clBtn = btn.cloneNode(true);
+              clBtn.removeAttribute("data-pdir");
+              btn.replaceWith(clBtn);
+              clBtn.addEventListener("click", e => { e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation(); idx += (isNext ? 1 : -1); show(); }, true);
             });
 
             let sx = null;
@@ -1089,6 +1096,7 @@
     if (f.minPrice && isFinite(f.minPrice)) st.pLo = Number(f.minPrice);
     if (f.maxPrice && isFinite(f.maxPrice)) st.pHi = Number(f.maxPrice);
     if (Array.isArray(f.localities) && f.localities.length) {
+      if (window.__bhClearSpatial) window.__bhClearSpatial("multiLocs");
       st.multiLocs = f.localities.slice(0, 5);
       if (api2.renderLocChips) api2.renderLocChips();
       applied.push(st.multiLocs.slice(0, 2).join(" + "));
@@ -1387,7 +1395,7 @@
       showHint("Drag on map to circle an area (Esc to cancel)");
     } else if (hasLasso) {
       const cnt = Array.isArray(api.filtered) ? api.filtered.length : 0;
-      btn.textContent = "\u2715 Clear area" + (cnt ? " (" + cnt.toLocaleString("en-IN") + ")" : "");
+      btn.textContent = "\u2715 Clear area (" + cnt.toLocaleString("en-IN") + ")";
       showHint("");
     } else {
       btn.textContent = "\u270E Draw area";
@@ -1527,6 +1535,7 @@
       }
       renderPolygon(map, true);
       if (curApi.st) {
+        if (window.__bhClearSpatial) window.__bhClearSpatial("lasso");
         curApi.st.lasso = pts.slice();
         curApi.st.page = 36;
       }
@@ -1581,7 +1590,7 @@ document.addEventListener("pointerdown", (e) => {
 /* === BH_V65_FIX_PHOTO_CNT_AND_SHARED: Clean '1/+' badge + honest Shared Room labeling === */
 (function(){
   const fix = () => {
-    document.querySelectorAll('.fc-cnt, .fc-pbadge').forEach(el => {
+    document.querySelectorAll('.fc-pcount, .fc-cnt, .fc-pbadge').forEach(el => {
       if (/\/\+/.test(el.textContent || '')) el.style.display = 'none';
     });
     const api = (typeof window.__bh === 'function' ? window.__bh() : {}) || {};

@@ -292,7 +292,7 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
     const sel = $("fSource"), prev = sel.value;
     const ordered = Object.entries(counts).filter(([_, n]) => n > 0).sort((a, b) => b[1] - a[1]);
     sel.innerHTML = '<option value="ALL">All Sources</option>' + ordered.map(([k, n]) => `<option value="${esc(k)}">${esc(PORTAL_NAMES[k] || k)} (${n.toLocaleString("en-IN")})</option>`).join("");
-    if (ordered.some(([k]) => k === prev)) sel.value = prev;
+    if (ordered.some(([k]) => k === prev)) sel.value = prev; else sel.value = "ALL";
     const commChip = document.querySelector('.chip[data-q="community"]');
     if (commChip) commChip.style.display = (counts.community || 0) > 0 ? "" : "none";
   }
@@ -400,6 +400,8 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
   function renderActiveBar() {
     const bar = $("activeBar"), tags = [];
     const z = $("fZone")?.value || "ALL", loc = $("fLoc")?.value || "ALL", srcF = $("fSource")?.value || "ALL", ceil = priceMax();
+    const sq = ($("searchBox")?.value || "").trim();
+    if (sq) tags.push({ k: "search", lbl: `Search: ${sq.slice(0, 22)}` });
     if (z !== "ALL") tags.push({ k: "zone", lbl: z });
     if (loc !== "ALL") tags.push({ k: "loc", lbl: loc });
     if (Array.isArray(st.multiLocs) && st.multiLocs.length) {
@@ -436,9 +438,10 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
     bar.querySelectorAll(".bh-af-btn").forEach(btn => {
       btn.onclick = () => {
         const k = btn.dataset.af || "";
-        if (k === "zone") { if ($("fZone")) $("fZone").value = "ALL"; document.querySelectorAll(".n-chip").forEach(c => c.classList.toggle("active", c.dataset.nb === "ALL")); populateLocalities(); }
+        if (k === "search") { if ($("searchBox")) $("searchBox").value = ""; const ai = $("bhAiInput"); if (ai) ai.value = ""; }
+        else if (k === "zone") { if ($("fZone")) $("fZone").value = "ALL"; document.querySelectorAll(".n-chip").forEach(c => c.classList.toggle("active", c.dataset.nb === "ALL")); populateLocalities(); }
         else if (k === "loc") { if ($("fLoc")) $("fLoc").value = "ALL"; }
-        else if (k.startsWith("mloc:")) { const v = k.slice(5); st.multiLocs = (st.multiLocs || []).filter(x => x !== v); if ($("fLoc") && $("fLoc").value === v) $("fLoc").value = "ALL"; }
+        else if (k.startsWith("mloc:")) { const v = k.slice(5); st.multiLocs = (st.multiLocs || []).filter(x => x !== v); if ($("fLoc") && $("fLoc").value === v) $("fLoc").value = "ALL"; if (!st.multiLocs.length) { const lb = $("locChipsBar"); if (lb) { lb.style.display = "none"; lb.innerHTML = ""; } } }
         else if (k === "src") { if ($("fSource")) $("fSource").value = "ALL"; }
         else if (k.startsWith("bhk:")) {
           const rv = k.slice(4);
@@ -727,7 +730,7 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
             ${img ? `<img referrerpolicy="no-referrer" class="fc-img" src="${esc(img)}" referrerpolicy="no-referrer" loading="lazy" alt="" onerror="this.remove()" />` : ""}
             ${topPills.length ? `<div class="fc-badges-top">${topPills.slice(0, 2).join("")}</div>` : ""}
             <button class="fc-heart${saved ? " on" : ""}" data-save="${esc(s.id)}" aria-label="Save flat">${saved ? "♥" : "♡"}</button>
-            ${img || directHref ? `<button type="button" class="fc-nav prev" data-pdir="-1" aria-label="Previous photo">‹</button><button type="button" class="fc-nav next" data-pdir="1" aria-label="Next photo">›</button><span class="fc-pcount">${Array.isArray(u.imgs) && u.imgs.length > 1 ? `1 / ${u.imgs.length}` : "1 / +"}</span>` : ""}
+            ${(() => { const _cp = [...new Set([img, u.img, ...(Array.isArray(u.imgs) ? u.imgs : []), s.thumb, ...(Array.isArray(s.photos) ? s.photos : [])].filter(Boolean))]; return _cp.length > 1 ? `<button type="button" class="fc-nav prev" data-pdir="-1" aria-label="Previous photo">‹</button><button type="button" class="fc-nav next" data-pdir="1" aria-label="Next photo">›</button><span class="fc-pcount">1/${_cp.length}</span>` : ""; })()}
           </div>
           <div class="fc-body">
             <div class="fc-price-row">
@@ -916,6 +919,40 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
     rebuildSocietyList(); syncCounts(); renderAll(); toast(`Saved "${name}"`);
   }
 
+  function clearSpatial(keep) {
+    if (keep !== "lasso" && st.lasso) {
+      st.lasso = null;
+      if (window.__bhClearLasso) window.__bhClearLasso(true);
+    }
+    if (keep !== "mapBounds" && st.mapBounds) {
+      st.mapBounds = false;
+      if ($("mapAreaBtn")) $("mapAreaBtn").classList.remove("active");
+    }
+    if (keep !== "zone") {
+      if ($("fZone") && $("fZone").value !== "ALL") {
+        $("fZone").value = "ALL";
+        populateLocalities();
+      }
+      document.querySelectorAll(".n-chip").forEach(c => c.classList.toggle("active", c.dataset.nb === "ALL"));
+    }
+    if (keep !== "loc" && keep !== "zone") {
+      if ($("fLoc") && $("fLoc").value !== "ALL") $("fLoc").value = "ALL";
+    }
+    if (keep !== "multiLocs") {
+      if (Array.isArray(st.multiLocs) && st.multiLocs.length) {
+        st.multiLocs = [];
+        const lb = $("locChipsBar");
+        if (lb) { lb.style.display = "none"; lb.innerHTML = ""; }
+      }
+    }
+    if (keep !== "search") {
+      if ($("searchBox") && $("searchBox").value) $("searchBox").value = "";
+      const aiIn = $("bhAiInput");
+      if (aiIn && aiIn.value) aiIn.value = "";
+    }
+  }
+  window.__bhClearSpatial = clearSpatial;
+
   function resetAll() {
     $("searchBox").value = ""; ["fZone","fLoc","fSource","fFurn","fTen"].forEach(id => { if ($(id)) $(id).value = "ALL"; });
     if ($("fHub")) $("fHub").value = ""; ["fHubMin","fMetro","fRate"].forEach(id => { if ($(id)) $(id).value = "0"; }); if ($("sortSelect")) $("sortSelect").value = "rec";
@@ -925,7 +962,7 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
     document.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
     document.querySelectorAll(".n-chip").forEach(c => c.classList.toggle("active", c.dataset.nb === "ALL"));
     ["fExactOnly","fShowEst","mapAreaBtn"].forEach(id => { if ($(id)) $(id).classList.remove("active"); });
-    populateLocalities(); renderAll();
+    const lb = $("locChipsBar"); if (lb) { lb.style.display = "none"; lb.innerHTML = ""; } populateLocalities(); renderAll();
   }
 
   const closeDetail = () => { $("detailBackdrop").style.display = "none"; $("detailSheet").style.display = "none"; };
@@ -947,7 +984,7 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
   }
 
   $("modeRent").onclick = () => { st.mode = "rent"; $("modeRent").classList.add("active"); $("modeBuy").classList.remove("active"); if ($("bhkSharedOpt")) $("bhkSharedOpt").style.display = ""; resetPriceScale(); populateSources(); renderAll(); };
-  $("modeBuy").onclick = () => { if (!window.__bhBuyDone) window.__bhModeLoading = "buy"; st.mode = "buy"; $("modeBuy").classList.add("active"); $("modeRent").classList.remove("active"); st.bhks.delete("shared"); if ($("bhkSharedOpt")) { $("bhkSharedOpt").classList.remove("active"); $("bhkSharedOpt").style.display = "none"; } resetPriceScale(); populateSources(); renderAll(); ensureBuyShardsLoaded(); };
+  $("modeBuy").onclick = () => { if (!window.__bhBuyDone) window.__bhModeLoading = "buy"; st.mode = "buy"; $("modeBuy").classList.add("active"); $("modeRent").classList.remove("active"); st.bhks.delete("shared"); st.community = false; if (st.lister === "shared") st.lister = "ALL"; if ($("fSource") && ($("fSource").value === "community" || $("fSource").value === "nextflat")) $("fSource").value = "ALL"; if ($("bhkSharedOpt")) { $("bhkSharedOpt").classList.remove("active"); $("bhkSharedOpt").style.display = "none"; } resetPriceScale(); populateSources(); renderAll(); ensureBuyShardsLoaded(); };
   $("themeBtn").onclick = () => applyTheme(st.theme === "dark" ? "light" : "dark");
   $("openFilterBtn").onclick = openFilters; $("closeFilterBtn").onclick = closeFilters; $("filterBackdrop").onclick = closeFilters; $("applyFiltersBtn").onclick = closeFilters;
   $("clearFiltersBtn").onclick = resetAll; $("resetMiniBtn").onclick = resetAll;
@@ -966,7 +1003,7 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
   $("msStreet").onclick = () => setMapStyle("street"); $("msDark").onclick = () => setMapStyle("dark"); $("msSat").onclick = () => setMapStyle("sat");
   $("togMetro").onclick = e => { st.showMetro = !st.showMetro; e.currentTarget.classList.toggle("active", st.showMetro); if (st.showMetro) metroL.addTo(map); else map.removeLayer(metroL); };
   $("togFlood").onclick = e => { st.showFlood = !st.showFlood; e.currentTarget.classList.toggle("active", st.showFlood); if (st.showFlood) floodL.addTo(map); else map.removeLayer(floodL); };
-  $("mapAreaBtn").onclick = e => { st.mapBounds = !st.mapBounds; if (st.mapBounds && st.lasso) { st.lasso = null; if (window.__bhClearLasso) window.__bhClearLasso(true); } e.currentTarget.classList.toggle("active", st.mapBounds); st.page = 36; renderAll(); };
+  $("mapAreaBtn").onclick = e => { st.mapBounds = !st.mapBounds; if (st.mapBounds) clearSpatial("mapBounds"); e.currentTarget.classList.toggle("active", st.mapBounds); st.page = 36; renderAll(); };
 
   document.querySelectorAll(".chip").forEach(btn => {
     btn.onclick = () => {
@@ -1008,9 +1045,9 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
       const rawNb = btn.dataset.nb;
       const curZ = $("fZone")?.value || "ALL";
       const nb = (rawNb !== "ALL" && curZ === rawNb) ? "ALL" : rawNb;
+      clearSpatial("zone");
       if ($("fZone")) $("fZone").value = nb;
       if ($("fLoc")) $("fLoc").value = "ALL";
-      st.multiLocs = [];
       populateLocalities();
       document.querySelectorAll(".n-chip").forEach(x => x.classList.toggle("active", x.dataset.nb === nb));
       st.page = 36;
@@ -1020,7 +1057,7 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
     };
   });
 
-  $("fZone").addEventListener("change", () => { document.querySelectorAll(".n-chip").forEach(x => x.classList.toggle("active", x.dataset.nb === $("fZone").value)); populateLocalities(); st.page = 36; renderAll(); });
+  $("fZone").addEventListener("change", () => { clearSpatial("zone"); document.querySelectorAll(".n-chip").forEach(x => x.classList.toggle("active", x.dataset.nb === $("fZone").value)); populateLocalities(); st.page = 36; renderAll(); });
   $("sortSelect")?.addEventListener("change", () => { st.page = 36; renderAll(); });
   ["mpMin","mpMax"].forEach(id => $(id).addEventListener("input", () => { syncPriceSliders(Number($("mpMin").value), Number($("mpMax").value)); st.page = 36; scheduleRender(); }));
   ["sMin","sMax"].forEach(id => $(id).addEventListener("input", () => { syncSqftSlider(); st.page = 36; scheduleRender(); }));
@@ -1029,7 +1066,14 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
   });
   if ($("fExactOnly")) $("fExactOnly").onclick = e => { st.exactOnly = !st.exactOnly; e.currentTarget.classList.toggle("active", st.exactOnly); st.page = 36; renderAll(); };
   if ($("fShowEst")) $("fShowEst").onclick = e => { st.showEst = !st.showEst; e.currentTarget.classList.toggle("active", st.showEst); st.page = 36; renderAll(); };
-  ["searchBox","fLoc","fSource","fMetro","fHub","fHubMin","fFurn","fTen","fRate"].forEach(id => { if ($(id)) $(id).addEventListener("input", () => { st.page = 36; scheduleRender(); }); });
+  ["searchBox","fLoc","fSource","fMetro","fHub","fHubMin","fFurn","fTen","fRate"].forEach(id => {
+    if (!$(id)) return;
+    $(id).addEventListener("input", () => {
+      if (id === "searchBox" && ($(id).value || "").trim().length > 0) clearSpatial("search");
+      else if (id === "fLoc" && $(id).value && $(id).value !== "ALL") clearSpatial("loc");
+      st.page = 36; scheduleRender();
+    });
+  });
 
   let _mvT = null;
   map.on("moveend zoomend", () => { clearTimeout(_mvT); _mvT = setTimeout(() => { requestAnimationFrame(() => { if (st.mapBounds) renderAll(); else renderMap(); }); }, 80); });
@@ -1188,7 +1232,7 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
     if (!window.__bhBuyDone) window.__bhModeLoading = "buy";
     if (_bhBuyLoaded || !_bhManifest) return;
     if (!_bhBuyPromise) {
-      _bhBuyPromise = _loadShardList(_bhManifest.buy_shards).then(buyRows => { window.__bhBuyDone = true; window.__bhModeLoading = null;
+      _bhBuyPromise = _loadShardList(_bhManifest.buy_shards).then(buyRows => { window.__bhBuyDone = true; try { populateSources(); } catch {} window.__bhModeLoading = null;
         baseSocieties = _mergeShardSocieties(baseSocieties, buyRows);
         _bhBuyLoaded = true;
         rebuildSocietyList(); populateLocalities(); populateSources(); renderAll();
@@ -1335,10 +1379,8 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
       if (st.multiLocs.length >= MAX_MULTI_LOCS) st.multiLocs.shift();
       st.multiLocs.push(loc);
     }
-    if ($("fZone") && $("fZone").value !== "ALL") $("fZone").value = "ALL";
-    if ($("fLoc") && $("fLoc").value !== "ALL") $("fLoc").value = "ALL";
+    clearSpatial("multiLocs");
     if (st.zone && st.zone !== "ALL") st.zone = "ALL";
-    document.querySelectorAll(".zone-pill, [data-zone]").forEach(z => z.classList.toggle("active", z.dataset.zone === "ALL"));
     if (sInput) sInput.value = "";
     if ("q" in st) st.q = "";
     if ("search" in st) st.search = "";
@@ -1596,7 +1638,7 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
   const clNode = $("cardList");
   if (clNode && clNode.addEventListener) {
     clNode.addEventListener("click", async e => {
-      const btn = e.target?.closest ? e.target.closest(".fc-nav") : null;
+      const btn = null; /* BH_V67: card carousel handled solely by enhancements.js */
       if (!btn) return;
       e.preventDefault(); e.stopPropagation();
       const card = btn.closest(".fc");

@@ -499,6 +499,14 @@ def _finalize_shards_and_manifest():
                 s_photos.add(s["thumb"])
             # BH_V63_URL_SCRUB + BH_V65_GUARD: Tag shared rooms lt='shared', normalize zones, sync s.bhks & sources dict
             _sh_re = re.compile(r'(?:shared[-_]?room|single[-_]?room[-_]?in|private[-_]?room[-_]?in|sharing|flatmate|roommate|/pg-|paying[-_]?guest|hostel)', re.I)
+            # BH_V66_MODE_URL_GUARD: Block Buy/Project URLs in Rent & Rent URLs in Buy
+            _buy_u_re = re.compile(r'(?:/buy/|for-sale|-for-sale|-pdpid-|/projects/page/|/new-projects?/|/resale/)', re.I)
+            _rent_u_re = re.compile(r'(?:/rent/|for-rent|-for-rent|on-rent)', re.I)
+            if uk == 'units_rent':
+                us = [u for u in us if not (_buy_u_re.search(str(u.get('u') or '')) and not _rent_u_re.search(str(u.get('u') or '')))]
+            else:
+                us = [u for u in us if not (_rent_u_re.search(str(u.get('u') or '')) and not _buy_u_re.search(str(u.get('u') or '')))]
+            s[uk] = us
             if uk == 'units_rent':
                 for _u in us:
                     if _sh_re.search(str(_u.get('u') or '')) or str(_u.get('s') or '') in ('community','reddit'): _u['lt'] = 'shared'
