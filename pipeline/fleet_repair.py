@@ -499,6 +499,13 @@ def _finalize_shards_and_manifest():
                 s_photos.add(s["thumb"])
             # BH_V63_URL_SCRUB + BH_V65_GUARD: Tag shared rooms lt='shared', normalize zones, sync s.bhks & sources dict
             _sh_re = re.compile(r'(?:shared[-_]?room|single[-_]?room[-_]?in|private[-_]?room[-_]?in|sharing|flatmate|roommate|/pg-|paying[-_]?guest|hostel)', re.I)
+            # BH_V68_URL_DEDUP: Deduplicate identical unit URLs inside same building
+            _seen_u = set(); _dedup_us = []
+            for _du in us:
+                _ukey = str(_du.get('u') or '').strip()
+                if _ukey and _ukey not in _seen_u:
+                    _seen_u.add(_ukey); _dedup_us.append(_du)
+            us = _dedup_us
             # BH_V66_MODE_URL_GUARD: Block Buy/Project URLs in Rent & Rent URLs in Buy
             _buy_u_re = re.compile(r'(?:/buy/|for-sale|-for-sale|-pdpid-|/projects/page/|/new-projects?/|/resale/)', re.I)
             _rent_u_re = re.compile(r'(?:/rent/|for-rent|-for-rent|on-rent)', re.I)

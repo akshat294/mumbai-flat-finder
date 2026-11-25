@@ -920,6 +920,7 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
   }
 
   function clearSpatial(keep) {
+    if (keep !== "search" && window.__bhHideSuggest) window.__bhHideSuggest();
     if (keep !== "lasso" && st.lasso) {
       st.lasso = null;
       if (window.__bhClearLasso) window.__bhClearLasso(true);
@@ -1384,6 +1385,8 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
     if (sInput) sInput.value = "";
     if ("q" in st) st.q = "";
     if ("search" in st) st.search = "";
+    if (ssBox) { ssBox.style.display = "none"; ssBox.classList.remove("open", "show"); }
+    if (window.__bhHideSuggest) window.__bhHideSuggest();
     renderLocChips();
     st.page = 36;
     renderAll();

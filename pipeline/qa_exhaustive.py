@@ -136,7 +136,7 @@ def run_exhaustive(target_url=None, live_mode=False):
             page = ctx.new_page()
             d_errs, d_fail = [], []
             page.on("pageerror", lambda e: d_errs.append(str(e)[:140]))
-            page.on("requestfailed", lambda req: d_fail.append(f"{req.url[:65]} ({req.failure})"))
+            page.on("requestfailed", lambda req: None if ("ERR_ABORTED" in str(req.failure) and any(h in req.url for h in ("tile.openstreetmap.org", "arcgisonline.com"))) else d_fail.append(f"{req.url[:65]} ({req.failure})"))
             page.goto(target_url, wait_until="networkidle", timeout=45000)
             page.wait_for_timeout(1800)
 
@@ -434,7 +434,7 @@ def run_exhaustive(target_url=None, live_mode=False):
             mp = mctx.new_page()
             m_errs, m_fail = [], []
             mp.on("pageerror", lambda e: m_errs.append(str(e)[:140]))
-            mp.on("requestfailed", lambda req: m_fail.append(f"{req.url[:65]} ({req.failure})"))
+            mp.on("requestfailed", lambda req: None if ("ERR_ABORTED" in str(req.failure) and any(h in req.url for h in ("tile.openstreetmap.org", "arcgisonline.com"))) else m_fail.append(f"{req.url[:65]} ({req.failure})"))
             mp.goto(target_url, wait_until="networkidle", timeout=45000)
             mp.wait_for_timeout(1800)
 

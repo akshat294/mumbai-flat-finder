@@ -1619,3 +1619,37 @@ document.addEventListener("pointerdown", (e) => {
   if (cl) new MutationObserver(fix).observe(cl, { childList: true, subtree: true });
   setTimeout(fix, 500);
 })();
+
+/* === BH_V68_SUGGEST_GUARD: #searchSuggest never stays stuck open over map/buttons === */
+(function initV68SuggestGuard() {
+  "use strict";
+  const hideSS = () => {
+    const ss = document.getElementById("searchSuggest");
+    if (ss) {
+      ss.style.display = "none";
+      ss.classList.remove("open", "show");
+    }
+  };
+  window.__bhHideSuggest = hideSS;
+
+  document.addEventListener("pointerdown", e => {
+    const ss = document.getElementById("searchSuggest");
+    if (!ss || getComputedStyle(ss).display === "none") return;
+    if (!e.target.closest("#searchSuggest, #searchBox, .search-wrap")) hideSS();
+  }, true);
+
+  const closeAfterSelect = e => {
+    if (e.target && e.target.closest && e.target.closest("#searchSuggest .ss-item")) {
+      setTimeout(hideSS, 0);
+      setTimeout(hideSS, 60);
+      setTimeout(hideSS, 180);
+    }
+  };
+  document.addEventListener("mousedown", closeAfterSelect, true);
+  document.addEventListener("pointerdown", closeAfterSelect, true);
+  document.addEventListener("click", closeAfterSelect, true);
+
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape") hideSS();
+  }, true);
+})();
