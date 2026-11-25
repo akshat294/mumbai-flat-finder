@@ -25,7 +25,7 @@ def _extract_nb_imgs(prop):
     photos = prop.get("photos") or []
     pid = prop.get("id") or ""
     imgs = []
-    for ph in photos[:6]:
+    for ph in photos[:20]:
         if not isinstance(ph, dict):
             continue
         im = ph.get("imagesMap") or {}
@@ -36,7 +36,7 @@ def _extract_nb_imgs(prop):
                 if url not in imgs:
                     imgs.append(url)
                 break
-    return imgs[:5]
+    return imgs[:20]
 
 def fetch_nobroker_40hubs():
     pockets = [

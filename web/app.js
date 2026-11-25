@@ -1,3 +1,13 @@
+function bhPointInPoly(lat, lng, poly) {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const xi = poly[i][0], yi = poly[i][1];
+    const xj = poly[j][0], yj = poly[j][1];
+    const intersect = ((yi > lng) !== (yj > lng)) && (lat < (xj - xi) * (lng - yi) / ((yj - yi) || 1e-12) + xi);
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
 function bhProxySy(u) {
   return (typeof u === "string" && /^https:\/\/static\.squareyards\.com\//i.test(u))
     ? ("/api/img?u=" + encodeURIComponent(u)) : u;
@@ -22,7 +32,7 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
 
   const st = {
     mode: "rent", theme: localStorage.getItem("mhf_t_v9") || "light", mapStyle: "street",
-    bhks: new Set(), zero: false, dealOnly: false, flood: false, exactOnly: false, showEst: false, mapBounds: false,
+    bhks: new Set(), zero: false, dealOnly: false, flood: false, exactOnly: false, showEst: false, mapBounds: false, lasso: null, /* BH_V62_LASSO */
     showMetro: true, showFlood: false, page: 36, sel: null,
     pLo: 0, pHi: RENT_STOPS[RENT_STOPS.length - 1], sLo: 0, sHi: SQFT_MAX,
     saved: savedInit, clipped: readJSON("mhf_clipped_v7", [])
@@ -114,6 +124,9 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
     if (st.reraOnly) {
       const _hasRera = !!(s.rera || s.rera_id || (Array.isArray(s.rera_ids) && s.rera_ids.length) || (s.units_buy || []).some(u => u && u.rera));
       if (!_hasRera) return false;
+    }
+    if (Array.isArray(st.lasso) && st.lasso.length >= 3) {
+      if (typeof s.lat !== "number" || typeof s.lng !== "number" || !bhPointInPoly(s.lat, s.lng, st.lasso)) return false;
     }
     return true;
   }
@@ -385,7 +398,7 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
     if ($("fTen") && $("fTen").value && $("fTen").value !== "ALL") tags.push($("fTen").selectedOptions?.[0]?.text || $("fTen").value);
     if (Number($("fRate").value)) tags.push(`${$("fRate").value}★+`);
     if (st.exactOnly) tags.push("Exact Pins");
-    if (st.mapBounds) tags.push("Map Area");
+    if (st.mapBounds) tags.push("Map Area"); if (Array.isArray(st.lasso) && st.lasso.length >= 3) tags.push("Drawn Area");
 
     $("filterCount").textContent = tags.length; $("filterCount").style.display = tags.length ? "inline-block" : "none";
     $("resetMiniBtn").style.display = (tags.length > 0 || st.zero || st.dealOnly || st.flood) ? "inline-block" : "none";
@@ -662,7 +675,7 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
             <div class="fc-sub">${esc(subTxt)}</div>
             <div class="fc-foot">
               <div class="fc-tags">${tags.slice(0, 2).join("")}</div>
-              ${directHref ? `<a class="fc-src" target="_blank" href="${esc(directHref)}" onclick="event.stopPropagation()">${esc(portal)} ↗</a>` : `<span class="fc-src">${esc(portal)}</span>`}
+              ${directHref ? `<a class="fc-src" target="_blank" rel="noopener noreferrer" referrerpolicy="no-referrer" href="${esc(directHref)}" onclick="event.stopPropagation()">${esc(portal)} ↗</a>` : `<span class="fc-src">${esc(portal)}</span>`}
             </div>
           </div>
         </article>`;
@@ -845,7 +858,7 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
     $("fHub").value = ""; ["fHubMin","fMetro","fRate"].forEach(id => $(id).value = "0"); if ($("sortSelect")) $("sortSelect").value = "rec";
     $("sMin").value = 0; $("sMax").value = SQFT_MAX; syncSqftSlider(); resetPriceScale();
     st.bhks.clear(); document.querySelectorAll(".bhk-opt").forEach(b => b.classList.remove("active"));
-    st.zero = st.dealOnly = st.flood = st.exactOnly = st.showEst = st.mapBounds = false; st.page = 36;
+    st.zero = st.dealOnly = st.flood = st.exactOnly = st.showEst = st.mapBounds = false; st.lasso = null; st.multiLocs = []; st.brightOnly = false; st.reraOnly = false; st.lister = "ALL"; st.page = 36; if (window.__bhClearLasso) window.__bhClearLasso(true); if (window.__bhResetAiUiOnly) window.__bhResetAiUiOnly();
     document.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
     document.querySelectorAll(".n-chip").forEach(c => c.classList.toggle("active", c.dataset.nb === "ALL"));
     ["fExactOnly","fShowEst","mapAreaBtn"].forEach(id => $(id).classList.remove("active"));
@@ -888,7 +901,7 @@ const PORTAL_NAMES = { magicbricks:"MagicBricks", nobroker:"NoBroker", squareyar
   $("msStreet").onclick = () => setMapStyle("street"); $("msDark").onclick = () => setMapStyle("dark"); $("msSat").onclick = () => setMapStyle("sat");
   $("togMetro").onclick = e => { st.showMetro = !st.showMetro; e.currentTarget.classList.toggle("active", st.showMetro); if (st.showMetro) metroL.addTo(map); else map.removeLayer(metroL); };
   $("togFlood").onclick = e => { st.showFlood = !st.showFlood; e.currentTarget.classList.toggle("active", st.showFlood); if (st.showFlood) floodL.addTo(map); else map.removeLayer(floodL); };
-  $("mapAreaBtn").onclick = e => { st.mapBounds = !st.mapBounds; e.currentTarget.classList.toggle("active", st.mapBounds); st.page = 36; renderAll(); };
+  $("mapAreaBtn").onclick = e => { st.mapBounds = !st.mapBounds; if (st.mapBounds && st.lasso) { st.lasso = null; if (window.__bhClearLasso) window.__bhClearLasso(true); } e.currentTarget.classList.toggle("active", st.mapBounds); st.page = 36; renderAll(); };
 
   document.querySelectorAll(".chip").forEach(btn => {
     btn.onclick = () => {

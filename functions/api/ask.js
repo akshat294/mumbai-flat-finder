@@ -254,7 +254,57 @@ function buildFallbackSummary(query, totalBuildings, totalFlats, topMatches, mod
   return `Matched ${totalFlats.toLocaleString("en-IN")} live flats across ${totalBuildings.toLocaleString("en-IN")} buildings. Standout picks: ${top3.join(" | ")}. Click any society chip below to jump straight to it on the map.`;
 }
 
-export async function onRequestPost({ request, env }) {
+
+// BH_V62_EDGE_SCALE: Edge response cache + per-IP sliding window rate limiter
+const _RL_MAP = new Map();
+function allowLlmForIp(request, maxPerMin = 20) {
+  try {
+    const ip = request.headers.get("CF-Connecting-IP") || request.headers.get("X-Forwarded-For") || "anon";
+    const now = Date.now();
+    let arr = _RL_MAP.get(ip) || [];
+    arr = arr.filter((ts) => now - ts < 60000);
+    if (arr.length >= maxPerMin) {
+      _RL_MAP.set(ip, arr);
+      return false;
+    }
+    arr.push(now);
+    _RL_MAP.set(ip, arr);
+    if (_RL_MAP.size > 500) {
+      for (const [k, v] of _RL_MAP.entries()) {
+        if (!v.length || now - v[v.length - 1] > 60000) _RL_MAP.delete(k);
+      }
+    }
+    return true;
+  } catch {
+    return true;
+  }
+}
+function normCacheQuery(q) {
+  return String(q || "").toLowerCase().replace(/[^a-z0-9\s]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 140);
+}
+async function readEdgeCache(keyPath) {
+  try {
+    if (typeof caches === "undefined" || !caches.default) return null;
+    const req = new Request("https:" + "//bombayhomes.pages.dev/__cache/ask/" + keyPath, { method: "GET" });
+    const hit = await caches.default.match(req);
+    return hit ? await hit.json() : null;
+  } catch {
+    return null;
+  }
+}
+function writeEdgeCache(waitUntil, keyPath, obj, ttlSec = 86400) {
+  try {
+    if (typeof caches === "undefined" || !caches.default || typeof waitUntil !== "function") return;
+    const req = new Request("https:" + "//bombayhomes.pages.dev/__cache/ask/" + keyPath, { method: "GET" });
+    const res = new Response(JSON.stringify(obj), {
+      status: 200,
+      headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=" + ttlSec },
+    });
+    waitUntil(caches.default.put(req, res));
+  } catch {}
+}
+
+export async function onRequestPost({ request, env, waitUntil }) {
   let body;
   try {
     body = await request.json();
@@ -295,10 +345,21 @@ export async function onRequestPost({ request, env }) {
       `Known Localities: ${knownLocalities.join(", ")}\n` +
       `User query: "${query}"`;
 
+    const cKey = "parse?m=" + encodeURIComponent(currentMode) + "&q=" + encodeURIComponent(normCacheQuery(query));
+    const cached = await readEdgeCache(cKey);
+    if (cached && cached.filters) {
+      return jsonRes(request, { ok: true, engine: cached.engine || "edge-cache", cached: true, diag: "cache-hit", filters: cached.filters });
+    }
+    if (!allowLlmForIp(request, 20)) {
+      const lp = sanitizeParsedFilters(localParseQuery(query, knownLocalities, currentMode), knownLocalities);
+      return jsonRes(request, { ok: true, engine: "local-rate-guard", diag: "rate-limited", filters: lp });
+    }
     const llm = await runLLM(env, sysPrompt, userPrompt, true);
     const rawParsed = extractJsonObject(llm.text) || localParseQuery(query, knownLocalities, currentMode);
     const parsed = sanitizeParsedFilters(rawParsed, knownLocalities);
-    return jsonRes(request, { ok: true, engine: llm.engine, diag: llm.diag || "", filters: parsed });
+    const payload = { ok: true, engine: llm.engine, diag: llm.diag || "", filters: parsed };
+    if (llm.engine && llm.engine !== "local-nlp") writeEdgeCache(waitUntil, cKey, payload, 86400);
+    return jsonRes(request, payload);
   }
 
   if (action === "summarize") {
@@ -348,13 +409,24 @@ export async function onRequestPost({ request, env }) {
       `Total live matches in Mumbai registry: ${totalFlats} flats across ${totalBuildings} buildings\n` +
       `Top Matches JSON:\n${JSON.stringify(compactMatches)}`;
 
+    const topSig = topMatches.slice(0, 3).map(m => (m.name || "").slice(0, 18) + ":" + (m.p || 0)).join("|");
+    const sKey = "sum?m=" + mode + "&q=" + encodeURIComponent(normCacheQuery(query)) + "&t=" + encodeURIComponent(topSig);
+    const cachedSum = await readEdgeCache(sKey);
+    if (cachedSum && cachedSum.summary) {
+      return jsonRes(request, { ok: true, engine: cachedSum.engine || "edge-cache", cached: true, summary: cachedSum.summary });
+    }
+    if (!allowLlmForIp(request, 20)) {
+      return jsonRes(request, { ok: true, engine: "local-rate-guard", summary: buildFallbackSummary(query, totalBuildings, totalFlats, topMatches, mode) });
+    }
     const llm = await runLLM(env, sysPrompt, userPrompt, false);
     const cleanText = (llm.text || "").replace(/\s+/g, " ").trim();
-    return jsonRes(request, {
+    const sumPayload = {
       ok: true,
       engine: cleanText ? llm.engine : "local-nlp",
       summary: cleanText || buildFallbackSummary(query, totalBuildings, totalFlats, topMatches, mode),
-    });
+    };
+    if (cleanText && llm.engine !== "local-nlp") writeEdgeCache(waitUntil, sKey, sumPayload, 21600);
+    return jsonRes(request, sumPayload);
   }
 
   return jsonRes(request, { ok: false, error: "Unknown action" }, 400);

@@ -81,7 +81,7 @@ def _res_tier(url):
         return 5
     return 3
 
-def _dedupe_rank_urls(urls, cap=12):
+def _dedupe_rank_urls(urls, cap=20):
     by_k, order = {}, []
     for raw in (urls or []):
         up = upgrade_media_url(raw)
@@ -399,7 +399,7 @@ def repair_societies(socs, mode="rent"):
             if u.get("img"):
                 raw_soc.append(u["img"])
             raw_soc.extend(u.get("imgs") or [])
-        soc_clean, best_by_k = _dedupe_rank_urls(raw_soc, cap=12)
+        soc_clean, best_by_k = _dedupe_rank_urls(raw_soc, cap=20)
         for u in us:
             u_raw = ([u["img"]] if u.get("img") else []) + list(u.get("imgs") or [])
             u_up = []
@@ -407,7 +407,7 @@ def repair_societies(socs, mode="rent"):
                 info = _media_key_rank(upgrade_media_url(r))
                 if info:
                     u_up.append(best_by_k.get(info[1], info[0]))
-            u_clean, _ = _dedupe_rank_urls(u_up, cap=8)
+            u_clean, _ = _dedupe_rank_urls(u_up, cap=16)
             if u_clean:
                 u["img"] = u_clean[0]
                 if len(u_clean) > 1:

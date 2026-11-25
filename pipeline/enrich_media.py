@@ -136,7 +136,7 @@ def _extract_nobroker(html, url):
     fac_m = re.search(r'"facingDesc"\s*:\s*"([A-Za-z\-\s]{3,16})"', t)
     fac = fac_m.group(1).strip() if fac_m else ""
     dead = bool(DEAD_PAGE_RE.search(t[:45000]) or '"inactive":true' in t[:45000].lower())
-    imgs, _ = _dedupe_rank_urls(raw_imgs, cap=10)
+    imgs, _ = _dedupe_rank_urls(raw_imgs, cap=20)
     return {"imgs": imgs, "vids": [], "furn": furn, "soc": soc_nm, "dep": dep, "flr": flr, "fac": fac, "dead": dead}
 
 def _mb_hex_to_pid(url, html):
@@ -187,8 +187,20 @@ def _extract_magicbricks(html, url):
     fac_m = re.search(r'"facing"\s*:\s*"([A-Za-z\-\s]{3,16})"', t)
     fac = fac_m.group(1).strip() if fac_m else ""
     dead = bool(DEAD_PAGE_RE.search(t[:45000]))
-    imgs, _ = _dedupe_rank_urls(raw_imgs, cap=10)
-    return {"imgs": imgs, "vids": [], "furn": "", "soc": soc_nm, "dep": dep, "flr": flr, "fac": fac, "dead": dead}
+    imgs, _ = _dedupe_rank_urls(raw_imgs, cap=20)
+    vids = []
+    seen_v = set()
+    for vm in re.finditer(r'"(?:videoID|youtubeId|youtubeVideoId)"\s*:\s*"([A-Za-z0-9_\-]{11})"', t, re.I):
+        vid_id = vm.group(1)
+        if vid_id not in seen_v:
+            seen_v.add(vid_id)
+            vids.append({"url": "https:" + "//www.youtube.com/watch?v=" + vid_id, "kind": "youtube", "poster": "https:" + f"//i.ytimg.com/vi/{vid_id}/hqdefault.jpg"})
+    for vm in re.finditer(r'https?:/{2}[^\s"\'<>\\]+\.(?:mp4|m3u8)', t, re.I):
+        vu = vm.group(0)
+        if vu not in seen_v:
+            seen_v.add(vu)
+            vids.append({"url": vu, "kind": "video"})
+    return {"imgs": imgs, "vids": vids[:4], "furn": "", "soc": soc_nm, "dep": dep, "flr": flr, "fac": fac, "dead": dead}
 
 def _extract_99acres(html, url):
     t = html.replace("\\u002F", "/").replace("\\/", "/")
@@ -222,7 +234,7 @@ def _extract_99acres(html, url):
     tf_m = re.search(r'"TOTAL_FLOOR"\s*:\s*"?(\d{1,2})"?', t, re.I)
     flr = f"{fl_m.group(1)}/{tf_m.group(1)}" if (fl_m and tf_m) else (fl_m.group(1) if fl_m else "")
     dead = bool(DEAD_PAGE_RE.search(t[:45000]))
-    imgs, _ = _dedupe_rank_urls(raw_imgs, cap=10)
+    imgs, _ = _dedupe_rank_urls(raw_imgs, cap=20)
     return {"imgs": imgs, "vids": vids[:3], "furn": "", "soc": soc_nm, "dep": 0, "flr": flr, "fac": "", "dead": dead}
 
 HS_BAD_GROUP_RE = re.compile(r"(floor|plan|layout|map|brochure|locality|neighbourhood|neighborhood|amenity|amenities|master)", re.I)
@@ -297,7 +309,7 @@ def _extract_housing_gql(url):
                 prop_imgs.append(u)
 
     raw_imgs = prop_imgs + proj_imgs
-    imgs, _ = _dedupe_rank_urls(raw_imgs, cap=12)
+    imgs, _ = _dedupe_rank_urls(raw_imgs, cap=20)
 
     vids = []
     pv = str(det.get("propertyVideoUrl") or "").strip()
@@ -420,7 +432,7 @@ def apply_cache_to_societies(socs, cache):
                 e_furn = entry.get("furn") or ""
                 if e_imgs:
                     u_raw = ([u["img"]] if u.get("img") else []) + list(u.get("imgs") or []) + e_imgs
-                    u_clean, _ = _dedupe_rank_urls(u_raw, cap=8)
+                    u_clean, _ = _dedupe_rank_urls(u_raw, cap=16)
                     if len(u_clean) > len(u.get("imgs") or []) or (u_clean and u.get("img") != u_clean[0]):
                         u["img"] = u_clean[0]
                         if len(u_clean) > 1:
@@ -449,7 +461,7 @@ def apply_cache_to_societies(socs, cache):
                     s["name"] = entry["soc"]
 
         if changed:
-            soc_clean, _ = _dedupe_rank_urls(soc_raw_imgs, cap=12)
+            soc_clean, _ = _dedupe_rank_urls(soc_raw_imgs, cap=20)
             if soc_clean:
                 s["thumb"] = soc_clean[0]
                 if len(soc_clean) > 1:

@@ -947,6 +947,14 @@
   let _askSeq = 0;
   let _aiActive = false;
 
+  window.__bhIsAiActive = () => !!_aiActive;
+  window.__bhResetAiUiOnly = () => {
+    _askSeq++; _aiActive = false;
+    const inp = document.getElementById('bhAiInput'); if (inp) inp.value = '';
+    const stEl = document.getElementById('bhAiStatus'); if (stEl) stEl.textContent = '';
+    const clrB = document.getElementById('bhAiClear'); if (clrB) clrB.style.display = 'none';
+    syncBrightBtnUi();
+  };
   function resetAskMapAll() {
     _askSeq++;
     _aiActive = false;
@@ -959,6 +967,7 @@
     syncBrightBtnUi();
     if (api.renderAll) api.renderAll();
   }
+  window.__bhResetAskMapAll = resetAskMapAll;
 
   async function runTalkToMap(query) {
     const q = String(query || "").trim();
@@ -1115,7 +1124,12 @@
     inp.addEventListener("input", () => {
       const empty = !inp.value.trim();
       clr.style.display = empty ? "none" : "inline-flex";
-      if (empty && _aiActive) resetAskMapAll();
+      const stTxt = (document.getElementById("bhAiStatus")?.textContent || "").trim();
+      if (empty && (_aiActive || stTxt)) {
+        const sb = document.getElementById("searchBox");
+        if (sb && sb.value.trim()) sb.value = "";
+        resetAskMapAll();
+      }
     });
     inp.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); runTalkToMap(inp.value); } });
   }
@@ -1147,6 +1161,7 @@
       else inp.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
       const ac = document.getElementById("ac");
       if (ac) ac.style.display = "none";
+      const _ss = document.getElementById("searchSuggest"); if (_ss) { _ss.style.display = "none"; _ss.classList.remove("open", "show"); }
       return true;
     };
 
@@ -1173,6 +1188,14 @@
       const syncBtn = () => {
         const v = sb.value.trim();
         aiBtn.classList.toggle("hot", NL_RE.test(v) || v.split(/\s+/).length >= 3);
+        if (!v) {
+          const _ss = document.getElementById("searchSuggest"); if (_ss) { _ss.style.display = "none"; _ss.classList.remove("open", "show"); }
+          if (window.__bhIsAiActive && window.__bhIsAiActive()) {
+            const aiInp = document.getElementById("bhAiInput");
+            if (aiInp) aiInp.value = "";
+            if (window.__bhResetAskMapAll) window.__bhResetAskMapAll();
+          }
+        }
       };
       sb.addEventListener("input", syncBtn);
       syncBtn();
@@ -1237,6 +1260,7 @@
         const rel = (a.getAttribute("rel") || "").toLowerCase();
         if (!rel.includes("noopener") || !rel.includes("noreferrer")) {
           a.setAttribute("rel", "noopener noreferrer");
+        if (!a.getAttribute("referrerpolicy")) a.setAttribute("referrerpolicy", "no-referrer");
         }
       });
       scope.querySelectorAll("img").forEach((im) => {
@@ -1265,3 +1289,232 @@
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", attach);
   else attach();
 })();
+
+/* === BH_V62_MAP_LASSO: Freehand Map Lasso Area-Select (Desktop + Touch Mobile) === */
+(function initMapLassoV62() {
+  if (window.__bhV62Lasso) return;
+  window.__bhV62Lasso = true;
+
+  let drawing = false;
+  let dragging = false;
+  let pts = [];
+  let polyLayer = null;
+  let hintEl = null;
+
+  const getApi = () => (typeof window.__bh === "function" ? window.__bh() : {});
+
+  function showHint(text) {
+    const pane = document.getElementById("mapPane");
+    if (!pane) return;
+    if (!hintEl) {
+      hintEl = document.createElement("div");
+      hintEl.id = "bhLassoHint";
+      hintEl.className = "bh-lasso-hint";
+      pane.appendChild(hintEl);
+    }
+    hintEl.textContent = text;
+    hintEl.style.display = text ? "block" : "none";
+  }
+
+  function updateBtn() {
+    const btn = document.getElementById("mapLassoBtn");
+    const api = getApi();
+    if (!btn) return;
+    const hasLasso = !!(api.st && Array.isArray(api.st.lasso) && api.st.lasso.length >= 3);
+    btn.classList.toggle("active", drawing || hasLasso);
+    btn.classList.toggle("drawing", drawing);
+    if (drawing) {
+      btn.textContent = "Cancel draw";
+      showHint("Drag on map to circle an area (Esc to cancel)");
+    } else if (hasLasso) {
+      const cnt = Array.isArray(api.filtered) ? api.filtered.length : 0;
+      btn.textContent = "\u2715 Clear area" + (cnt ? " (" + cnt.toLocaleString("en-IN") + ")" : "");
+      showHint("");
+    } else {
+      btn.textContent = "\u270E Draw area";
+      showHint("");
+    }
+  }
+
+  function stopDrawing(map) {
+    drawing = false;
+    dragging = false;
+    if (map) {
+      try { map.dragging.enable(); } catch {}
+      const c = map.getContainer();
+      if (c) c.classList.remove("bh-lasso-cursor");
+    }
+    updateBtn();
+  }
+
+  function clearLasso(silent) {
+    const api = getApi();
+    const map = api.map;
+    if (polyLayer && map) {
+      try { map.removeLayer(polyLayer); } catch {}
+    }
+    polyLayer = null;
+    pts = [];
+    if (api.st) api.st.lasso = null;
+    stopDrawing(map);
+    if (!silent && api.renderAll) api.renderAll();
+    updateBtn();
+  }
+  window.__bhClearLasso = clearLasso;
+
+  function renderPolygon(map, closed) {
+    if (!map || !window.L) return;
+    if (polyLayer) {
+      try { map.removeLayer(polyLayer); } catch {}
+    }
+    if (!pts.length) return;
+    polyLayer = closed
+      ? window.L.polygon(pts, {
+          color: "#1b4332",
+          weight: 2.5,
+          fillColor: "#2d6a4f",
+          fillOpacity: 0.16,
+          dashArray: null,
+          interactive: false,
+        }).addTo(map)
+      : window.L.polyline(pts, {
+          color: "#c49e5c",
+          weight: 3,
+          dashArray: "6,4",
+          interactive: false,
+        }).addTo(map);
+  }
+
+  function clientToLatLng(map, clientX, clientY) {
+    const rect = map.getContainer().getBoundingClientRect();
+    return map.containerPointToLatLng(window.L.point(clientX - rect.left, clientY - rect.top));
+  }
+
+  function attach() {
+    const api = getApi();
+    const map = api.map;
+    const btn = document.getElementById("mapLassoBtn");
+    if (!map || !btn) {
+      setTimeout(attach, 300);
+      return;
+    }
+    if (btn.dataset.bhLassoWired) return;
+    btn.dataset.bhLassoWired = "1";
+
+    const container = map.getContainer();
+
+    btn.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const curApi = getApi();
+      const hasLasso = !!(curApi.st && Array.isArray(curApi.st.lasso) && curApi.st.lasso.length >= 3);
+      if (drawing || hasLasso) {
+        clearLasso(false);
+        return;
+      }
+      if (curApi.st && curApi.st.mapBounds) {
+        curApi.st.mapBounds = false;
+        const ab = document.getElementById("mapAreaBtn");
+        if (ab) ab.classList.remove("active");
+      }
+      pts = [];
+      if (polyLayer) { try { map.removeLayer(polyLayer); } catch {} polyLayer = null; }
+      drawing = true;
+      dragging = false;
+      try { map.dragging.disable(); } catch {}
+      container.classList.add("bh-lasso-cursor");
+      updateBtn();
+    });
+
+    const onStart = (cx, cy, ev) => {
+      if (!drawing) return;
+      if (ev && ev.target && ev.target.closest(".map-left-ctl, .map-ctl, .leaflet-control")) return;
+      if (ev) { ev.preventDefault(); ev.stopPropagation(); }
+      dragging = true;
+      const ll = clientToLatLng(map, cx, cy);
+      pts = [[ll.lat, ll.lng]];
+      renderPolygon(map, false);
+    };
+
+    const onMove = (cx, cy, ev) => {
+      if (!drawing || !dragging) return;
+      if (ev) { ev.preventDefault(); }
+      const ll = clientToLatLng(map, cx, cy);
+      const prev = pts[pts.length - 1];
+      if (!prev || Math.hypot(ll.lat - prev[0], ll.lng - prev[1]) > 0.00025) {
+        pts.push([ll.lat, ll.lng]);
+        renderPolygon(map, false);
+      }
+    };
+
+    const onEnd = () => {
+      if (!drawing || !dragging) return;
+      dragging = false;
+      const curApi = getApi();
+      if (pts.length < 3) {
+        clearLasso(false);
+        return;
+      }
+      let minLa = 999, maxLa = -999, minLn = 999, maxLn = -999;
+      for (const p of pts) {
+        if (p[0] < minLa) minLa = p[0];
+        if (p[0] > maxLa) maxLa = p[0];
+        if (p[1] < minLn) minLn = p[1];
+        if (p[1] > maxLn) maxLn = p[1];
+      }
+      if ((maxLa - minLa) < 0.0006 && (maxLn - minLn) < 0.0006) {
+        clearLasso(false);
+        return;
+      }
+      renderPolygon(map, true);
+      if (curApi.st) {
+        curApi.st.lasso = pts.slice();
+        curApi.st.page = 36;
+      }
+      stopDrawing(map);
+      if (curApi.renderAll) curApi.renderAll();
+      setTimeout(updateBtn, 60);
+    };
+
+    container.addEventListener("mousedown", (e) => { if (e.button === 0) onStart(e.clientX, e.clientY, e); }, { passive: false });
+    window.addEventListener("mousemove", (e) => onMove(e.clientX, e.clientY, e), { passive: false });
+    window.addEventListener("mouseup", onEnd);
+
+    container.addEventListener("touchstart", (e) => {
+      if (e.touches && e.touches.length === 1) onStart(e.touches[0].clientX, e.touches[0].clientY, e);
+    }, { passive: false });
+    window.addEventListener("touchmove", (e) => {
+      if (drawing && dragging && e.touches && e.touches.length === 1) onMove(e.touches[0].clientX, e.touches[0].clientY, e);
+    }, { passive: false });
+    window.addEventListener("touchend", onEnd);
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && drawing) clearLasso(false);
+    });
+
+    const rs = document.getElementById("resSum");
+    if (rs) new MutationObserver(() => { if (!drawing) updateBtn(); }).observe(rs, { childList: true, characterData: true, subtree: true });
+
+    const ab = document.getElementById("activeBar");
+    if (ab) {
+      ab.addEventListener("click", (e) => {
+        const tag = e.target.closest("span, button, .atag");
+        if (tag && /Drawn Area/i.test(tag.textContent || "")) clearLasso(false);
+      });
+    }
+    updateBtn();
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => setTimeout(attach, 350));
+  else setTimeout(attach, 350);
+})();
+
+/* === BH_V62C_SS_DISMISS === */
+document.addEventListener("pointerdown", (e) => {
+  const ss = document.getElementById("searchSuggest");
+  if (!ss || ss.style.display === "none") return;
+  if (!e.target.closest(".search-wrap, #searchSuggest")) {
+    ss.style.display = "none";
+    ss.classList.remove("open", "show");
+  }
+}, true);

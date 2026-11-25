@@ -1,7 +1,7 @@
-// Cloudflare Pages Function: Strict SquareYards Image Proxy (fixes Chromium ERR_BLOCKED_BY_ORB)
+// Cloudflare Pages Function: Strict SquareYards Image Proxy with Edge Cache (v62)
 const ALLOWED_HOSTS = new Set(["static.squareyards.com"]);
 
-export async function onRequestGet({ request }) {
+export async function onRequestGet({ request, waitUntil }) {
   try {
     const reqUrl = new URL(request.url);
     const target = reqUrl.searchParams.get("u") || "";
@@ -17,13 +17,24 @@ export async function onRequestGet({ request }) {
       return new Response("Host not allowed", { status: 403 });
     }
 
+    const cache = typeof caches !== "undefined" ? caches.default : null;
+    const cacheKey = new Request("https:" + "//bombayhomes.pages.dev/__cache/img?u=" + encodeURIComponent(parsed.toString()), { method: "GET" });
+    if (cache) {
+      const hit = await cache.match(cacheKey);
+      if (hit) {
+        const h = new Headers(hit.headers);
+        h.set("X-Edge-Cache", "HIT");
+        return new Response(hit.body, { status: hit.status, headers: h });
+      }
+    }
+
     const upstream = await fetch(parsed.toString(), {
       headers: {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
         "Referer": "https:" + "//www.squareyards.com/",
         "Accept": "image/avif,image/webp,image/apng,image/jpeg,image/*,*/*;q=0.8",
       },
-      cf: { cacheTtl: 86400, cacheEverything: true },
+      cf: { cacheTtl: 604800, cacheEverything: true },
     });
 
     const ct = (upstream.headers.get("content-type") || "").toLowerCase();
@@ -34,16 +45,21 @@ export async function onRequestGet({ request }) {
       });
     }
 
-    return new Response(upstream.body, {
+    const resp = new Response(upstream.body, {
       status: 200,
       headers: {
         "Content-Type": ct,
-        "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",
+        "Cache-Control": "public, max-age=604800, immutable",
         "Cross-Origin-Resource-Policy": "cross-origin",
         "Access-Control-Allow-Origin": "*",
         "X-Content-Type-Options": "nosniff",
+        "X-Edge-Cache": "MISS",
       },
     });
+    if (cache && typeof waitUntil === "function") {
+      waitUntil(cache.put(cacheKey, resp.clone()));
+    }
+    return resp;
   } catch {
     return new Response("Proxy error", { status: 502 });
   }
