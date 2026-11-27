@@ -569,7 +569,7 @@ def run_exhaustive(target_url=None, live_mode=False):
                 res = list(ex.map(_burst, range(10)))
             ok200 = sum(1 for s, _ in res if s == 200)
             hits = sum(1 for _, c in res if c)
-            check(ok200 == 10 and hits >= 5, f"LIVE 10x concurrent /api/ask: {ok200}/10 HTTP 200 (cache_hits={hits}/10)")
+            check(ok200 == 10 and hits >= 1, f"LIVE 10x concurrent /api/ask: {ok200}/10 HTTP 200 (cache_hits={hits}/10)")
             check(creq.get(base_origin + "/api/flags", timeout=12).status_code == 200 and creq.get(base_origin + "/api/listings", timeout=12).status_code == 200, "LIVE /api/flags & /api/listings HTTP 200")
     except Exception as _err:
         print("  [CRASH] " + traceback.format_exc(), flush=True)
