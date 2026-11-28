@@ -1,12 +1,12 @@
 {
   "version": 28,
   "city": "Mumbai MMR",
-  "generated_at": "28 Nov 2026, 01:00 AM IST",
-  "generated_ts": 1795807826,
+  "generated_at": "28 Nov 2026, 08:13 AM IST",
+  "generated_ts": 1795833797,
   "count": 16759,
   "rent_buildings": 10972,
   "buy_buildings": 7236,
-  "rent_flats": 17628,
+  "rent_flats": 17629,
   "buy_flats": 12193,
   "rent_shards": [
     "shards/rent_0.json",
@@ -28,7 +28,7 @@
   "total_societies": 16759,
   "rent_societies": 10972,
   "buy_societies": 7236,
-  "total_rent_flats": 17628,
+  "total_rent_flats": 17629,
   "total_buy_flats": 12193,
-  "updated_ist": "28 Nov 2026, 01:00 AM IST"
+  "updated_ist": "28 Nov 2026, 08:13 AM IST"
 }
